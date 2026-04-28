@@ -1,0 +1,337 @@
+/* =============================================
+   DEVICE PAGE STYLES (RESPONSIVE)
+   ============================================= */
+
+:root {
+    --green:       #006947;
+    --green-dim:   #005c3e;
+    --surface:     #f5f7f9;
+    --text:        #2c2f31;
+    --text-muted:  #595c5e;
+}
+
+.main {
+    margin-left: 120px;
+    padding: 88px 40px 40px;
+    transition: margin-left 0.3s ease;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.page-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin: 0 0 6px;
+}
+
+.sub-info {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.dot {
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.btn {
+    background: var(--green);
+    color: #d1fae5;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s;
+    white-space: nowrap;
+    text-decoration: none;
+}
+.btn:hover { background: var(--green-dim); }
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+/* ── Card as clickable link ── */
+.card {
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(44,47,49,0.06), 0 4px 16px rgba(44,47,49,0.04);
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    cursor: pointer;
+}
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(44,47,49,0.10), 0 8px 24px rgba(44,47,49,0.06);
+    text-decoration: none;
+    color: inherit;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.card-category {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-style: normal;
+    font-size: 10px;
+    line-height: 15px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #94a3b8;
+    vertical-align: middle;
+}
+
+.badge {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-style: normal;
+    font-size: 10px;
+    line-height: 15px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: #d1fae5;
+    color: var(--green);
+    padding: 3px 10px;
+    border-radius: 9999px;
+    vertical-align: middle;
+}
+
+.badge.offline {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.badge.warning {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.card-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-style: normal;
+    font-size: 36px;
+    line-height: 40px;
+    letter-spacing: -0.9px;
+    margin: 0 0 10px;
+    vertical-align: middle;
+}
+
+.meta {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-style: normal;
+    font-size: 10px;
+    line-height: 15px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    vertical-align: middle;
+}
+
+.meta span {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    color: var(--text);
+    text-transform: none;
+}
+
+.device-img {
+    width: 100px;
+    opacity: 0.9;
+}
+
+.card-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+/* =============================================
+   TABLET (max-width: 1024px)
+   ============================================= */
+@media screen and (max-width: 1024px) {
+    .main {
+        margin-left: 90px;
+        padding: 80px 24px 32px;
+    }
+
+    .grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+    }
+
+    .card {
+        padding: 20px;
+    }
+
+    .card-title {
+        font-size: 30px;
+        line-height: 36px;
+    }
+
+    .device-img {
+        width: 80px;
+    }
+}
+
+/* =============================================
+   MOBILE (max-width: 768px) — Sidebar drawer mode
+   ============================================= */
+@media screen and (max-width: 768px) {
+    .main {
+        margin-left: 0 !important;
+        padding: 72px 16px 24px;
+    }
+
+    /*
+     * JANGAN set display: none di sini!
+     * Sidebar mobile dikendalikan oleh sidebar.css (transform slide-in).
+     * Kalau di-display:none, hamburger tidak akan bisa membuka sidebar.
+     */
+
+    .grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .btn {
+        width: 100%;
+        justify-content: center;
+        padding: 14px 20px;
+        font-size: 0.9rem;
+        border-radius: 12px;
+    }
+}
+
+/* =============================================
+   MOBILE CARD — Besar & Mudah Dibaca
+   ============================================= */
+@media screen and (max-width: 640px) {
+    .main {
+        padding: 72px 16px 24px;
+    }
+
+    .page-title {
+        font-size: 1.75rem;
+    }
+
+    .sub-info {
+        gap: 10px;
+        font-size: 0.875rem;
+    }
+
+    /* Card lebih lega dan terbaca */
+    .card {
+        padding: 24px 20px;
+        border-radius: 24px;
+        min-height: 160px;
+    }
+
+    .card-header {
+        margin-bottom: 12px;
+    }
+
+    .card-category {
+        font-size: 11px;
+        line-height: 18px;
+    }
+
+    .badge {
+        font-size: 11px;
+        line-height: 18px;
+        padding: 4px 12px;
+    }
+
+    .card-title {
+        font-size: 2rem;          /* 32px — terbaca jelas tanpa terlalu besar */
+        line-height: 1.15;
+        letter-spacing: -0.5px;
+        margin-bottom: 12px;
+    }
+
+    .meta {
+        font-size: 12px;
+        line-height: 22px;
+        letter-spacing: 0.4px;
+    }
+
+    .meta span {
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .device-img {
+        width: 90px;
+    }
+
+    .card-content {
+        flex-direction: row;
+        align-items: flex-end;
+    }
+}
+
+/* =============================================
+   LAYAR SANGAT KECIL (max-width: 380px)
+   ============================================= */
+@media screen and (max-width: 380px) {
+    .main {
+        padding: 68px 12px 20px;
+    }
+
+    .card {
+        padding: 20px 16px;
+    }
+
+    .card-title {
+        font-size: 1.75rem;
+    }
+
+    .device-img {
+        width: 75px;
+    }
+}
