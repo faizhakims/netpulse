@@ -11,17 +11,12 @@
     <link rel="stylesheet" href="{{ asset('css/incidents.css') }}">
     <style>
         .panel-close-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            transition: background 0.15s;
+            background: none; border: none; cursor: pointer; padding: 4px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 8px; transition: background 0.15s;
         }
         .panel-close-btn:hover { background: #F1F5F9; }
+        tr.hidden { display: none; }
     </style>
 </head>
 <body>
@@ -34,25 +29,25 @@
                 <h1 class="page-title">Incidents Management</h1>
                 <p class="page-subtitle">Real‑time overview of network anomalies, device outages, and performance degradation.</p>
             </div>
-            <div class="updated-badge">Updated 3s ago</div>
+            <div class="updated-badge">Updated just now</div>
         </div>
 
         <div class="stats-row">
             <div class="stat-card">
                 <div class="stat-label">DEVICE DOWN</div>
-                <div class="stat-value">248</div>
+                <div class="stat-value">{{ $deviceDown }}</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">LATENCY SPIKES</div>
-                <div class="stat-value" style="color:#FEB64C;">47</div>
+                <div class="stat-value" style="color:#FEB64C;">{{ $latencySpikes }}</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">UNRESOLVED ISSUES</div>
-                <div class="stat-value" style="color:#000;">23</div>
+                <div class="stat-value" style="color:#000;">{{ $unresolvedCount }}</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">SYSTEM SUCCESS RATE</div>
-                <div class="stat-value" style="color:#047857;">99.8%</div>
+                <div class="stat-value" style="color:#047857;">{{ $successRate }}%</div>
             </div>
         </div>
 
@@ -87,34 +82,24 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @php
-                            $incidents = [
-                                ['id'=>'INC-0042','device'=>'Core Router Alpha-01','issue'=>'Connection lost – no traffic','status'=>'Critical','duration'=>'1h 12m'],
-                                ['id'=>'INC-0041','device'=>'Switch 12F – Floor 3','issue'=>'Packet loss > 15%','status'=>'Warning','duration'=>'45m'],
-                                ['id'=>'INC-0040','device'=>'AP Lobby-02','issue'=>'Latency spike – 120ms','status'=>'Monitoring','duration'=>'2m 14s'],
-                                ['id'=>'INC-0039','device'=>'Firewall Perimeter','issue'=>'Interface flapping','status'=>'Info','duration'=>'18s'],
-                                ['id'=>'INC-0038','device'=>'Switch-Core-01','issue'=>'Spanning Tree Topology Change','status'=>'Warning','duration'=>'3m 05s'],
-                            ];
-                            @endphp
-                            @foreach($incidents as $inc)
-                            <tr data-status="{{ $inc['status'] }}" data-search="{{ strtolower($inc['id'].' '.$inc['device'].' '.$inc['issue']) }}">
-                                <td><span class="id-text">{{ $inc['id'] }}</span></td>
-                                <td>{{ $inc['device'] }}</td>
-                                <td>{{ $inc['issue'] }}</td>
+                            @forelse($activeIncidents as $inc)
+                            <tr data-status="{{ $inc->status }}"
+                                data-search="{{ strtolower('INC-'.str_pad($inc->id,4,'0',STR_PAD_LEFT).' '.$inc->device.' '.$inc->issue) }}">
+                                <td><span class="id-text">INC-{{ str_pad($inc->id, 4, '0', STR_PAD_LEFT) }}</span></td>
+                                <td>{{ $inc->device }}</td>
+                                <td>{{ $inc->issue }}</td>
                                 <td>
-                                    @php
-                                        $badgeClass = match($inc['status']) {
-                                            'Critical' => 'badge-critical',
-                                            'Warning'  => 'badge-high',
-                                            'Monitoring' => 'badge-normal',
-                                            default    => 'badge-info',
-                                        };
-                                    @endphp
-                                    <span class="badge {{ $badgeClass }}">{{ $inc['status'] }}</span>
+                                    <span class="badge {{ $inc->badgeClass() }}">{{ $inc->status }}</span>
                                 </td>
-                                <td style="text-align:right;">{{ $inc['duration'] }}</td>
+                                <td style="text-align:right;">{{ $inc->displayDuration() }}</td>
                             </tr>
-                            @endforeach
+                            @empty
+                            <tr>
+                                <td colspan="5" style="text-align:center; padding:32px; color:#94A3B8;">
+                                    No active incidents — all systems operational.
+                                </td>
+                            </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
@@ -126,30 +111,20 @@
                     <h2 class="section-title">Resolved Log</h2>
                 </div>
                 <div class="resolved-log-list">
+                    @forelse($resolvedLog as $log)
                     <div class="log-item">
                         <div class="log-meta">
-                            <span class="log-time">10:45 AM</span>
-                            <span class="log-ago">5m ago</span>
+                            <span class="log-time">{{ $log->resolved_at->format('h:i A') }}</span>
+                            <span class="log-ago">{{ $log->resolved_at->diffForHumans() }}</span>
                         </div>
-                        <div class="log-title">Database Sync Restored</div>
-                        <div class="log-desc">Resolved by Auto-healing Protocol X.</div>
+                        <div class="log-title">{{ $log->issue }}</div>
+                        <div class="log-desc">{{ $log->device }} — resolved after {{ $log->displayDuration() }}</div>
                     </div>
+                    @empty
                     <div class="log-item">
-                        <div class="log-meta">
-                            <span class="log-time">09:12 AM</span>
-                            <span class="log-ago">1h ago</span>
-                        </div>
-                        <div class="log-title">Bandwidth Limit Released</div>
-                        <div class="log-desc">Manual intervention by Operator J.Smith.</div>
+                        <div class="log-desc" style="color:#94A3B8;">No resolved incidents yet.</div>
                     </div>
-                    <div class="log-item">
-                        <div class="log-meta">
-                            <span class="log-time">08:30 AM</span>
-                            <span class="log-ago">2h ago</span>
-                        </div>
-                        <div class="log-title">Node Reboot Successful</div>
-                        <div class="log-desc">Scheduled maintenance task completed.</div>
-                    </div>
+                    @endforelse
                 </div>
                 <div class="view-full-wrapper">
                     <hr class="resolved-separator">
@@ -167,18 +142,19 @@
                 </button>
             </div>
             <div class="panel-body">
-                <div class="history-item"><strong>INC-0050</strong> – Router AB1 – Packet loss – 2m – Resolved</div>
-                <div class="history-item"><strong>INC-0049</strong> – Switch Core – High CPU – 5m – Resolved</div>
-                <div class="history-item"><strong>INC-0048</strong> – AP Office – Latency spike – 1m – Resolved</div>
-                <div class="history-item"><strong>INC-0047</strong> – Firewall – Interface down – 30s – Resolved</div>
-                <div class="history-item"><strong>INC-0046</strong> – Router AB1 – Connection lost – 1h – Resolved</div>
-                <div class="history-item"><strong>INC-0045</strong> – Switch 12F – Packet loss – 45m – Resolved</div>
-                <div class="history-item"><strong>INC-0044</strong> – AP Lobby – Latency – 2m – Resolved</div>
-                <div class="history-item"><strong>INC-0043</strong> – Firewall – Flapping – 18s – Resolved</div>
-                <div class="history-item"><strong>INC-0042</strong> – Core Router – Critical – 1h12m – Resolved</div>
-                <div class="history-item"><strong>INC-0041</strong> – Switch 12F – High – 45m – Resolved</div>
-                <div class="history-item"><strong>INC-0040</strong> – AP Lobby – Monitoring – 2m – Resolved</div>
-                <div class="history-item"><strong>INC-0039</strong> – Firewall – Info – 18s – Resolved</div>
+                @forelse($fullHistory as $h)
+                <div class="history-item">
+                    <strong>INC-{{ str_pad($h->id, 4, '0', STR_PAD_LEFT) }}</strong>
+                    – {{ $h->device }} – {{ $h->issue }}
+                    – {{ $h->displayDuration() }}
+                    – <span style="color:#047857;">Resolved</span>
+                    <span style="color:#94A3B8; font-size:12px; margin-left:8px;">
+                        {{ $h->resolved_at->format('d M Y H:i') }}
+                    </span>
+                </div>
+                @empty
+                <div class="history-item" style="color:#94A3B8;">No history yet.</div>
+                @endforelse
             </div>
         </div>
 
@@ -186,7 +162,7 @@
             <span class="footer-copy">&copy; 2026 NetPulse – Network Operations Center</span>
             <div class="footer-status">
                 <span class="status-dot">API Status: Operational</span>
-                <span class="status-dot">Database: 4ms Sync</span>
+                <span class="status-dot">Database: Live</span>
                 <a href="#" class="footer-link">Privacy Policy</a>
                 <a href="#" class="footer-link">System Logs</a>
             </div>
@@ -195,25 +171,24 @@
 
     <script>
         (function() {
-            // Filter
-            const searchInput = document.getElementById('searchInput');
+            const searchInput    = document.getElementById('searchInput');
             const severityFilter = document.getElementById('severityFilter');
-            const rows = document.querySelectorAll('#incidentTable tbody tr');
+            const rows           = document.querySelectorAll('#incidentTable tbody tr');
 
             function filterRows() {
-                const term = searchInput.value.toLowerCase();
+                const term     = searchInput.value.toLowerCase();
                 const severity = severityFilter.value;
                 rows.forEach(row => {
-                    const text = row.dataset.search || '';
-                    const status = row.dataset.status || '';
-                    const show = (!term || text.includes(term)) && (severity === 'all' || status === severity);
+                    const text   = row.dataset.search || '';
+                    const status = row.dataset.status  || '';
+                    const show   = (!term || text.includes(term))
+                                && (severity === 'all' || status === severity);
                     row.classList.toggle('hidden', !show);
                 });
             }
             searchInput.addEventListener('input', filterRows);
             severityFilter.addEventListener('change', filterRows);
 
-            // History panel
             document.getElementById('openHistoryBtn').addEventListener('click', () => {
                 document.getElementById('historyPanel').classList.add('open');
             });

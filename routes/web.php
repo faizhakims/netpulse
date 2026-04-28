@@ -6,6 +6,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\TrafficController;
 use App\Http\Controllers\LogsController;
+use App\Http\Controllers\IncidentController;
+use App\Http\Controllers\AlertController;
 
 // ── Auth (guest only) ─────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
@@ -26,6 +28,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/traffic', [TrafficController::class, 'index'])->name('traffic');
     Route::get('/logs',    [LogsController::class,    'index'])->name('logs');
 
-    Route::get('/alert',     fn() => view('alert'))->name('alert');
-    Route::get('/incidents', fn() => view('incidents'))->name('incidents');
+    Route::get('/alert',     [AlertController::class,    'index'])->name('alert');
+    Route::get('/incidents', [IncidentController::class, 'index'])->name('incidents');
 });

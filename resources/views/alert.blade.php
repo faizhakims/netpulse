@@ -42,19 +42,19 @@
         <div class="stats-row">
             <div class="stat-card">
                 <span class="stat-label">Active Rules</span>
-                <span class="stat-value">9</span>
+                <span class="stat-value">{{ $activeRules }}</span>
             </div>
             <div class="stat-card">
                 <span class="stat-label">Alert Sent (24H)</span>
-                <span class="stat-value">9</span>
+                <span class="stat-value">{{ $sentLast24h }}</span>
             </div>
             <div class="stat-card">
                 <span class="stat-label">Success Rate</span>
-                <span class="stat-value green">99.8<small style="font-size:18px;">%</small></span>
+                <span class="stat-value green">{{ $successRate }}<small style="font-size:18px;">%</small></span>
             </div>
             <div class="stat-card">
                 <span class="stat-label">Failed Alerts</span>
-                <span class="stat-value red">3</span>
+                <span class="stat-value red">{{ $failedAlerts }}</span>
             </div>
         </div>
 
@@ -74,7 +74,7 @@
                         </div>
                     </div>
                     <label class="toggle-wrap">
-                        <input type="checkbox" checked>
+                        <input type="checkbox" {{ $telegram?->is_active ? 'checked' : '' }}>
                         <span class="toggle-track"></span>
                     </label>
                 </div>
@@ -85,7 +85,7 @@
                         <input
                             class="field-input"
                             type="text"
-                            value="1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                            value="{{ $telegram?->config['token'] ?? '' }}"
                             placeholder="Enter bot token"
                         >
                     </div>
@@ -94,7 +94,7 @@
                         <input
                             class="field-input"
                             type="text"
-                            value="-100123456789"
+                            value="{{ $telegram?->config['chat_id'] ?? '' }}"
                             placeholder="Enter chat ID"
                         >
                     </div>
@@ -131,21 +131,21 @@
                     <div class="field-grid-2">
                         <div>
                             <label class="field-label">SMTP Server</label>
-                            <input class="field-input" type="text" value="smtp.mailgun.org" placeholder="SMTP Server">
+                            <input class="field-input" type="text" value="{{ $emailCfg?->config['host'] ?? '' }}" placeholder="SMTP Server">
                         </div>
                         <div>
                             <label class="field-label">Port</label>
-                            <input class="field-input" type="text" value="587" placeholder="Port">
+                            <input class="field-input" type="text" value="{{ $emailCfg?->config['port'] ?? '' }}" placeholder="Port">
                         </div>
                     </div>
                     <div class="field-grid-2">
                         <div>
                             <label class="field-label">Username</label>
-                            <input class="field-input" type="text" value="alerts@netpulse.io" placeholder="Username">
+                            <input class="field-input" type="text" value="{{ $emailCfg?->config['username'] ?? '' }}" placeholder="Username">
                         </div>
                         <div>
                             <label class="field-label">Password</label>
-                            <input class="field-input" type="password" value="password123" placeholder="Password">
+                            <input class="field-input" type="password" value="{{ $emailCfg?->config['password'] ?? '' }}" placeholder="Password">
                         </div>
                     </div>
                 </div>
@@ -174,34 +174,10 @@
             TODO: Replace dummy $rules with $thresholdRules from AlertController@index
             Expected $rule fields: id, severity, title, description, channels[], is_active
         --}}
-        @php
-        $rules = [
-            [
-                'severity'    => 'critical',
-                'title'       => 'High Latency Alert',
-                'description' => 'If Latency > 100ms for 5 mins',
-                'channels'    => ['telegram', 'email'],
-                'is_active'   => true,
-            ],
-            [
-                'severity'    => 'warning',
-                'title'       => 'Device Offline',
-                'description' => 'If Device Status is DOWN',
-                'channels'    => ['telegram'],
-                'is_active'   => true,
-            ],
-            [
-                'severity'    => 'warning',
-                'title'       => 'High Bandwidth Usage',
-                'description' => 'If Bandwidth > 90% for 15 mins',
-                'channels'    => ['email'],
-                'is_active'   => false,
-            ],
-        ];
-        @endphp
+        {{-- $thresholdRules passed from AlertController --}}
 
         <div class="rules-grid">
-            @foreach($rules as $rule)
+            @foreach($thresholdRules as $rule)
             <div class="rule-card">
                 <div class="rule-card-top">
                     <span class="severity-badge {{ $rule['severity'] }}">{{ strtoupper($rule['severity']) }}</span>
@@ -280,31 +256,7 @@
                     TODO: Replace dummy $history with $alertHistory from AlertController@index
                     Expected fields: time, channel, recipient, status ('sent'|'failed'), message
                 --}}
-                @php
-                $history = [
-                    [
-                        'time'      => 'Today, 14:32',
-                        'channel'   => 'telegram',
-                        'recipient' => '-100123456789',
-                        'status'    => 'sent',
-                        'message'   => 'CRITICAL: Core-Router-01 is DOWN',
-                    ],
-                    [
-                        'time'      => 'Today, 11:15',
-                        'channel'   => 'email',
-                        'recipient' => 'alerts@netpulse.io',
-                        'status'    => 'sent',
-                        'message'   => 'WARNING: High Latency (142ms) on Link-NYC',
-                    ],
-                    [
-                        'time'      => 'Yesterday, 09:45',
-                        'channel'   => 'telegram',
-                        'recipient' => '-100123456789',
-                        'status'    => 'failed',
-                        'message'   => 'CRITICAL: Database sync failed on DB-02',
-                    ],
-                ];
-                @endphp
+                {{-- $alertHistory passed from AlertController --}}
 
                 <table class="history-table">
                     <thead>
@@ -317,12 +269,12 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($history as $log)
+                        @foreach($alertHistory as $log)
                         <tr>
-                            <td>{{ $log['time'] }}</td>
+                            <td>{{ $log->sent_at->format('M d, H:i') }}</td>
                             <td>
                                 <div class="channel-cell">
-                                    @if($log['channel'] === 'telegram')
+                                    @if($log->channel === 'telegram')
                                         <span class="channel-icon telegram material-symbols-outlined">send</span>
                                         Telegram
                                     @else
@@ -331,9 +283,9 @@
                                     @endif
                                 </div>
                             </td>
-                            <td><span class="mono">{{ $log['recipient'] }}</span></td>
+                            <td><span class="mono">{{ $log->recipient }}</span></td>
                             <td>
-                                @if($log['status'] === 'sent')
+                                @if($log->status === 'sent')
                                     <span class="status-badge sent">
                                         <span class="material-symbols-outlined">check_circle</span>
                                         Sent
@@ -345,7 +297,7 @@
                                     </span>
                                 @endif
                             </td>
-                            <td>{{ $log['message'] }}</td>
+                            <td>{{ $log->message }}</td>
                         </tr>
                         @endforeach
                     </tbody>
