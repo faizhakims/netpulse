@@ -21,6 +21,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middl
 // ── Protected pages ───────────────────────────────────────────────────────────
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/export-csv', [DashboardController::class, 'exportCsv'])->name('dashboard.export.csv');
 
     Route::get('/device',          [DeviceController::class, 'index'])->name('device.index');
     Route::get('/device/{device}', [DeviceController::class, 'show'])->name('device.show');

@@ -28,7 +28,6 @@ body {
     overflow-x: hidden;
 }
 
-/* .mono is no longer used for device names; numeric/display elements use Space Grotesk explicitly */
 .mono { font-family: 'Space Grotesk', sans-serif; }
 
 .flex { display: flex; }
@@ -78,9 +77,9 @@ body {
 
 .hero-title {
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 3rem;        /* 48px — sesuai Figma */
+    font-size: 3rem;
     font-weight: 700;
-    letter-spacing: -0.05em; /* -2.4px at 48px — sesuai Figma */
+    letter-spacing: -0.05em;
     color: var(--text);
     margin: 0 0 6px;
 }
@@ -295,7 +294,11 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.04em;
     cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
 }
+.investigate-btn:hover { opacity: 1; }
 
 .badge {
     padding: 2px 8px;
@@ -519,8 +522,7 @@ body {
 }
 .btn-primary:hover { background: var(--green-dim); }
 
-.data-table { width: 100%; border-collapse: collapse; }
-.data-table thead tr { background: var(--surface-low); }
+.data-table thead tr { background: #ffffff; }
 .data-table thead th {
     padding: 14px 24px;
     font-size: 0.625rem;
@@ -685,6 +687,66 @@ body {
 }
 .perf-label.red { color: var(--red); }
 
+/* --- SLIDE PANEL UNTUK "VIEW ALL MANAGED NODES" --- */
+.slide-panel {
+    position: fixed;
+    top: 0;
+    right: -460px;
+    width: 440px;
+    height: 100vh;
+    background: #ffffff;
+    box-shadow: -4px 0 24px rgba(0,0,0,0.08);
+    z-index: 1000;
+    transition: right 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+    overflow-y: auto;
+    padding: 32px 24px 24px;
+}
+.slide-panel.active {
+    right: 0;
+}
+.slide-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+.slide-panel-header h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.375rem;
+    margin: 0;
+}
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 4px 8px;
+}
+.slide-panel-content .device-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--surface-high);
+    font-size: 0.875rem;
+}
+.device-row .name { font-weight: 600; }
+.device-row .status-dot { margin-left: 8px; }
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.3);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+.overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
 .dashboard-footer {
     margin-top: 48px;
     padding: 20px 0;
@@ -728,24 +790,20 @@ body {
         padding: 80px 24px 40px;
     }
 
-    /* 2-col grid → single column */
     .main-grid {
         grid-template-columns: 1fr !important;
     }
 
-    /* Right sidebar cards go horizontal on tablet */
     .main-grid > div:last-child {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 16px;
     }
 
-    /* Activity feed spans full width on tablet */
     .activity-feed {
         grid-column: 1 / -1;
     }
 
-    /* 4 stat cards in one row */
     .stat-grid {
         grid-template-columns: repeat(4, 1fr);
     }
@@ -763,7 +821,6 @@ body {
         padding: 68px 14px 32px;
     }
 
-    /* Hero header: stack vertically */
     .hero-section {
         flex-direction: column !important;
         align-items: flex-start !important;
@@ -780,7 +837,6 @@ body {
         justify-content: space-between;
     }
 
-    /* Incidents: stack header stats below title */
     .incidents-panel {
         padding: 20px 16px 18px;
     }
@@ -798,42 +854,35 @@ body {
 
     .stat-block { text-align: left; }
 
-    /* Incident row wraps on narrow screens */
     .incident-row {
         flex-wrap: wrap;
         gap: 10px;
         padding: 14px 14px;
     }
 
-    /* Always show Investigate on mobile (no hover) */
     .investigate-btn {
         opacity: 1;
     }
 
-    /* Latency chart smaller */
     .chart-container {
         height: 150px;
     }
 
-    /* Latency stats: single column */
     .latency-stats {
         grid-template-columns: 1fr;
         gap: 12px;
     }
 
-    /* Sidebar cards: stacked */
     .main-grid > div:last-child {
         display: flex;
         flex-direction: column;
         gap: 16px;
     }
 
-    /* 2x2 stat grid stays 2-col */
     .stat-grid {
         grid-template-columns: 1fr 1fr;
     }
 
-    /* Section header: stack */
     .section-header {
         flex-direction: column;
         align-items: flex-start;
@@ -846,24 +895,20 @@ body {
         justify-content: flex-start;
     }
 
-    /* Table: tighten cell padding */
     .data-table thead th,
     .data-table td {
         padding: 12px 12px;
     }
 
-    /* Hide Layer column on mobile */
     .data-table th:nth-child(2),
     .data-table td:nth-child(2) {
         display: none;
     }
 
-    /* Device icon cell smaller */
     .device-icon {
         padding: 8px;
     }
 
-    /* Performance section */
     .perf-section {
         padding: 20px 16px 18px;
         margin-top: 20px;
@@ -885,12 +930,10 @@ body {
         gap: 8px;
     }
 
-    /* SLA bars */
     .sla-bars {
         height: 40px;
     }
 
-    /* Footer: stack */
     .dashboard-footer {
         flex-direction: column;
         align-items: flex-start;
@@ -903,7 +946,6 @@ body {
         gap: 12px;
     }
 
-    /* Bg icon on incident panel hidden on tiny screens */
     .incidents-bg-icon {
         display: none;
     }
@@ -928,7 +970,6 @@ body {
         font-size: 1.625rem;
     }
 
-    /* Hide Uptime column too on very small screens */
     .data-table th:nth-child(3),
     .data-table td:nth-child(3) {
         display: none;

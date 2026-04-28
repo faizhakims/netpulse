@@ -62,57 +62,47 @@
                                 <span class="status-dot ping-ring" style="background:#ef4444;width:10px;height:10px;"></span>
                                 Active Incidents
                             </h2>
-                            <p class="incidents-sub">Immediate attention required for 3 critical issues</p>
+                            <p class="incidents-sub">Immediate attention required for {{ $activeIncidents->count() }} critical issues</p>
                         </div>
                         <div class="incidents-stats">
                             <div class="stat-block">
                                 <p class="stat-label">Total Active</p>
-                                <p class="stat-number mono">{{ $downDevices }}</p>
+                                <p class="stat-number mono">{{ $activeIncidents->count() }}</p>
                             </div>
                             <div class="stat-divider"></div>
                             <div class="stat-severity">
                                 <p class="stat-severity-label">Max Severity</p>
-                                <p class="stat-severity-value mono">CRITICAL</p>
+                                <p class="stat-severity-value mono">{{ strtoupper($maxSeverity ?? 'NONE') }}</p>
                             </div>
                         </div>
                     </div>
 
                     <div class="flex flex-col gap-3 relative z-1">
-                        {{-- INC-8422 --}}
-                        <div class="incident-row">
-                            <div class="flex items-center gap-4">
-                                <div class="incident-icon critical">
-                                    <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">priority_high</span>
-                                </div>
-                                <div class="incident-info">
-                                    <div class="incident-meta">
-                                        <span class="incident-id mono">#INC-8422</span>
-                                        <span class="badge badge-critical">Critical</span>
+                        @forelse($activeIncidents as $incident)
+                            @php
+                                $severity = strtolower($incident->severity ?? 'major');
+                                $iconName = $severity === 'critical' ? 'priority_high' : 'warning';
+                                $badgeClass = $severity === 'critical' ? 'badge-critical' : 'badge-major';
+                            @endphp
+                            <div class="incident-row">
+                                <div class="flex items-center gap-4">
+                                    <div class="incident-icon {{ $severity }}">
+                                        <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">{{ $iconName }}</span>
                                     </div>
-                                    <p class="incident-desc">Power redundancy failure – Rack B12</p>
-                                    <p class="incident-time">US-EAST-DC-01 • Active for 42m</p>
-                                </div>
-                            </div>
-                            <button class="investigate-btn">Investigate</button>
-                        </div>
-
-                        {{-- INC-8419 --}}
-                        <div class="incident-row">
-                            <div class="flex items-center gap-4">
-                                <div class="incident-icon major">
-                                    <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">warning</span>
-                                </div>
-                                <div class="incident-info">
-                                    <div class="incident-meta">
-                                        <span class="incident-id mono">#INC-8419</span>
-                                        <span class="badge badge-major">Major</span>
+                                    <div class="incident-info">
+                                        <div class="incident-meta">
+                                            <span class="incident-id mono">#INC-{{ $incident->id }}</span>
+                                            <span class="badge {{ $badgeClass }}">{{ ucfirst($severity) }}</span>
+                                        </div>
+                                        <p class="incident-desc">{{ $incident->description }}</p>
+                                        <p class="incident-time">{{ $incident->location ?? '' }} • Active for {{ $incident->duration ?? '' }}</p>
                                     </div>
-                                    <p class="incident-desc">BGP Route Flapping Detected</p>
-                                    <p class="incident-time">Border-GW-Tokyo • Active for 1h 12m</p>
                                 </div>
+                                <a href="{{ $incident->device ? route('device.show', $incident->device) : '#' }}" class="investigate-btn">Investigate</a>
                             </div>
-                            <button class="investigate-btn">Investigate</button>
-                        </div>
+                        @empty
+                            <p style="color:#94a3b8; font-size:0.9375rem; text-align:center; padding:20px;">No Incidents</p>
+                        @endforelse
                     </div>
                 </div>
 
@@ -147,25 +137,42 @@
                                     <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
                                 </linearGradient>
                             </defs>
-                            <path d="M0,155 Q100,145 200,165 T400,148 T600,162 T800,148 T1000,154 L1000,200 L0,200 Z" fill="url(#grad-core)"/>
-                            <path class="chart-glow-green" d="M0,155 Q100,145 200,165 T400,148 T600,162 T800,148 T1000,154" fill="none" stroke="#10b981" stroke-width="2.5"/>
-                            <path d="M0,120 Q80,95 200,135 T380,85 T560,60 T750,90 T900,88 T1000,110 L1000,200 L0,200 Z" fill="url(#grad-edge)"/>
-                            <path class="chart-glow-blue" d="M0,120 Q80,95 200,135 T380,85 T560,60 T750,90 T900,88 T1000,110" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
+                            @php
+                                $corePoints = $latencyCore ?? array_fill(0, 21, 100);
+                                $edgePoints = $latencyEdge ?? array_fill(0, 21, 80);
+                                $xStep = 1000 / (count($corePoints) - 1);
+                                $pathCore = '';
+                                $pathEdge = '';
+                                foreach ($corePoints as $i => $y) {
+                                    $x = $i * $xStep;
+                                    $pathCore .= ($i === 0 ? "M" : "L") . round($x,1) . ',' . round($y,1) . ' ';
+                                }
+                                foreach ($edgePoints as $i => $y) {
+                                    $x = $i * $xStep;
+                                    $pathEdge .= ($i === 0 ? "M" : "L") . round($x,1) . ',' . round($y,1) . ' ';
+                                }
+                                $fillCore = $pathCore . 'L1000,200 L0,200 Z';
+                                $fillEdge = $pathEdge . 'L1000,200 L0,200 Z';
+                            @endphp
+                            <path d="{{ $fillCore }}" fill="url(#grad-core)"/>
+                            <path class="chart-glow-green" d="{{ $pathCore }}" fill="none" stroke="#10b981" stroke-width="2.5"/>
+                            <path d="{{ $fillEdge }}" fill="url(#grad-edge)"/>
+                            <path class="chart-glow-blue" d="{{ $pathEdge }}" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
                         </svg>
                     </div>
 
                     <div class="latency-stats">
                         <div>
                             <p class="latency-label">Core Infrastructure</p>
-                            <p class="latency-value mono">{{ $avgLatency }} <span class="latency-unit">ms</span></p>
+                            <p class="latency-value mono">{{ $coreAvgLatency }} <span class="latency-unit">ms</span></p>
                         </div>
                         <div>
                             <p class="latency-label">Edge Layer GW</p>
-                            <p class="latency-value mono">48.9 <span class="latency-unit">ms</span></p>
+                            <p class="latency-value mono">{{ $edgeAvgLatency }} <span class="latency-unit">ms</span></p>
                         </div>
                         <div>
                             <p class="latency-label">Peak Latency</p>
-                            <p class="latency-value mono">48.9 <span class="latency-unit">ms</span></p>
+                            <p class="latency-value mono">{{ $peakLatency }} <span class="latency-unit">ms</span></p>
                         </div>
                     </div>
                 </div>
@@ -250,74 +257,72 @@
                     <p class="section-sub">Sorted by criticality and operational status</p>
                 </div>
                 <div class="flex gap-3">
-                    <button class="btn-outline">Export .CSV</button>
-                    <button class="btn-primary">Add Device</button>
+                    <a href="{{ route('dashboard.export.csv') }}" class="btn-outline">Export .CSV</a>
+                    {{-- Tombol Add Device dihapus --}}
                 </div>
             </div>
 
-            <div style="overflow-x:auto;">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Node Identity</th>
-                            <th>Layer</th>
-                            <th>Uptime</th>
-                            <th>Load</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($latestDevices as $dev)
-                        @php
-                            $isUp     = strtolower($dev->status) === 'up';
-                            $rowClass = $isUp ? '' : 'row-critical';
-                            $icon     = str_contains(strtolower($dev->device), 'switch') ? 'lan' : 'router';
-                        @endphp
-                        <tr class="{{ $rowClass }}">
-                            <td>
-                                <div class="device-icon-cell">
-                                    <div class="device-icon {{ $isUp ? 'core' : 'critical' }}">
-                                        <span class="material-symbols-outlined" style="font-size:18px;font-variation-settings:'FILL' 1;">{{ $icon }}</span>
-                                    </div>
-                                    <div>
-                                        <p class="device-name {{ $isUp ? '' : 'critical' }} mono">{{ $dev->device }}</p>
-                                        <p class="device-desc {{ $isUp ? '' : 'critical' }}">{{ $dev->ip_address }}</p>
-                                    </div>
+            <table class="data-table" style="width:100%;">
+                <thead>
+                    <tr>
+                        <th>Node Identity</th>
+                        <th>Layer</th>
+                        <th>Uptime</th>
+                        <th>Load</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($latestDevices as $dev)
+                    @php
+                        $isUp     = strtolower($dev->status) === 'up';
+                        $rowClass = $isUp ? '' : 'row-critical';
+                        $icon     = str_contains(strtolower($dev->device), 'switch') ? 'lan' : 'router';
+                    @endphp
+                    <tr class="{{ $rowClass }}">
+                        <td>
+                            <div class="device-icon-cell">
+                                <div class="device-icon {{ $isUp ? 'core' : 'critical' }}">
+                                    <span class="material-symbols-outlined" style="font-size:18px;font-variation-settings:'FILL' 1;">{{ $icon }}</span>
                                 </div>
-                            </td>
-                            <td class="cell-layer {{ $isUp ? '' : 'critical' }}">Network Device</td>
-                            <td class="cell-uptime {{ $isUp ? '' : 'critical' }} mono">
-                                {{ $dev->checked_at ? $dev->checked_at->diffForHumans() : '-' }}
-                            </td>
-                            <td>
-                                <div class="load-cell">
-                                    @php $lat = min($dev->latency_ms ?? 0, 200); $pct = round(($lat/200)*100); @endphp
-                                    <div class="progress-bar">
-                                        <div class="progress-fill {{ $pct > 70 ? 'warning' : '' }}" style="width:{{ $pct }}%;"></div>
-                                    </div>
-                                    <span class="load-value">{{ $dev->latency_ms ? $dev->latency_ms . ' ms' : '-' }}</span>
+                                <div>
+                                    <p class="device-name {{ $isUp ? '' : 'critical' }} mono">{{ $dev->device }}</p>
+                                    <p class="device-desc {{ $isUp ? '' : 'critical' }}">{{ $dev->ip_address }}</p>
                                 </div>
-                            </td>
-                            <td>
-                                <div class="status-badge {{ $isUp ? 'up' : 'down' }}">
-                                    <span class="status-dot {{ $isUp ? 'green' : 'ping-ring' }}" style="{{ $isUp ? '' : 'background:#dc2626;' }}"></span>
-                                    {{ strtoupper($dev->status) }}
+                            </div>
+                        </td>
+                        <td class="cell-layer {{ $isUp ? '' : 'critical' }}">Network Device</td>
+                        <td class="cell-uptime {{ $isUp ? '' : 'critical' }} mono">
+                            {{ $dev->checked_at ? $dev->checked_at->diffForHumans() : '-' }}
+                        </td>
+                        <td>
+                            <div class="load-cell">
+                                @php $lat = min($dev->latency_ms ?? 0, 200); $pct = round(($lat/200)*100); @endphp
+                                <div class="progress-bar">
+                                    <div class="progress-fill {{ $pct > 70 ? 'warning' : '' }}" style="width:{{ $pct }}%;"></div>
                                 </div>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="5" style="text-align:center;padding:24px;color:#94A3B8;">
-                                No device data found. Make sure the monitoring agent is running.
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+                                <span class="load-value">{{ $dev->latency_ms ? $dev->latency_ms . ' ms' : '-' }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="status-badge {{ $isUp ? 'up' : 'down' }}">
+                                <span class="status-dot {{ $isUp ? 'green' : 'ping-ring' }}" style="{{ $isUp ? '' : 'background:#dc2626;' }}"></span>
+                                {{ strtoupper($dev->status) }}
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5" style="text-align:center;padding:24px;color:#94A3B8;">
+                            No device data found. Make sure the monitoring agent is running.
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
 
             <div class="table-footer">
-                <button class="view-all-link">View All 128 Managed Nodes →</button>
+                <button id="viewAllNodesBtn" class="view-all-link">View All Managed Nodes →</button>
             </div>
         </section>
 
@@ -326,37 +331,29 @@
             <div class="perf-header">
                 <div>
                     <h2 class="perf-title">Performance History</h2>
-                    <p class="perf-sub">Global region health aggregation (Last 7 Days)</p>
+                    <p class="perf-sub" id="perf-sub-text">Global region health aggregation (Last 7 Days)</p>
                 </div>
                 <div class="perf-tabs">
-                    <button class="perf-tab active">Weekly</button>
-                    <button class="perf-tab">Monthly</button>
+                    <button class="perf-tab active" id="tab-weekly">Weekly</button>
+                    <button class="perf-tab" id="tab-monthly">Monthly</button>
                 </div>
             </div>
 
-            <div class="perf-bars-container">
-                @php
-                    // Hitung uptime % per hari (7 hari terakhir) dari device_status
-                    $weeklyData = [];
-                    for ($i = 6; $i >= 0; $i--) {
-                        $date = \Carbon\Carbon::today()->subDays($i);
-                        $dayLabel = $date->format('D');
-                        $rows = \Illuminate\Support\Facades\DB::table('device_status')
-                            ->whereDate('checked_at', $date->toDateString())
-                            ->get();
-                        $total = $rows->count();
-                        $up    = $rows->where('status', 'up')->count();
-                        $pct   = $total > 0 ? round(($up / $total) * 100) : 0;
-                        $weeklyData[] = [
-                            'label' => $dayLabel,
-                            'h'     => $pct . '%',
-                            'type'  => $pct >= 80 ? 'green' : ($pct >= 50 ? 'orange' : 'red'),
-                            'pct'   => $pct,
-                        ];
-                    }
-                @endphp
+            {{-- Data Mingguan --}}
+            <div id="weekly-bars" class="perf-bars-container">
+                @foreach ($weeklyChartData as $day)
+                <div class="perf-bar-item">
+                    <div style="width:100%;flex:1;display:flex;align-items:flex-end;">
+                        <div class="perf-bar {{ $day['type'] }}" style="height:{{ $day['h'] ?: '2%' }};"></div>
+                    </div>
+                    <p class="perf-label {{ $day['type']==='red' ? 'red' : '' }}">{{ $day['label'] }}</p>
+                </div>
+                @endforeach
+            </div>
 
-                @foreach ($weeklyData as $day)
+            {{-- Data Bulanan (hidden by default) --}}
+            <div id="monthly-bars" class="perf-bars-container" style="display:none;">
+                @foreach($monthlyData as $day)
                 <div class="perf-bar-item">
                     <div style="width:100%;flex:1;display:flex;align-items:flex-end;">
                         <div class="perf-bar {{ $day['type'] }}" style="height:{{ $day['h'] ?: '2%' }};"></div>
@@ -383,7 +380,31 @@
         </footer>
     </main>
 
+    {{-- SLIDE PANEL UNTUK ALL MANAGED NODES --}}
+    <div class="overlay" id="panelOverlay"></div>
+    <div id="allNodesSlidePanel" class="slide-panel">
+        <div class="slide-panel-header">
+            <h3>All Managed Nodes</h3>
+            <button class="close-btn" id="closePanelBtn">&times;</button>
+        </div>
+        <div class="slide-panel-content">
+            @forelse($allDevices as $device)
+                @php $status = strtolower($device->status); @endphp
+                <div class="device-row">
+                    <span class="name">{{ $device->device }}</span>
+                    <span class="flex items-center gap-2">
+                        <span class="status-dot {{ $status === 'up' ? 'green' : 'red' }}"></span>
+                        {{ strtoupper($device->status) }}
+                    </span>
+                </div>
+            @empty
+                <p style="color:var(--text-muted);">No devices found.</p>
+            @endforelse
+        </div>
+    </div>
+
     <script>
+        // Fade-in animation
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry, i) => {
                 if (entry.isIntersecting) {
@@ -393,8 +414,49 @@
                 }
             });
         }, { threshold: 0.08 });
-
         document.querySelectorAll('.fade-in-up').forEach(el => observer.observe(el));
+
+        // Slide panel logic
+        const viewAllBtn = document.getElementById('viewAllNodesBtn');
+        const panel = document.getElementById('allNodesSlidePanel');
+        const overlay = document.getElementById('panelOverlay');
+        const closeBtn = document.getElementById('closePanelBtn');
+
+        function openPanel() {
+            panel.classList.add('active');
+            overlay.classList.add('active');
+        }
+        function closePanel() {
+            panel.classList.remove('active');
+            overlay.classList.remove('active');
+        }
+
+        viewAllBtn.addEventListener('click', openPanel);
+        closeBtn.addEventListener('click', closePanel);
+        overlay.addEventListener('click', closePanel);
+
+        // Performance tab switch
+        const tabWeekly = document.getElementById('tab-weekly');
+        const tabMonthly = document.getElementById('tab-monthly');
+        const weeklyBars = document.getElementById('weekly-bars');
+        const monthlyBars = document.getElementById('monthly-bars');
+        const perfSubText = document.getElementById('perf-sub-text');
+
+        tabWeekly.addEventListener('click', () => {
+            tabWeekly.classList.add('active');
+            tabMonthly.classList.remove('active');
+            weeklyBars.style.display = 'flex';
+            monthlyBars.style.display = 'none';
+            perfSubText.textContent = 'Global region health aggregation (Last 7 Days)';
+        });
+
+        tabMonthly.addEventListener('click', () => {
+            tabMonthly.classList.add('active');
+            tabWeekly.classList.remove('active');
+            monthlyBars.style.display = 'flex';
+            weeklyBars.style.display = 'none';
+            perfSubText.textContent = 'Global region health aggregation (Last 30 Days)';
+        });
     </script>
 </body>
 </html>

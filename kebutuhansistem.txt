@@ -1,7 +1,7 @@
 Isi sidebar :
-Overview Done
-Devices Done
-Traffic 
+Overview Monthly Revisi
+Devices Revisi
+Traffic DONE NO REVISI
 Incidents Belum Responsive
 Alerts Belum Responsive
 Logs Done
