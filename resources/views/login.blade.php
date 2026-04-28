@@ -245,17 +245,48 @@ body{
 
         <div class="login-title">Login</div>
 
-        <form method="POST" action="/dashboard">
+        <form method="POST" action="{{ route('login') }}">
             @csrf
 
+            {{-- Error message --}}
+            @if ($errors->any())
+            <div style="
+                background:rgba(220,38,38,.15);
+                border:1px solid rgba(220,38,38,.4);
+                border-radius:10px;
+                padding:10px 14px;
+                margin-bottom:20px;
+                color:#fca5a5;
+                font-size:13px;
+                text-align:center;
+            ">
+                {{ $errors->first('email') }}
+            </div>
+            @endif
+
             <div class="form-group">
-                <label>Username</label>
-                <input type="text" class="form-control" placeholder="Enter username">
+                <label>Email</label>
+                <input
+                    type="email"
+                    name="email"
+                    class="form-control"
+                    placeholder="Enter email"
+                    value="{{ old('email') }}"
+                    autocomplete="email"
+                    required
+                >
             </div>
 
             <div class="form-group">
                 <label>Password</label>
-                <input type="password" class="form-control" placeholder="Enter password">
+                <input
+                    type="password"
+                    name="password"
+                    class="form-control"
+                    placeholder="Enter password"
+                    autocomplete="current-password"
+                    required
+                >
             </div>
 
             <button type="submit" class="login-btn">
