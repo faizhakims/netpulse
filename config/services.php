@@ -35,4 +35,7 @@ return [
         ],
     ],
 
+    'monitoring' => [
+        'url' => env('MONITORING_API_URL'),
+    ],
 ];

@@ -39,6 +39,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/alert/rules/{id}/duplicate',[AlertController::class,'duplicateRule'])->name('alert.rules.duplicate');
     Route::get('/incidents', [IncidentController::class, 'index'])->name('incidents');
 
+
     // ── Settings ──────────────────────────────────────────────────────────────
     Route::get('/settings',                      [\App\Http\Controllers\SettingsController::class, 'index'])->name('settings');
     Route::post('/settings/general',             [\App\Http\Controllers\SettingsController::class, 'saveGeneral'])->name('settings.general');
@@ -51,4 +52,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/settings/users/{id}',        [\App\Http\Controllers\SettingsController::class, 'deleteUser'])->name('settings.users.delete');
     Route::post('/settings/clear-logs',          [\App\Http\Controllers\SettingsController::class, 'clearLogs'])->name('settings.clear-logs');
     Route::get('/settings/system-info',          [\App\Http\Controllers\SettingsController::class, 'systemInfo'])->name('settings.system-info');
+
+
+    // ── flash api Route──────────────────────────────────────────────────────────────
+    Route::post('/device/ping',   [DeviceController::class, 'ping'])->name('device.ping');
+    Route::post('/device/reboot', [DeviceController::class, 'reboot'])->middleware('throttle:3,1');
 });

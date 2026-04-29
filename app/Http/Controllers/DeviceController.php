@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\DeviceStatus;
 use App\Models\InterfaceTraffic;
 use App\Models\SnmpMetric;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class DeviceController extends Controller
 {
@@ -72,4 +74,49 @@ class DeviceController extends Controller
             'uptimePct'
         ));
     }
+
+    public function ping(Request $request)
+    {
+        $request->validate([
+            'device' => 'required|string'
+        ]);
+
+        try {
+            $response = Http::timeout(5)->post(
+                config('services.monitoring.url') . '/ping',
+                ['device' => $request->device]
+            );
+
+            return response()->json($response->json());
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ping gagal',
+            ], 500);
+        }
+    }
+
+    public function reboot(Request $request)
+    {
+        $request->validate([
+            'device' => 'required|string'
+        ]);
+
+        try {
+            $response = Http::timeout(5)->post(
+                config('services.monitoring.url') . '/reboot',
+                ['device' => $request->device]
+            );
+
+            return response()->json($response->json());
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Reboot gagal',
+            ], 500);
+        }
+    }
+
 }

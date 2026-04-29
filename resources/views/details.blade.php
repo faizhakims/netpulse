@@ -363,6 +363,10 @@
     </div>
 
     {{-- Chart.js & Scripts --}}
+    <script>
+        window.DEVICE_NAME = "{{ $deviceName }}";
+        window.CSRF_TOKEN = "{{ csrf_token() }}";
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         (function () {
@@ -450,78 +454,78 @@
                 }]
             });
 
-            /* ── Ping Button ── */
-            const pingBtn = document.getElementById('pingBtn');
-            if (pingBtn) {
-                pingBtn.addEventListener('click', function () {
-                    const icon = this.querySelector('.material-symbols-outlined');
-                    const orig = icon.textContent;
-                    icon.textContent = 'sync';
-                    icon.style.animation = 'spin 0.8s linear infinite';
-                    setTimeout(() => {
-                        icon.textContent = orig;
-                        icon.style.animation = '';
-                    }, 1800);
-                });
-            }
+            // /* ── Ping Button ── */
+            // const pingBtn = document.getElementById('pingBtn');
+            // if (pingBtn) {
+            //     pingBtn.addEventListener('click', function () {
+            //         const icon = this.querySelector('.material-symbols-outlined');
+            //         const orig = icon.textContent;
+            //         icon.textContent = 'sync';
+            //         icon.style.animation = 'spin 0.8s linear infinite';
+            //         setTimeout(() => {
+            //             icon.textContent = orig;
+            //             icon.style.animation = '';
+            //         }, 1800);
+            //     });
+            // }
 
-            /* ── Reboot Button Long Press (3 detik) ── */
-            const rebootBtn = document.getElementById('rebootBtn');
-            if (rebootBtn) {
-                let pressTimer = null;
-                let progressInterval = null;
-                const HOLD_DURATION = 3000; // 3 detik
+            // /* ── Reboot Button Long Press (3 detik) ── */
+            // const rebootBtn = document.getElementById('rebootBtn');
+            // if (rebootBtn) {
+            //     let pressTimer = null;
+            //     let progressInterval = null;
+            //     const HOLD_DURATION = 3000; // 3 detik
 
-                function clearRebootTimers() {
-                    if (pressTimer) clearTimeout(pressTimer);
-                    if (progressInterval) clearInterval(progressInterval);
-                    pressTimer = null;
-                    progressInterval = null;
-                }
+            //     function clearRebootTimers() {
+            //         if (pressTimer) clearTimeout(pressTimer);
+            //         if (progressInterval) clearInterval(progressInterval);
+            //         pressTimer = null;
+            //         progressInterval = null;
+            //     }
 
-                function startRebootHold() {
-                    // Bersihkan timer sebelumnya
-                    clearRebootTimers();
-                    
-                    // Tambahkan kelas untuk memulai transisi CSS
-                    rebootBtn.classList.add('rebooting');
-                    
-                    // Set timeout utama untuk eksekusi reboot
-                    pressTimer = setTimeout(() => {
-                        // Lakukan aksi reboot di sini (misal kirim request)
-                        alert('Device reboot initiated!'); // Ganti dengan fetch/axios POST
-                        // Reset tampilan
-                        rebootBtn.classList.remove('rebooting');
-                        clearRebootTimers();
-                    }, HOLD_DURATION);
-                }
+            //     function startRebootHold() {
+            //         // Bersihkan timer sebelumnya
+            //         clearRebootTimers();
 
-                function cancelRebootHold() {
-                    if (rebootBtn.classList.contains('rebooting')) {
-                        rebootBtn.classList.remove('rebooting');
-                    }
-                    clearRebootTimers();
-                }
+            //         // Tambahkan kelas untuk memulai transisi CSS
+            //         rebootBtn.classList.add('rebooting');
 
-                // Event untuk mouse / touch
-                rebootBtn.addEventListener('mousedown', (e) => {
-                    // Hanya trigger jika klik kiri
-                    if (e.button !== 0) return;
-                    startRebootHold();
-                });
+            //         // Set timeout utama untuk eksekusi reboot
+            //         pressTimer = setTimeout(() => {
+            //             // Lakukan aksi reboot di sini (misal kirim request)
+            //             alert('Device reboot initiated!'); // Ganti dengan fetch/axios POST
+            //             // Reset tampilan
+            //             rebootBtn.classList.remove('rebooting');
+            //             clearRebootTimers();
+            //         }, HOLD_DURATION);
+            //     }
 
-                rebootBtn.addEventListener('mouseup', cancelRebootHold);
-                rebootBtn.addEventListener('mouseleave', cancelRebootHold);
-                
-                // Touch events untuk mobile
-                rebootBtn.addEventListener('touchstart', (e) => {
-                    e.preventDefault(); // mencegah scroll atau zoom
-                    startRebootHold();
-                }, { passive: false });
-                
-                rebootBtn.addEventListener('touchend', cancelRebootHold);
-                rebootBtn.addEventListener('touchcancel', cancelRebootHold);
-            }
+            //     function cancelRebootHold() {
+            //         if (rebootBtn.classList.contains('rebooting')) {
+            //             rebootBtn.classList.remove('rebooting');
+            //         }
+            //         clearRebootTimers();
+            //     }
+
+            //     // Event untuk mouse / touch
+            //     rebootBtn.addEventListener('mousedown', (e) => {
+            //         // Hanya trigger jika klik kiri
+            //         if (e.button !== 0) return;
+            //         startRebootHold();
+            //     });
+
+            //     rebootBtn.addEventListener('mouseup', cancelRebootHold);
+            //     rebootBtn.addEventListener('mouseleave', cancelRebootHold);
+
+            //     // Touch events untuk mobile
+            //     rebootBtn.addEventListener('touchstart', (e) => {
+            //         e.preventDefault(); // mencegah scroll atau zoom
+            //         startRebootHold();
+            //     }, { passive: false });
+
+            //     rebootBtn.addEventListener('touchend', cancelRebootHold);
+            //     rebootBtn.addEventListener('touchcancel', cancelRebootHold);
+            // }
 
             /* ── Log Activity Filters ── */
             const filterBtns = document.querySelectorAll('#logFilters .log-filter-btn');
@@ -570,5 +574,6 @@
 
         })();
     </script>
+    <script src="{{ asset('js/device-actions.js') }}"></script>
 </body>
 </html>
