@@ -38,4 +38,17 @@ Route::middleware('auth')->group(function () {
     Route::delete('/alert/rules/{id}',       [AlertController::class, 'deleteRule'])->name('alert.rules.delete');
     Route::post('/alert/rules/{id}/duplicate',[AlertController::class,'duplicateRule'])->name('alert.rules.duplicate');
     Route::get('/incidents', [IncidentController::class, 'index'])->name('incidents');
+
+    // ── Settings ──────────────────────────────────────────────────────────────
+    Route::get('/settings',                      [\App\Http\Controllers\SettingsController::class, 'index'])->name('settings');
+    Route::post('/settings/general',             [\App\Http\Controllers\SettingsController::class, 'saveGeneral'])->name('settings.general');
+    Route::post('/settings/monitoring',          [\App\Http\Controllers\SettingsController::class, 'saveMonitoring'])->name('settings.monitoring');
+    Route::post('/settings/security',            [\App\Http\Controllers\SettingsController::class, 'saveSecurity'])->name('settings.security');
+    Route::post('/settings/profile',             [\App\Http\Controllers\SettingsController::class, 'saveProfile'])->name('settings.profile');
+    Route::post('/settings/users',               [\App\Http\Controllers\SettingsController::class, 'storeUser'])->name('settings.users.store');
+    Route::put('/settings/users/{id}',           [\App\Http\Controllers\SettingsController::class, 'updateUser'])->name('settings.users.update');
+    Route::post('/settings/users/{id}/toggle',   [\App\Http\Controllers\SettingsController::class, 'toggleUser'])->name('settings.users.toggle');
+    Route::delete('/settings/users/{id}',        [\App\Http\Controllers\SettingsController::class, 'deleteUser'])->name('settings.users.delete');
+    Route::post('/settings/clear-logs',          [\App\Http\Controllers\SettingsController::class, 'clearLogs'])->name('settings.clear-logs');
+    Route::get('/settings/system-info',          [\App\Http\Controllers\SettingsController::class, 'systemInfo'])->name('settings.system-info');
 });
