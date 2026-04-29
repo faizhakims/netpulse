@@ -41,6 +41,12 @@ class CheckAlertRules extends Command
             $targets = $this->resolveTargets($rule, $latestDevices);
 
             foreach ($targets as $device) {
+                // ── Cooldown: jangan kirim ulang jika sudah alert dalam durasi yang sama ──
+                if ($this->isInCooldown($rule)) {
+                    $this->line("  ⏳ Rule [{$rule->title}] masih dalam cooldown, skip.");
+                    continue;
+                }
+
                 $triggered = $this->evaluate($rule, $device, $avgLatency);
 
                 if ($triggered) {
@@ -81,33 +87,88 @@ class CheckAlertRules extends Command
 
         switch ($metric) {
             case 'status':
-                if ($condition === 'is_down') return strtolower($device->status) === 'down';
-                if ($condition === 'is_up')   return strtolower($device->status) === 'up';
+                $minutes = $this->durationToMinutes($rule->duration);
+
+                if ($condition === 'is_down') {
+                    // ── Logika: tidak ada status 'up' selama [duration] menit terakhir
+                    //    AND record terakhir yang diketahui adalah 'down'
+                    //    Ini menangani kasus DB tidak update saat down maupun update rutin 'down'
+                    $lastRecord = DB::table('device_status')
+                        ->where('device', $device->device)
+                        ->orderByDesc('checked_at')
+                        ->first();
+
+                    // Jika tidak ada data sama sekali, skip
+                    if (!$lastRecord) return false;
+
+                    // Jika status terakhir bukan down, jelas tidak perlu alert
+                    if (strtolower($lastRecord->status) !== 'down') return false;
+
+                    // Cek apakah ada status 'up' dalam [duration] menit terakhir
+                    $hasUpRecently = DB::table('device_status')
+                        ->where('device', $device->device)
+                        ->where('status', 'up')
+                        ->where('checked_at', '>=', now()->subMinutes($minutes))
+                        ->exists();
+
+                    // Trigger hanya jika tidak ada 'up' sama sekali dalam window waktu tersebut
+                    return !$hasUpRecently;
+                }
+
+                if ($condition === 'is_up') {
+                    return strtolower($device->status) === 'up';
+                }
+
                 return false;
 
             case 'latency':
-                $val = (float) ($avgLatency->get($device->device)?->avg_latency ?? $device->latency_ms ?? 0);
+                // Jika device down, latency_ms = NULL → skip, jangan fallback ke 0
+                // karena latency 0 akan false-trigger rule "lt X"
+                if (strtolower($device->status) === 'down') return false;
+                $latencyRow = $avgLatency->get($device->device);
+                $val = ($latencyRow !== null && $latencyRow->avg_latency !== null)
+                    ? (float) $latencyRow->avg_latency
+                    : (($device->latency_ms !== null) ? (float) $device->latency_ms : null);
+                if ($val === null) return false; // Tidak ada data latency, skip
                 return $this->compare($val, $condition, $threshold);
 
             case 'packet_loss':
-                // Hitung % down dari riwayat 10 terakhir
+                // Hitung % down dari riwayat 10 terakhir untuk device ini
                 $recent = DB::table('device_status')
                     ->where('device', $device->device)
                     ->orderByDesc('id')->limit(10)->get();
-                $lossRate = $recent->isEmpty() ? 0
-                    : ($recent->where('status', 'down')->count() / $recent->count()) * 100;
+                if ($recent->isEmpty()) return false;
+                $lossRate = ($recent->where('status', 'down')->count() / $recent->count()) * 100;
                 return $this->compare($lossRate, $condition, $threshold);
 
             case 'bandwidth':
-            case 'cpu':
-            case 'memory':
-                // Ambil dari snmp_metrics jika tersedia
-                $snmpVal = DB::table('snmp_metrics')
+                // Ambil 2 round collection terakhir dari interface_traffic untuk device ini
+                // Setiap round bisa punya banyak row (per interface), group by collected_at
+                $rounds = DB::table('interface_traffic')
                     ->where('device', $device->device)
-                    ->where('metric_name', $metric)
-                    ->orderByDesc('id')->value('metric_value');
-                if ($snmpVal === null) return false;
-                return $this->compare((float) $snmpVal, $condition, $threshold);
+                    ->select('collected_at',
+                        DB::raw('SUM(bytes_in + bytes_out) as total_bytes'))
+                    ->groupBy('collected_at')
+                    ->orderByDesc('collected_at')
+                    ->limit(2)
+                    ->get();
+
+                if ($rounds->count() < 2) return false;
+
+                $newer = $rounds->first();
+                $older = $rounds->last();
+
+                // Hitung delta waktu dalam detik
+                $timeDiff = strtotime($newer->collected_at) - strtotime($older->collected_at);
+                if ($timeDiff <= 0) return false;
+
+                // Delta bytes (handle counter wrap: jika negatif, skip)
+                $bytesDelta = $newer->total_bytes - $older->total_bytes;
+                if ($bytesDelta < 0) return false; // Counter reset/wrap, skip satu siklus
+
+                // Konversi ke Mbps: (bytes * 8 bit) / detik / 1_000_000
+                $mbps = ($bytesDelta * 8) / $timeDiff / 1_000_000;
+                return $this->compare($mbps, $condition, $threshold);
         }
 
         return false;
@@ -230,6 +291,25 @@ class CheckAlertRules extends Command
                 'sent_at'       => now(),
             ]);
         }
+    }
+
+    // ── Cooldown: hindari spam alert dalam satu window durasi ──────────────────
+    /**
+     * Return true jika rule ini sudah pernah trigger dalam [duration] menit terakhir.
+     * Tujuan: kalau device down 30 menit, alert dikirim sekali — bukan setiap menit.
+     */
+    private function isInCooldown(AlertRule $rule): bool
+    {
+        if (!$rule->last_triggered_at) return false;
+        $minutes = $this->durationToMinutes($rule->duration);
+        return $rule->last_triggered_at->greaterThan(now()->subMinutes($minutes));
+    }
+
+    // ── Konversi string durasi ke menit integer ─────────────────────────────
+    private function durationToMinutes(string $duration): int
+    {
+        // Format: '1m', '5m', '10m', '15m', '30m'
+        return (int) str_replace('m', '', $duration);
     }
 
     // ── Buat incident otomatis ──────────────────────────────────────────────

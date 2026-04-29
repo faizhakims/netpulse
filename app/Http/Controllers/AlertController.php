@@ -161,7 +161,7 @@ class AlertController extends Controller
         $data = $request->validate([
             'title'           => 'required|string|max:120',
             'target_device'   => 'nullable|string|max:100',
-            'metric_type'     => 'required|in:latency,status,cpu,memory,bandwidth,packet_loss',
+            'metric_type'     => 'required|in:latency,status,bandwidth,packet_loss',
             'condition'       => 'required|in:gt,lt,eq,is_down,is_up',
             'threshold_value' => 'nullable|numeric',
             'duration'        => 'required|in:1m,5m,10m,15m,30m',
@@ -170,6 +170,17 @@ class AlertController extends Controller
             'channels.*'      => 'in:telegram,email',
             'is_active'       => 'boolean',
         ]);
+
+        // Validasi cross-field: kondisi harus sesuai metric_type
+        $this->validateConditionForMetric($data['metric_type'], $data['condition']);
+
+        // Kondisi boolean tidak butuh threshold
+        if (in_array($data['condition'], ['is_down', 'is_up'])) {
+            $data['threshold_value'] = null;
+        } elseif (empty($data['threshold_value']) && $data['threshold_value'] !== 0) {
+            return response()->json(['ok' => false, 'message' => 'Threshold Value wajib diisi untuk kondisi ini.'], 422);
+        }
+
         $data['description'] = $data['title'];
         $data['sort_order']  = AlertRule::max('sort_order') + 1;
         $data['is_active']   = $request->boolean('is_active', true);
@@ -183,7 +194,7 @@ class AlertController extends Controller
         $data = $request->validate([
             'title'           => 'required|string|max:120',
             'target_device'   => 'nullable|string|max:100',
-            'metric_type'     => 'required|in:latency,status,cpu,memory,bandwidth,packet_loss',
+            'metric_type'     => 'required|in:latency,status,bandwidth,packet_loss',
             'condition'       => 'required|in:gt,lt,eq,is_down,is_up',
             'threshold_value' => 'nullable|numeric',
             'duration'        => 'required|in:1m,5m,10m,15m,30m',
@@ -192,6 +203,17 @@ class AlertController extends Controller
             'channels.*'      => 'in:telegram,email',
             'is_active'       => 'boolean',
         ]);
+
+        // Validasi cross-field: kondisi harus sesuai metric_type
+        $this->validateConditionForMetric($data['metric_type'], $data['condition']);
+
+        // Kondisi boolean tidak butuh threshold
+        if (in_array($data['condition'], ['is_down', 'is_up'])) {
+            $data['threshold_value'] = null;
+        } elseif (empty($data['threshold_value']) && $data['threshold_value'] !== 0) {
+            return response()->json(['ok' => false, 'message' => 'Threshold Value wajib diisi untuk kondisi ini.'], 422);
+        }
+
         $data['description'] = $data['title'];
         $data['is_active']   = $request->boolean('is_active', $rule->is_active);
         $rule->update($data);
@@ -204,6 +226,27 @@ class AlertController extends Controller
         $rule->is_active = !$rule->is_active;
         $rule->save();
         return response()->json(['ok' => true, 'is_active' => $rule->is_active]);
+    }
+
+    /**
+     * Pastikan condition kompatibel dengan metric_type.
+     * - metric_type = status  → hanya is_down / is_up
+     * - metric_type numerik  → hanya gt / lt / eq
+     */
+    private function validateConditionForMetric(string $metric, string $condition): void
+    {
+        if ($metric === 'status' && !in_array($condition, ['is_down', 'is_up'])) {
+            abort(response()->json([
+                'ok'      => false,
+                'message' => "Metric 'status' hanya mendukung kondisi 'is_down' atau 'is_up'.",
+            ], 422));
+        }
+        if ($metric !== 'status' && in_array($condition, ['is_down', 'is_up'])) {
+            abort(response()->json([
+                'ok'      => false,
+                'message' => "Kondisi 'is_down'/'is_up' hanya berlaku untuk metric 'status'.",
+            ], 422));
+        }
     }
 
     public function deleteRule($id)

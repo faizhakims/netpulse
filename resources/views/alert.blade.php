@@ -49,12 +49,10 @@
             <div>
                 <label class="field-label">Metric Type *</label>
                 <select class="field-select" id="d_metric_type">
-                    <option value="latency">Latency</option>
-                    <option value="status">Status</option>
-                    <option value="cpu">CPU</option>
-                    <option value="memory">Memory</option>
-                    <option value="bandwidth">Bandwidth</option>
-                    <option value="packet_loss">Packet Loss</option>
+                    <option value="latency">Latency (ms)</option>
+                    <option value="status">Status (Up/Down)</option>
+                    <option value="bandwidth">Bandwidth (Mbps)</option>
+                    <option value="packet_loss">Packet Loss (%)</option>
                 </select>
             </div>
             <div>
@@ -71,9 +69,12 @@
 
         {{-- Threshold + Duration --}}
         <div class="drawer-field-row">
-            <div>
+            <div id="d_threshold_wrapper">
                 <label class="field-label">Threshold Value</label>
                 <input class="field-input" id="d_threshold_value" type="number" placeholder="e.g. 100">
+                <small id="d_threshold_hint" style="display:none;color:#94a3b8;font-size:11px;margin-top:4px;">
+                    Tidak diperlukan untuk kondisi Status (is DOWN / is UP)
+                </small>
             </div>
             <div>
                 <label class="field-label">Duration *</label>
@@ -693,18 +694,82 @@ const drawerOverlay = document.getElementById('drawerOverlay');
 function openDrawer() { drawer.classList.add('open'); drawerOverlay.classList.add('open'); document.body.style.overflow='hidden'; }
 function closeDrawer(){ drawer.classList.remove('open'); drawerOverlay.classList.remove('open'); document.body.style.overflow=''; }
 
+// ── Logika dinamis Metric Type → Condition → Threshold ───────────────────────
+const CONDITIONS_NUMERIC = [
+    { value:'gt', label:'> Greater than' },
+    { value:'lt', label:'< Less than' },
+    { value:'eq', label:'= Equals' },
+];
+const CONDITIONS_STATUS = [
+    { value:'is_down', label:'is DOWN' },
+    { value:'is_up',   label:'is UP'   },
+];
+
+// Hint placeholder per metric
+const METRIC_HINTS = {
+    latency:      'e.g. 100  (dalam ms)',
+    bandwidth:    'e.g. 10   (dalam Mbps, total in+out)',
+    packet_loss:  'e.g. 50   (dalam %, dari 10 data terakhir)',
+};
+
+function updateConditionOptions(metricType, currentCondition) {
+    const condSel = document.getElementById('d_condition');
+    const isStatus = (metricType === 'status');
+    const options = isStatus ? CONDITIONS_STATUS : CONDITIONS_NUMERIC;
+
+    condSel.innerHTML = '';
+    options.forEach(opt => {
+        const el = document.createElement('option');
+        el.value = opt.value;
+        el.textContent = opt.label;
+        condSel.appendChild(el);
+    });
+
+    if (currentCondition && options.find(o => o.value === currentCondition)) {
+        condSel.value = currentCondition;
+    } else {
+        condSel.value = options[0].value;
+    }
+
+    updateThresholdVisibility(condSel.value, metricType);
+}
+
+function updateThresholdVisibility(condition, metricType) {
+    const wrapper = document.getElementById('d_threshold_wrapper');
+    const input   = document.getElementById('d_threshold_value');
+    const isBoolean = (condition === 'is_down' || condition === 'is_up');
+    wrapper.style.opacity       = isBoolean ? '0.4' : '1';
+    wrapper.style.pointerEvents = isBoolean ? 'none' : 'auto';
+    input.required  = !isBoolean;
+    if (isBoolean) {
+        input.value = '';
+        input.placeholder = 'N/A';
+    } else {
+        input.placeholder = METRIC_HINTS[metricType] || 'e.g. 100';
+    }
+}
+
+// Event listeners
+document.getElementById('d_metric_type').addEventListener('change', function() {
+    updateConditionOptions(this.value, document.getElementById('d_condition').value);
+});
+document.getElementById('d_condition').addEventListener('change', function() {
+    const metric = document.getElementById('d_metric_type').value;
+    updateThresholdVisibility(this.value, metric);
+});
+
 document.getElementById('addRuleBtn').addEventListener('click', () => {
     document.getElementById('drawerTitle').textContent = 'Add Alert Rule';
     document.getElementById('editRuleId').value = '';
     document.getElementById('d_title').value = '';
     document.getElementById('d_target_device').value = '';
     document.getElementById('d_metric_type').value = 'latency';
-    document.getElementById('d_condition').value = 'gt';
-    document.getElementById('d_threshold_value').value = '';
     document.getElementById('d_duration').value = '5m';
     document.getElementById('d_is_active').checked = true;
     setDrawerSeverity('warning');
     setDrawerChannels([]);
+    updateConditionOptions('latency', 'gt');
+    document.getElementById('d_threshold_value').value = '';
     openDrawer();
 });
 document.getElementById('drawerCloseBtn').addEventListener('click', closeDrawer);
@@ -745,12 +810,12 @@ function openEditDrawer(id) {
     document.getElementById('d_title').value = rule.title;
     document.getElementById('d_target_device').value = rule.target_device || '';
     document.getElementById('d_metric_type').value = rule.metric_type || 'latency';
-    document.getElementById('d_condition').value = rule.condition || 'gt';
-    document.getElementById('d_threshold_value').value = rule.threshold_value || '';
     document.getElementById('d_duration').value = rule.duration || '5m';
     document.getElementById('d_is_active').checked = !!rule.is_active;
     setDrawerSeverity(rule.severity);
     setDrawerChannels(rule.channels || []);
+    updateConditionOptions(rule.metric_type || 'latency', rule.condition || 'gt');
+    document.getElementById('d_threshold_value').value = (rule.condition === 'is_down' || rule.condition === 'is_up') ? '' : (rule.threshold_value || '');
     openDrawer();
 }
 
@@ -772,6 +837,10 @@ document.getElementById('drawerSaveBtn').addEventListener('click', async () => {
     };
     if (!body.title) { showToast('Rule name is required.','error'); return; }
     if (!channels.length) { showToast('Select at least one notification channel.','error'); return; }
+    const needsThreshold = !['is_down','is_up'].includes(body.condition);
+    if (needsThreshold && (body.threshold_value === '' || body.threshold_value === null)) {
+        showToast('Threshold Value wajib diisi untuk kondisi ini.','error'); return;
+    }
 
     const btn = document.getElementById('drawerSaveBtn');
     btn.disabled = true;

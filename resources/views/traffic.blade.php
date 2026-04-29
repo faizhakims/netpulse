@@ -140,13 +140,13 @@
                         <tr>
                             <th>DEVICE NAME</th>
                             <th>IP ADDRESS</th>
-                            <th>STATUS</th>
+                            <th>LOCATION</th>
                             <th>BANDWIDTH</th>
-                            <th>LOAD</th>
+                            <th>STATUS</th>
                         </tr>
                     </thead>
                     <tbody>
-                                                @foreach($topDevices as $device)
+                        @foreach($topDevices as $device)
                         <tr>
                             <td>
                                 <div class="device-name-cell">
@@ -155,15 +155,19 @@
                                 </div>
                             </td>
                             <td><span class="mono-text">{{ $device->ip_address }}</span></td>
-                            <td>
-                                <div class="status-cell">
-                                    <span class="status-dot" style="background:#65F3B6;"></span>
-                                    <span>Active</span>
-                                </div>
-                            </td>
+                            <td>{{ $device->location ?? '-' }}</td>
                             <td>{{ \App\Models\InterfaceTraffic::formatBytes($device->total_bytes) }}</td>
                             <td>
-                                <span class="load-badge load-badge-active">Active</span>
+                                @php
+                                    $status = strtolower($device->status ?? 'unknown');
+                                    $dotColor = $status === 'up' ? '#65F3B6' : ($status === 'down' ? '#ef4444' : '#94a3b8');
+                                    $label = $status === 'up' ? 'Active' : ($status === 'down' ? 'Offline' : 'Unknown');
+                                    $badgeClass = $status === 'up' ? 'load-badge-active' : ($status === 'down' ? 'load-badge-critical' : '');
+                                @endphp
+                                <div class="status-cell">
+                                    <span class="status-dot" style="background:{{ $dotColor }};"></span>
+                                    <span>{{ $label }}</span>
+                                </div>
                             </td>
                         </tr>
                         @endforeach
@@ -189,22 +193,25 @@
     <div class="all-devices-panel" id="allDevicesPanel">
         <div class="panel-header">
             <span class="panel-title">All Devices</span>
-            {{-- TOMBOL X SELALU TAMPIL --}}
             <button class="panel-close-btn" onclick="closeAllDevicesPanel()" aria-label="Close panel">
                 <span class="material-symbols-outlined" style="font-size:20px;">close</span>
                 <span class="fallback-x" style="display:none;">&times;</span>
             </button>
         </div>
 
-        {{-- Panel Search --}}
         <div class="panel-search-wrap">
             <span class="material-symbols-outlined panel-search-icon">search</span>
             <input type="text" class="panel-search-input" id="panelSearchInput" placeholder="Search devices..." oninput="filterPanelDevices()">
         </div>
 
-        {{-- Panel Device List --}}
         <div class="panel-device-list" id="panelDeviceList">
-                        @foreach($topDevices as $device)
+            @foreach($topDevices as $device)
+            @php
+                $status = strtolower($device->status ?? 'unknown');
+                $dotColor = $status === 'up' ? '#65F3B6' : ($status === 'down' ? '#ef4444' : '#94a3b8');
+                $label = $status === 'up' ? 'Active' : ($status === 'down' ? 'Offline' : 'Unknown');
+                $badgeClass = $status === 'up' ? 'load-badge-active' : ($status === 'down' ? 'load-badge-critical' : '');
+            @endphp
             <div class="panel-device-item" data-search="{{ strtolower($device->device) }} {{ strtolower($device->ip_address) }}">
                 <div class="panel-device-left">
                     <span class="material-symbols-outlined panel-device-icon">router</span>
@@ -215,12 +222,11 @@
                 </div>
                 <div class="panel-device-right">
                     <div class="panel-device-status">
-                        <span class="status-dot" style="background:#65F3B6;"></span>
-                        <span>Active</span>
+                        <span class="status-dot" style="background:{{ $dotColor }};"></span>
+                        <span>{{ $label }}</span>
                     </div>
                     <span class="panel-device-bw">{{ \App\Models\InterfaceTraffic::formatBytes($device->total_bytes) }}</span>
-                    
-                    <span class="load-badge load-badge-active">Active</span>
+                    <span class="load-badge {{ $badgeClass }}">{{ $label }}</span>
                 </div>
             </div>
             @endforeach
@@ -290,7 +296,6 @@
             if (closeBtn) {
                 const icon = closeBtn.querySelector('.material-symbols-outlined');
                 const fallback = closeBtn.querySelector('.fallback-x');
-                // Deteksi sederhana: jika ikon tidak terlihat (offsetWidth 0), tampilkan fallback
                 if (icon && icon.offsetWidth === 0 && fallback) {
                     icon.style.display = 'none';
                     fallback.style.display = 'inline';

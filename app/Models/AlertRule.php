@@ -28,16 +28,23 @@ class AlertRule extends Model
 
     public function conditionLabel(): string
     {
-        $map = ['gt'=>'>','lt'=>'<','eq'=>'=','is_down'=>'is DOWN','is_up'=>'is UP'];
-        $metricUnit = match($this->metric_type ?? 'latency') {
-            'latency','bandwidth','cpu','memory','packet_loss' => match($this->metric_type) {
-                'latency' => 'ms', default => '%'
-            },
-            default => '',
+        // Untuk metric status, tidak perlu threshold value
+        if ($this->metric_type === 'status') {
+            if ($this->condition === 'is_down') {
+                return "If no 'up' received for " . ($this->duration ?? '5m') . " (sustained down)";
+            }
+            return "If Status is UP for " . ($this->duration ?? '5m');
+        }
+
+        $map = ['gt' => '>', 'lt' => '<', 'eq' => '='];
+        $metricUnit = match ($this->metric_type ?? 'latency') {
+            'latency'     => 'ms',
+            'bandwidth'   => 'Mbps',
+            'packet_loss' => '%',
+            default       => '',
         };
-        $cond = $map[$this->condition ?? 'gt'] ?? '>';
-        $val  = in_array($this->condition, ['is_down','is_up']) ? '' : " {$this->threshold_value}{$metricUnit}";
-        $metric = ucfirst(str_replace('_',' ', $this->metric_type ?? 'latency'));
-        return "If {$metric} {$cond}{$val} for " . ($this->duration ?? '5m');
+        $cond   = $map[$this->condition ?? 'gt'] ?? '>';
+        $metric = ucfirst(str_replace('_', ' ', $this->metric_type ?? 'latency'));
+        return "If {$metric} {$cond} {$this->threshold_value}{$metricUnit} for " . ($this->duration ?? '5m');
     }
 }
