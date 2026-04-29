@@ -29,6 +29,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/traffic', [TrafficController::class, 'index'])->name('traffic');
     Route::get('/logs',    [LogsController::class,    'index'])->name('logs');
 
-    Route::get('/alert',     [AlertController::class,    'index'])->name('alert');
+    Route::get('/alert',                     [AlertController::class, 'index'])->name('alert');
+    Route::post('/alert/channel/save',       [AlertController::class, 'saveChannel'])->name('alert.channel.save');
+    Route::post('/alert/channel/test',       [AlertController::class, 'testChannel'])->name('alert.channel.test');
+    Route::post('/alert/rules',              [AlertController::class, 'storeRule'])->name('alert.rules.store');
+    Route::put('/alert/rules/{id}',          [AlertController::class, 'updateRule'])->name('alert.rules.update');
+    Route::post('/alert/rules/{id}/toggle',  [AlertController::class, 'toggleRule'])->name('alert.rules.toggle');
+    Route::delete('/alert/rules/{id}',       [AlertController::class, 'deleteRule'])->name('alert.rules.delete');
+    Route::post('/alert/rules/{id}/duplicate',[AlertController::class,'duplicateRule'])->name('alert.rules.duplicate');
     Route::get('/incidents', [IncidentController::class, 'index'])->name('incidents');
 });
