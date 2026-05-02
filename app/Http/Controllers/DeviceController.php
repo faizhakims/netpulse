@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\DeviceStatus;
 use App\Models\InterfaceTraffic;
+use App\Models\Incident;
+use App\Models\AlertChannel;
 use App\Models\SnmpMetric;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -82,10 +84,24 @@ class DeviceController extends Controller
             $rebootTime = now()->subSeconds($ticks / 100);
             $lastReboot = $rebootTime->format('d-m-Y \a\t H.i');
         }
+
+        // REVISI 2: Ambil semua incident untuk device ini (5 terakhir di card, semua di slider)
+        $incidents = Incident::where('device', $deviceName)
+            ->orderByDesc('started_at')
+            ->get();
+
+        // REVISI 3: Status aktif alert channel (Telegram & Email) dari DB
+        $alertChannelModels = AlertChannel::whereIn('type', ['telegram', 'email'])->get()->keyBy('type');
+        $alertChannels = [
+            'telegram' => $alertChannelModels->get('telegram')?->is_active ?? false,
+            'email'    => $alertChannelModels->get('email')?->is_active ?? false,
+        ];
+
         return view('details', compact(
             'status', 'statusHistory', 'traffic', 'metrics', 'deviceName',
             'latencyLabels', 'latencyData', 'latencyAvg', 'latencyPeak', 'latencyMin',
-            'uptimePct', 'isStale', 'effectiveStatus','lastReboot'
+            'uptimePct', 'isStale', 'effectiveStatus', 'lastReboot',
+            'incidents', 'alertChannels'
         ));
         
     }

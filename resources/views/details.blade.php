@@ -47,14 +47,18 @@
                             &nbsp;|&nbsp;
                             Last checked: {{ $status && $status->checked_at ? $status->checked_at->diffForHumans() : 'N/A' }}
                         </span>
-                        <span class="device-status-badge {{ $effectiveStatus === 'up' ? '' : ($effectiveStatus === 'unknown' ? 'stale' : 'offline') }}">
+                        {{-- REVISI 1: Status UNKNOWN ⚠ dihapus — hanya tampil UP atau DOWN --}}
+                        @if($effectiveStatus !== 'unknown')
+                        <span class="device-status-badge {{ $effectiveStatus === 'up' ? '' : 'offline' }}">
                             <span class="dot"></span>
-                            {{ strtoupper($effectiveStatus) }}{{ $isStale ? ' ⚠' : '' }}
+                            {{ strtoupper($effectiveStatus) }}
                         </span>
+                        @endif
                     </div>
                 </div>
 
                 <div class="device-hero-actions">
+                    {{-- REVISI 6: Edit, Ping, Reboot, Hapus tidak diubah fungsionalitasnya --}}
                     <button class="btn-action btn-edit">
                         <span class="material-symbols-outlined">edit</span>
                         Edit
@@ -152,11 +156,12 @@
             {{-- ===================== Incident History + Device Info ===================== --}}
             <div class="two-col-section">
 
-                {{-- Incident History --}}
+                {{-- REVISI 2: Incident History — terhubung ke DB, tampil 5 terakhir --}}
                 <div class="incident-card">
                     <div class="card-header-row">
                         <h2 class="card-title">Incident History</h2>
-                        <a href="#" class="card-view-all">View All</a>
+                        {{-- View All membuka slider panel --}}
+                        <a href="#" class="card-view-all" id="viewAllIncidentsBtn">View All</a>
                     </div>
                     <table class="incident-table">
                         <thead>
@@ -167,58 +172,38 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {{-- Replace with @foreach($incidents as $incident) when DB is ready --}}
+                            @forelse($incidents->take(5) as $incident)
+                            @php
+                                $tagClass = match(strtolower($incident->status)) {
+                                    'critical'   => 'tag-red',
+                                    'warning'    => 'tag-yellow',
+                                    'monitoring' => 'tag-orange',
+                                    default      => 'tag-blue',
+                                };
+                                $dotClass = match(strtolower($incident->status)) {
+                                    'critical'   => 'dot-red',
+                                    'warning'    => 'dot-yellow',
+                                    'monitoring' => 'dot-orange',
+                                    default      => 'dot-blue',
+                                };
+                            @endphp
                             <tr>
-                                <td>Today, 10:24 AM</td>
+                                <td>{{ $incident->started_at ? $incident->started_at->format('M d, H:i') : '-' }}</td>
                                 <td>
-                                    <span class="incident-tag tag-yellow">
-                                        <span class="dot dot-yellow"></span>
-                                        Latency Spike
+                                    <span class="incident-tag {{ $tagClass }}">
+                                        <span class="dot {{ $dotClass }}"></span>
+                                        {{ $incident->issue }}
                                     </span>
                                 </td>
-                                <td>2m 14s</td>
+                                <td>{{ $incident->displayDuration() }}</td>
                             </tr>
+                            @empty
                             <tr>
-                                <td>Yesterday, 14:00</td>
-                                <td>
-                                    <span class="incident-tag tag-red">
-                                        <span class="dot dot-red"></span>
-                                        Connection Lost
-                                    </span>
+                                <td colspan="3" style="text-align:center; color: var(--text-muted); padding: 24px 0; font-size:13px;">
+                                    No incidents recorded for this device.
                                 </td>
-                                <td>45s</td>
                             </tr>
-                            <tr>
-                                <td>Yesterday, 09:12</td>
-                                <td>
-                                    <span class="incident-tag tag-orange">
-                                        <span class="dot dot-orange"></span>
-                                        High Packet Loss
-                                    </span>
-                                </td>
-                                <td>3m 20s</td>
-                            </tr>
-                            <tr>
-                                <td>Mar 14, 16:30</td>
-                                <td>
-                                    <span class="incident-tag tag-yellow">
-                                        <span class="dot dot-yellow"></span>
-                                        Interface Flapping
-                                    </span>
-                                </td>
-                                <td>18s</td>
-                            </tr>
-                            <tr>
-                                <td>Mar 12, 08:15</td>
-                                <td>
-                                    <span class="incident-tag tag-orange">
-                                        <span class="dot dot-orange"></span>
-                                        Packet Loss &gt; 5%
-                                    </span>
-                                </td>
-                                <td>1m 05s</td>
-                            </tr>
-                            {{-- @endforeach --}}
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
@@ -280,13 +265,16 @@
                         </div>
                     </div>
 
-                    {{-- Alert Settings --}}
+                    {{-- REVISI 3: Alert Settings — toggle terhubung ke DB via AJAX --}}
                     <div>
                         <div class="alert-settings-title">Alert Settings</div>
                         <div class="alert-toggles">
                             <label class="alert-toggle-item">
                                 <label class="toggle-switch">
-                                    <input type="checkbox" checked>
+                                    <input type="checkbox"
+                                        id="alertToggleTelegram"
+                                        data-channel="telegram"
+                                        {{ $alertChannels['telegram'] ?? false ? 'checked' : '' }}>
                                     <span class="toggle-track"></span>
                                 </label>
                                 <span class="alert-icon">
@@ -296,7 +284,10 @@
                             </label>
                             <label class="alert-toggle-item">
                                 <label class="toggle-switch">
-                                    <input type="checkbox" >
+                                    <input type="checkbox"
+                                        id="alertToggleEmail"
+                                        data-channel="email"
+                                        {{ $alertChannels['email'] ?? false ? 'checked' : '' }}>
                                     <span class="toggle-track"></span>
                                 </label>
                                 <span class="alert-icon">
@@ -305,11 +296,13 @@
                                 </span>
                             </label>
                         </div>
+                        <div id="alertSaveMsg" class="alert-save-msg" style="display:none;"></div>
                     </div>
                 </div>
             </div>
 
             {{-- ===================== Log Activity ===================== --}}
+            {{-- REVISI 4: Tampilkan 6 log, jika lebih bisa di-scroll dalam card --}}
             <div class="log-card">
                 <div class="log-card-header">
                     <h2 class="card-title">Log Activity</h2>
@@ -330,6 +323,7 @@
                     </div>
                 </div>
 
+                {{-- REVISI 4: log-list dibatasi tingginya, bisa scroll internal --}}
                 <div class="log-list" id="logList">
                     @forelse($statusHistory as $log)
                     @php
@@ -342,7 +336,7 @@
                             : 'Device did not respond to ping. Status: DOWN.';
                     @endphp
                     <div class="log-item" data-type="{{ $logType }}">
-                        <span class="log-time">{{ $log->checked_at ? $log->checked_at->format('H:i A') : '-' }}</span>
+                        <span class="log-time">{{ $log->checked_at ? $log->checked_at->format('H:i') : '-' }}</span>
                         <div class="log-indicator"><span class="log-dot {{ $dotColor }}"></span></div>
                         <div class="log-content">
                             <div class="log-event-title">{{ $title }}</div>
@@ -380,10 +374,77 @@
         </div>
     </div>
 
+    {{-- ===================== REVISI 2: Incident History Slider Panel ===================== --}}
+    <div class="incident-slider-overlay" id="incidentSliderOverlay"></div>
+    <div class="incident-slider-panel" id="incidentSliderPanel">
+        <div class="incident-slider-header">
+            <div>
+                <h2 class="incident-slider-title">All Incidents</h2>
+                <p class="incident-slider-sub">{{ $deviceName }}</p>
+            </div>
+            <button class="incident-slider-close" id="incidentSliderClose">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <div class="incident-slider-body">
+            @if($incidents->count() === 0)
+                <div class="incident-slider-empty">
+                    <span class="material-symbols-outlined" style="font-size:40px; color:var(--border)">check_circle</span>
+                    <p>No incidents recorded for this device.</p>
+                </div>
+            @else
+            <table class="incident-table incident-table-full">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Issue</th>
+                        <th>Status</th>
+                        <th>Duration</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($incidents as $incident)
+                    @php
+                        $tagClass = match(strtolower($incident->status)) {
+                            'critical'   => 'tag-red',
+                            'warning'    => 'tag-yellow',
+                            'monitoring' => 'tag-orange',
+                            default      => 'tag-blue',
+                        };
+                        $dotClass = match(strtolower($incident->status)) {
+                            'critical'   => 'dot-red',
+                            'warning'    => 'dot-yellow',
+                            'monitoring' => 'dot-orange',
+                            default      => 'dot-blue',
+                        };
+                    @endphp
+                    <tr>
+                        <td>{{ $incident->started_at ? $incident->started_at->format('d M Y, H:i') : '-' }}</td>
+                        <td>
+                            <span class="incident-tag {{ $tagClass }}">
+                                <span class="dot {{ $dotClass }}"></span>
+                                {{ $incident->issue }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="incident-status-badge {{ $incident->isActive() ? 'badge-active' : 'badge-resolved' }}">
+                                {{ $incident->isActive() ? 'Active' : 'Resolved' }}
+                            </span>
+                        </td>
+                        <td>{{ $incident->displayDuration() }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+            @endif
+        </div>
+    </div>
+
     {{-- Chart.js & Scripts --}}
     <script>
         window.DEVICE_NAME = "{{ $deviceName }}";
-        window.CSRF_TOKEN = "{{ csrf_token() }}";
+        window.CSRF_TOKEN  = "{{ csrf_token() }}";
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
@@ -474,19 +535,16 @@
             });
             @endif
 
-            /* ── Log Activity Filters ── */
+            /* ── REVISI 4: Log Activity Filters + scroll container tetap --*/
             const filterBtns = document.querySelectorAll('#logFilters .log-filter-btn');
-            const logItems   = document.querySelectorAll('#logList .log-item');
+            const logList    = document.getElementById('logList');
 
             filterBtns.forEach(btn => {
                 btn.addEventListener('click', function () {
-                    // Toggle active state
                     filterBtns.forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
-
                     const filter = this.dataset.filter;
-
-                    logItems.forEach(item => {
+                    logList.querySelectorAll('.log-item').forEach(item => {
                         if (filter === 'all' || item.dataset.type === filter) {
                             item.classList.remove('hidden');
                         } else {
@@ -496,27 +554,87 @@
                 });
             });
 
-            /* ── Export CSV (dummy) ── */
+            /* ── Export CSV ── */
             document.getElementById('exportCsvBtn').addEventListener('click', function (e) {
                 e.preventDefault();
-
-                // Collect visible log rows
                 const rows = [['Time', 'Event', 'Description']];
-                document.querySelectorAll('#logList .log-item:not(.hidden)').forEach(item => {
-                    const time  = item.querySelector('.log-time').textContent.trim();
-                    const title = item.querySelector('.log-event-title').textContent.trim();
-                    const desc  = item.querySelector('.log-event-desc').textContent.trim();
+                logList.querySelectorAll('.log-item:not(.hidden)').forEach(item => {
+                    const time  = item.querySelector('.log-time')?.textContent.trim() ?? '';
+                    const title = item.querySelector('.log-event-title')?.textContent.trim() ?? '';
+                    const desc  = item.querySelector('.log-event-desc')?.textContent.trim() ?? '';
                     rows.push([time, title, desc]);
                 });
-
-                const csv = rows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(',')).join('\n');
+                const csv  = rows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(',')).join('\n');
                 const blob = new Blob([csv], { type: 'text/csv' });
                 const url  = URL.createObjectURL(blob);
                 const a    = document.createElement('a');
-                a.href     = url;
-                a.download = 'log_activity.csv';
-                a.click();
+                a.href = url; a.download = 'log_activity.csv'; a.click();
                 URL.revokeObjectURL(url);
+            });
+
+            /* ── REVISI 2: Incident Slider Panel ── */
+            const overlay  = document.getElementById('incidentSliderOverlay');
+            const panel    = document.getElementById('incidentSliderPanel');
+            const openBtn  = document.getElementById('viewAllIncidentsBtn');
+            const closeBtn = document.getElementById('incidentSliderClose');
+
+            function openSlider() {
+                overlay.classList.add('active');
+                panel.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeSlider() {
+                overlay.classList.remove('active');
+                panel.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            if (openBtn)  openBtn.addEventListener('click',  e => { e.preventDefault(); openSlider(); });
+            if (closeBtn) closeBtn.addEventListener('click', closeSlider);
+            if (overlay)  overlay.addEventListener('click',  closeSlider);
+
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape') closeSlider();
+            });
+
+            /* ── REVISI 3: Alert Settings Toggle — save ke DB via AJAX ── */
+            document.querySelectorAll('.alert-toggle-item input[data-channel]').forEach(toggle => {
+                toggle.addEventListener('change', function () {
+                    const channel  = this.dataset.channel;
+                    const isActive = this.checked;
+                    const msgEl    = document.getElementById('alertSaveMsg');
+
+                    fetch('/alert/channel/save', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': window.CSRF_TOKEN,
+                        },
+                        body: JSON.stringify({
+                            type:      channel,
+                            is_active: isActive,
+                            config:    {},
+                        }),
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (msgEl) {
+                            msgEl.textContent = data.message ?? (isActive ? channel + ' alerts enabled.' : channel + ' alerts disabled.');
+                            msgEl.className   = 'alert-save-msg ' + (data.ok ? 'success' : 'error');
+                            msgEl.style.display = 'block';
+                            setTimeout(() => { msgEl.style.display = 'none'; }, 2500);
+                        }
+                    })
+                    .catch(() => {
+                        if (msgEl) {
+                            msgEl.textContent = 'Failed to save. Please try again.';
+                            msgEl.className   = 'alert-save-msg error';
+                            msgEl.style.display = 'block';
+                            setTimeout(() => { msgEl.style.display = 'none'; }, 2500);
+                        }
+                    });
+                });
             });
 
         })();

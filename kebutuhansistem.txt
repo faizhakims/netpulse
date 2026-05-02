@@ -1,49 +1,10 @@
 Isi sidebar :
-Overview Monthly Revisi
-Devices Revisi
-Traffic DONE NO REVISI
+Overview DONE
+Devices DONE
+Details DONE
+Traffic
 Incidents Belum Responsive
 Alerts Belum Responsive
 Logs Done
 Settings
 Logout Done
-
-Kekurangan :
-1. Traffic
-Fungsi:
-Monitoring performa jaringan.
-Isi:
-bandwidth usage
-upload/download
-top busiest device
-traffic trend
-
-2. Incidents
-Fungsi:
-Gangguan & tiket otomatis.
-Isi:
-device down
-latency spike
-unresolved issues
-assigned status
-resolved logs
-
-3. Alerts
-Fungsi:
-Notifikasi.
-Isi:
-Telegram token
-Email SMTP
-threshold rules
-test notification
-alert history
-
-4. Settings
-Fungsi:
-Konfigurasi umum.
-Isi:
-refresh interval
-timezone
-theme
-profile
-password

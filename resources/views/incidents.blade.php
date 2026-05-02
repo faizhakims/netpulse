@@ -24,18 +24,20 @@
     @include('partials.sidebar')
 
     <div class="main" id="mainContent">
+        {{-- ===================== Header (REVISI 1: hapus "Updated just now") ===================== --}}
         <div class="page-header">
             <div>
                 <h1 class="page-title">Incidents Management</h1>
                 <p class="page-subtitle">Real‑time overview of network anomalies, device outages, and performance degradation.</p>
             </div>
-            <div class="updated-badge">Updated just now</div>
+            {{-- REVISI 1: Badge "Updated just now" dihapus --}}
         </div>
 
+        {{-- ===================== Stat Cards ===================== --}}
         <div class="stats-row">
             <div class="stat-card">
                 <div class="stat-label">DEVICE DOWN</div>
-                <div class="stat-value">{{ $deviceDown }}</div>
+                <div class="stat-value" style="color:#B31B25;">{{ $deviceDown }}</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">LATENCY SPIKES</div>
@@ -52,10 +54,14 @@
         </div>
 
         <div class="main-content-row">
-            {{-- Active Incidents --}}
+            {{-- ===================== Active Incidents ===================== --}}
             <div class="active-incidents">
                 <div class="active-incidents-header">
-                    <h2 class="section-title">Active Incidents</h2>
+                    <div>
+                        <h2 class="section-title">Active Incidents</h2>
+                        {{-- REVISI 4: info bahwa auto-resolve aktif --}}
+                        <p class="section-subtitle">Auto-resolved when device returns to normal.</p>
+                    </div>
                     <div class="toolbar">
                         <div class="search-wrap">
                             <span class="material-symbols-outlined">search</span>
@@ -65,20 +71,23 @@
                             <option value="all">Severity: All</option>
                             <option value="Critical">Critical</option>
                             <option value="Warning">Warning</option>
-                            <option value="Info">Info</option>
                             <option value="Monitoring">Monitoring</option>
+                            <option value="Info">Info</option>
                         </select>
                     </div>
                 </div>
-                <div class="table-responsive">
+
+                {{-- REVISI 2: table-responsive diberi max-height agar maks 8 baris lalu scroll --}}
+                <div class="table-responsive" id="incidentTableWrap">
                     <table class="incident-table" id="incidentTable">
                         <thead>
                             <tr>
                                 <th>INCIDENT ID</th>
                                 <th>DEVICE / NODE</th>
                                 <th>ISSUE</th>
+                                <th>STARTED</th>
                                 <th>STATUS</th>
-                                <th>DURATION</th>
+                                <th style="text-align:right;">DURATION</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -86,16 +95,27 @@
                             <tr data-status="{{ $inc->status }}"
                                 data-search="{{ strtolower('INC-'.str_pad($inc->id,4,'0',STR_PAD_LEFT).' '.$inc->device.' '.$inc->issue) }}">
                                 <td><span class="id-text">INC-{{ str_pad($inc->id, 4, '0', STR_PAD_LEFT) }}</span></td>
-                                <td>{{ $inc->device }}</td>
+                                <td>
+                                    <div class="device-cell">
+                                        <span class="device-name">{{ $inc->device }}</span>
+                                        @if($inc->ip_address)
+                                        <span class="device-ip">{{ $inc->ip_address }}</span>
+                                        @endif
+                                    </div>
+                                </td>
                                 <td>{{ $inc->issue }}</td>
+                                <td class="started-cell">
+                                    {{ $inc->started_at ? $inc->started_at->format('d M, H:i') : '-' }}
+                                </td>
                                 <td>
                                     <span class="badge {{ $inc->badgeClass() }}">{{ $inc->status }}</span>
                                 </td>
                                 <td style="text-align:right;">{{ $inc->displayDuration() }}</td>
                             </tr>
                             @empty
-                            <tr>
-                                <td colspan="5" style="text-align:center; padding:32px; color:#94A3B8;">
+                            <tr class="empty-row">
+                                <td colspan="6" style="text-align:center; padding:40px; color:#94A3B8;">
+                                    <span class="material-symbols-outlined" style="font-size:32px; display:block; margin-bottom:8px; color:#CBD5E1;">check_circle</span>
                                     No active incidents — all systems operational.
                                 </td>
                             </tr>
@@ -103,9 +123,19 @@
                         </tbody>
                     </table>
                 </div>
+
+                {{-- Row count info --}}
+                @if($activeIncidents->count() > 0)
+                <div class="table-info">
+                    <span id="visibleCount">{{ $activeIncidents->count() }}</span> incident{{ $activeIncidents->count() !== 1 ? 's' : '' }} active
+                    @if($activeIncidents->count() > 8)
+                    &nbsp;·&nbsp; scroll to see more
+                    @endif
+                </div>
+                @endif
             </div>
 
-            {{-- Resolved Log Sidebar --}}
+            {{-- ===================== Resolved Log Sidebar ===================== --}}
             <div class="resolved-log">
                 <div class="resolved-log-header">
                     <h2 class="section-title">Resolved Log</h2>
@@ -114,11 +144,15 @@
                     @forelse($resolvedLog as $log)
                     <div class="log-item">
                         <div class="log-meta">
-                            <span class="log-time">{{ $log->resolved_at->format('h:i A') }}</span>
+                            <span class="log-time">{{ $log->resolved_at->format('H:i') }}</span>
                             <span class="log-ago">{{ $log->resolved_at->diffForHumans() }}</span>
                         </div>
                         <div class="log-title">{{ $log->issue }}</div>
-                        <div class="log-desc">{{ $log->device }} — resolved after {{ $log->displayDuration() }}</div>
+                        <div class="log-desc">
+                            {{ $log->device }}
+                            @if($log->ip_address) · {{ $log->ip_address }}@endif
+                            — resolved after {{ $log->displayDuration() }}
+                        </div>
                     </div>
                     @empty
                     <div class="log-item">
@@ -133,10 +167,13 @@
             </div>
         </div>
 
-        {{-- Full History Panel --}}
+        {{-- ===================== Full History Slide Panel ===================== --}}
         <div class="history-panel" id="historyPanel">
             <div class="panel-header">
-                <span class="panel-title">Full Incident History</span>
+                <div>
+                    <span class="panel-title">Full Incident History</span>
+                    <p class="panel-subtitle">All resolved incidents, newest first.</p>
+                </div>
                 <button class="panel-close-btn" onclick="closeHistory()" aria-label="Close panel">
                     <span class="material-symbols-outlined" style="font-size:20px; color:#64748B;">close</span>
                 </button>
@@ -144,20 +181,28 @@
             <div class="panel-body">
                 @forelse($fullHistory as $h)
                 <div class="history-item">
-                    <strong>INC-{{ str_pad($h->id, 4, '0', STR_PAD_LEFT) }}</strong>
-                    – {{ $h->device }} – {{ $h->issue }}
-                    – {{ $h->displayDuration() }}
-                    – <span style="color:#047857;">Resolved</span>
-                    <span style="color:#94A3B8; font-size:12px; margin-left:8px;">
-                        {{ $h->resolved_at->format('d M Y H:i') }}
-                    </span>
+                    <div class="history-item-row">
+                        <span class="history-id">INC-{{ str_pad($h->id, 4, '0', STR_PAD_LEFT) }}</span>
+                        <span class="badge badge-resolved-sm">Resolved</span>
+                    </div>
+                    <div class="history-device">{{ $h->device }}@if($h->ip_address) · {{ $h->ip_address }}@endif</div>
+                    <div class="history-issue">{{ $h->issue }}</div>
+                    <div class="history-meta">
+                        Started: {{ $h->started_at ? $h->started_at->format('d M Y H:i') : '-' }}
+                        &nbsp;→&nbsp;
+                        Resolved: {{ $h->resolved_at->format('d M Y H:i') }}
+                        &nbsp;·&nbsp;
+                        Duration: {{ $h->displayDuration() }}
+                    </div>
                 </div>
                 @empty
-                <div class="history-item" style="color:#94A3B8;">No history yet.</div>
+                <div class="history-item" style="color:#94A3B8; text-align:center; padding:40px 0;">No history yet.</div>
                 @endforelse
             </div>
         </div>
+        <div class="history-overlay" id="historyOverlay" onclick="closeHistory()"></div>
 
+        {{-- ===================== Footer ===================== --}}
         <div class="page-footer">
             <span class="footer-copy">&copy; 2026 NetPulse – Network Operations Center</span>
             <div class="footer-status">
@@ -173,28 +218,47 @@
         (function() {
             const searchInput    = document.getElementById('searchInput');
             const severityFilter = document.getElementById('severityFilter');
-            const rows           = document.querySelectorAll('#incidentTable tbody tr');
+            const rows           = document.querySelectorAll('#incidentTable tbody tr:not(.empty-row)');
+            const visibleCount   = document.getElementById('visibleCount');
 
             function filterRows() {
                 const term     = searchInput.value.toLowerCase();
                 const severity = severityFilter.value;
+                let count = 0;
                 rows.forEach(row => {
                     const text   = row.dataset.search || '';
                     const status = row.dataset.status  || '';
                     const show   = (!term || text.includes(term))
                                 && (severity === 'all' || status === severity);
                     row.classList.toggle('hidden', !show);
+                    if (show) count++;
                 });
+                if (visibleCount) visibleCount.textContent = count;
             }
-            searchInput.addEventListener('input', filterRows);
-            severityFilter.addEventListener('change', filterRows);
 
-            document.getElementById('openHistoryBtn').addEventListener('click', () => {
-                document.getElementById('historyPanel').classList.add('open');
+            if (searchInput)    searchInput.addEventListener('input', filterRows);
+            if (severityFilter) severityFilter.addEventListener('change', filterRows);
+
+            // History panel
+            const openBtn  = document.getElementById('openHistoryBtn');
+            const panel    = document.getElementById('historyPanel');
+            const overlay  = document.getElementById('historyOverlay');
+
+            if (openBtn) openBtn.addEventListener('click', () => {
+                panel.classList.add('open');
+                overlay.classList.add('open');
+                document.body.style.overflow = 'hidden';
             });
+
             window.closeHistory = function() {
-                document.getElementById('historyPanel').classList.remove('open');
+                panel.classList.remove('open');
+                overlay.classList.remove('open');
+                document.body.style.overflow = '';
             };
+
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape') closeHistory();
+            });
         })();
     </script>
 </body>
