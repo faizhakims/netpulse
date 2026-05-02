@@ -43,10 +43,6 @@
                     Last updated: <span id="lastUpdated">just now</span>
                 </div>
             </div>
-            <button class="btn" onclick="openAddDeviceModal()">
-                <span class="material-symbols-outlined" style="font-size:16px;">add</span>
-                ADD DEVICE
-            </button>
         </div>
 
         {{-- ── Device Grid ── --}}
@@ -55,20 +51,32 @@
 
             @foreach($devices as $device)
 
-            {{--
-                LINK ke halaman detail:
-                Ganti route('/device/' . $device->id) dengan
-                route('device.show', $device->id) setelah pakai Eloquent model.
-            --}}
             <a href="{{ route('device.show', $device->device) }}" class="card">
 
-                <div class="card-header">
-                    <span class="card-category">{{ strtolower($device->status) === 'up' ? 'Active' : 'Inactive' }}</span>
+                @php
+                    $effStatus = $device->effectiveStatus();
+                    $isUp = $effStatus === 'up';
 
-                    @if(strtolower($device->status) === 'up')
+                    // Hitung uptime / last online
+                    if ($isUp && $device->last_down_at) {
+                        $uptimeSeconds = now()->diffInSeconds(\Carbon\Carbon::parse($device->last_down_at));
+                    } elseif (!$isUp && $device->last_up_at) {
+                        $lastOnlineSeconds = now()->diffInSeconds(\Carbon\Carbon::parse($device->last_up_at));
+                    } else {
+                        $uptimeSeconds = null;
+                        $lastOnlineSeconds = null;
+                    }
+                @endphp
+
+                <div class="card-header">
+                    <span class="card-category">
+                        {{ $effStatus === 'up' ? 'Active' : ($effStatus === 'unknown' ? 'Unknown' : 'Inactive') }}
+                    </span>
+
+                    @if($effStatus === 'up')
                         <span class="badge">Connected</span>
-                    @elseif(strtolower($device->status) === 'warning')
-                        <span class="badge warning">Warning</span>
+                    @elseif($effStatus === 'unknown')
+                        <span class="badge" style="background:#f59e0b;color:#fff;" title="Data terlalu lama — collector mungkin mati">Unknown</span>
                     @else
                         <span class="badge offline">Offline</span>
                     @endif
@@ -79,16 +87,26 @@
                         <div class="card-title">{{ $device->device }}</div>
                         <div class="meta">
                             IP &nbsp;<span>{{ $device->ip_address }}</span><br>
-                            LAT &nbsp;<span>{{ $device->latency_ms !== null ? $device->latency_ms . ' ms' : '—' }}</span><br>
-                            UP &nbsp;&nbsp;<span>{{ $device->checked_at ? $device->checked_at->diffForHumans() : '—' }}</span><br>
+                            LAT &nbsp;<span>
+                                {{ $isUp && $device->latency_ms !== null ? $device->latency_ms . ' ms' : '-' }}
+                            </span><br>
+                            @if($isUp)
+                                UP &nbsp;&nbsp;<span>
+                                    {{ $uptimeSeconds !== null
+                                        ? \App\Models\DeviceStatus::formatDuration($uptimeSeconds)
+                                        : 'Uptime unavailable' }}
+                                </span><br>
+                            @else
+                                LAST &nbsp;<span>
+                                    {{ $lastOnlineSeconds !== null
+                                        ? \App\Models\DeviceStatus::formatDuration($lastOnlineSeconds) . ' ago'
+                                        : '–' }}
+                                </span><br>
+                            @endif
                             LOC &nbsp;<span>{{ '-' }}</span>
                         </div>
                     </div>
 
-                    {{--
-                        Gambar device — gunakan $device->imageUrl() dari DB,
-                        atau fallback ke gambar generik berdasarkan tipe.
-                    --}}
                     <img
                         src="{{ $device->imageUrl() }}"
                         class="device-img"
@@ -100,7 +118,6 @@
             </a>
 
             @endforeach
-            {{-- @endforeach (DB version) --}}
 
         </div>
     </main>
@@ -125,11 +142,6 @@
         }, 1000);
     })();
 
-    /* ── Add Device Modal (placeholder) ── */
-    function openAddDeviceModal() {
-        // TODO: ganti dengan modal Bootstrap / Alpine.js sesuai stack yang dipakai
-        alert('Add Device modal — hubungkan ke form DeviceController@store');
-    }
     </script>
 </body>
 </html>

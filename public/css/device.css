@@ -335,3 +335,30 @@
         width: 75px;
     }
 }
+/* ── Unknown / Stale status ──────────────────────────────────────────────── */
+.badge.stale,
+.badge.unknown {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+}
+
+.device-icon.warning {
+    background: #fef9c3;
+    color: #854d0e;
+}
+
+.row-warning td {
+    opacity: 0.85;
+}
+
+.status-dot.gray {
+    background: #9ca3af;
+}
+
+/* Stale badge in details page */
+.device-status-badge.stale {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #fcd34d;
+}

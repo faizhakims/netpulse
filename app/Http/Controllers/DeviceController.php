@@ -41,7 +41,7 @@ class DeviceController extends Controller
         $latencyPeak = $latencyData->count() ? round($latencyData->max(), 1) : null;
         $latencyMin  = $latencyData->count() ? round($latencyData->min(), 1) : null;
 
-        // Riwayat status (20 terakhir) untuk log activity
+        // Riwayat status (20 terakhir)
         $statusHistory = DeviceStatus::where('device', $deviceName)
             ->orderByDesc('checked_at')
             ->limit(20)
@@ -62,61 +62,64 @@ class DeviceController extends Controller
             ->get()
             ->keyBy('metric_name');
 
-        // Hitung uptime % dari statusHistory
+        // Uptime % dari seluruh history
         $allStatuses = DeviceStatus::where('device', $deviceName)->get();
         $upCount   = $allStatuses->where('status', 'up')->count();
         $total     = $allStatuses->count();
         $uptimePct = $total > 0 ? round(($upCount / $total) * 100, 2) : 100;
 
+        // Staleness info untuk ditampilkan di view
+        $isStale       = $status ? $status->isStale() : true;
+        $effectiveStatus = $status ? $status->effectiveStatus() : 'unknown';
+
+        $lastReboot = null;
+        $sysUpTimeMetric = $metrics->get('sysUpTime');
+        if ($sysUpTimeMetric && $sysUpTimeMetric->metric_value) {
+            $ticks = (float) $sysUpTimeMetric->metric_value; // dalam hundredths of second
+            $rebootTime = now()->subSeconds($ticks / 100);
+            $lastReboot = $rebootTime->format('d-m-Y \a\t H.i');
+        }
         return view('details', compact(
             'status', 'statusHistory', 'traffic', 'metrics', 'deviceName',
             'latencyLabels', 'latencyData', 'latencyAvg', 'latencyPeak', 'latencyMin',
-            'uptimePct'
+            'uptimePct', 'isStale', 'effectiveStatus','lastReboot'
         ));
+        
     }
 
     public function ping(Request $request)
     {
-        $request->validate([
-            'device' => 'required|string'
-        ]);
+        $request->validate(['device' => 'required|string']);
 
         try {
             $response = Http::timeout(5)->post(
                 config('services.monitoring.url') . '/ping',
                 ['device' => $request->device]
             );
-
             return response()->json($response->json());
-
         } catch (\Exception $e) {
             return response()->json([
-                'status' => 'error',
-                'message' => 'Ping gagal',
+                'status'  => 'error',
+                'message' => 'Ping gagal: ' . $e->getMessage(),
             ], 500);
         }
     }
 
     public function reboot(Request $request)
     {
-        $request->validate([
-            'device' => 'required|string'
-        ]);
+        $request->validate(['device' => 'required|string']);
 
         try {
-            $response = Http::timeout(5)->post(
+            $response = Http::timeout(15)->post(
                 config('services.monitoring.url') . '/reboot',
                 ['device' => $request->device]
             );
-
             return response()->json($response->json());
-
         } catch (\Exception $e) {
             return response()->json([
-                'status' => 'error',
-                'message' => 'Reboot gagal',
+                'status'  => 'error',
+                'message' => 'Reboot gagal: ' . $e->getMessage(),
             ], 500);
         }
     }
-
 }

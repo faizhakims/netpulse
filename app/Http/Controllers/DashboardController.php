@@ -13,13 +13,23 @@ class DashboardController extends Controller
         // ── Ringkasan Device ──────────────────────────────────────────────
         $latestDevices = DeviceStatus::latestPerDevice();
 
-        $totalDevices  = $latestDevices->count();
-        $upDevices     = $latestDevices->where('status', 'up')->count();
-        $downDevices   = $totalDevices - $upDevices;
-        $avgLatency    = round($latestDevices->avg('latency_ms'), 2);
+        $totalDevices = $latestDevices->count();
 
-        $healthScore   = $totalDevices > 0
-            ? round(($upDevices / $totalDevices) * 100)
+        // Hitung berdasarkan effectiveStatus() — stale device TIDAK dihitung UP
+        $upDevices      = $latestDevices->filter(fn($d) => $d->effectiveStatus() === 'up')->count();
+        $downDevices    = $latestDevices->filter(fn($d) => $d->effectiveStatus() === 'down')->count();
+        $unknownDevices = $latestDevices->filter(fn($d) => $d->effectiveStatus() === 'unknown')->count();
+
+        // Latency hanya dari device yang benar-benar UP (bukan stale)
+        $activeLatencies = $latestDevices
+            ->filter(fn($d) => $d->effectiveStatus() === 'up')
+            ->pluck('latency_ms')
+            ->filter();
+        $avgLatency = $activeLatencies->count() ? round($activeLatencies->avg(), 2) : 0;
+
+        // Health score: unknown dihitung setengah, down = 0
+        $healthScore = $totalDevices > 0
+            ? round((($upDevices + ($unknownDevices * 0)) / $totalDevices) * 100)
             : 0;
 
         // ── Identitas main-router dari config ─────────────────────────────
@@ -27,16 +37,25 @@ class DashboardController extends Controller
 
         // ── Statistik latency (Core, Edge, Peak) ──────────────────────────
         $mainRouterStatus = $latestDevices->firstWhere('device', $mainRouterName);
-        $coreAvgLatency = $mainRouterStatus ? round($mainRouterStatus->latency_ms, 2) : $avgLatency;
 
-        $edgeDevices    = $latestDevices->where('device', '!=', $mainRouterName);
+        // Core latency: hanya valid kalau device UP dan tidak stale
+        $coreAvgLatency = ($mainRouterStatus && $mainRouterStatus->effectiveStatus() === 'up')
+            ? round($mainRouterStatus->latency_ms, 2)
+            : null;
+
+        $edgeDevices    = $latestDevices->where('device', '!=', $mainRouterName)
+            ->filter(fn($d) => $d->effectiveStatus() === 'up');
         $edgeAvgLatency = $edgeDevices->count() > 0
             ? round($edgeDevices->avg('latency_ms'), 2)
-            : 0;
+            : null;
 
-        $peakLatency = $latestDevices->max('latency_ms') ?? 0;
+        $peakLatency = $latestDevices
+            ->filter(fn($d) => $d->effectiveStatus() === 'up')
+            ->max('latency_ms') ?? 0;
 
-        // ── Data grafik latency 21 titik (berdasarkan checked_at unik) ──
+        // ── Data grafik latency 21 titik ───────────────────────────────────
+        $staleThreshold = DeviceStatus::staleThresholdMinutes();
+
         $checkTimes = DB::table('device_status')
             ->select('checked_at')
             ->distinct()
@@ -63,27 +82,22 @@ class DashboardController extends Controller
             $latencyEdge[] = min(200, round($edgeAvgVal ?? 0));
         }
 
-        // Isi jika kurang dari 21 titik (fallback)
-        while (count($latencyCore) < 21) {
-            $latencyCore[] = $coreAvgLatency;
-        }
-        while (count($latencyEdge) < 21) {
-            $latencyEdge[] = $edgeAvgLatency;
-        }
+        while (count($latencyCore) < 21) $latencyCore[] = 0;
+        while (count($latencyEdge) < 21) $latencyEdge[] = 0;
 
-        // ── Active Incidents (fallback, jika model Incident belum ada) ──
-        // Jika sudah membuat Incident model, ganti dengan query yang sesuai
-        $activeIncidents = collect(); // Incident::where('status', 'active')->with('device')->get();
-        $maxSeverity = $activeIncidents->max('severity') ?? 'NONE';
+        // ── Active Incidents ───────────────────────────────────────────────
+        $activeIncidents = \App\Models\Incident::whereNull('resolved_at')
+            ->orderByDesc('started_at')
+            ->get();
+        $maxSeverity = $activeIncidents->max('status') ?? 'NONE';
 
-        // ── Device untuk slide panel "View All Managed Nodes" ────────────
-        $allDevices = DeviceStatus::latestPerDevice();
+        // ── Semua device untuk slide panel ────────────────────────────────
+        $allDevices = $latestDevices;
 
-        // ── Performance History (Weekly) ─────────────────────────────────
+        // ── Performance History (Weekly) ───────────────────────────────────
         $weeklyChartData = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::today()->subDays($i);
-            $dayLabel = $date->format('D');
             $rows = DB::table('device_status')
                 ->whereDate('checked_at', $date->toDateString())
                 ->get();
@@ -92,18 +106,17 @@ class DashboardController extends Controller
             $pct   = $total > 0 ? round(($up / $total) * 100) : 0;
             $type  = $pct >= 80 ? 'green' : ($pct >= 50 ? 'orange' : 'red');
             $weeklyChartData[] = [
-                'label' => $dayLabel,
+                'label' => $date->format('D'),
                 'h'     => $pct . '%',
                 'type'  => $type,
                 'pct'   => $pct,
             ];
         }
 
-        // ── Performance History (Monthly) ────────────────────────────────
+        // ── Performance History (Monthly) ──────────────────────────────────
         $monthlyData = [];
         for ($i = 29; $i >= 0; $i--) {
             $date = Carbon::today()->subDays($i);
-            $dayLabel = $date->format('M d');
             $rows = DB::table('device_status')
                 ->whereDate('checked_at', $date->toDateString())
                 ->get();
@@ -112,7 +125,7 @@ class DashboardController extends Controller
             $pct   = $total > 0 ? round(($up / $total) * 100) : 0;
             $type  = $pct >= 80 ? 'green' : ($pct >= 50 ? 'orange' : 'red');
             $monthlyData[] = [
-                'label' => $dayLabel,
+                'label' => $date->format('M d'),
                 'h'     => $pct . '%',
                 'type'  => $type,
                 'pct'   => $pct,
@@ -120,7 +133,7 @@ class DashboardController extends Controller
         }
 
         return view('dashboard', compact(
-            'totalDevices', 'upDevices', 'downDevices', 'avgLatency',
+            'totalDevices', 'upDevices', 'downDevices', 'unknownDevices', 'avgLatency',
             'healthScore', 'latestDevices',
             'activeIncidents', 'maxSeverity',
             'latencyCore', 'latencyEdge',
@@ -130,7 +143,7 @@ class DashboardController extends Controller
         ));
     }
 
-    // ── Ekspor CSV ───────────────────────────────────────────────────────
+    // ── Ekspor CSV ────────────────────────────────────────────────────────
     public function exportCsv()
     {
         $devices = DeviceStatus::latestPerDevice();
@@ -144,9 +157,8 @@ class DashboardController extends Controller
 
         return response()->stream(function () use ($devices) {
             $handle = fopen('php://output', 'w');
-            // BOM untuk Excel agar terbaca UTF-8 dengan benar
             fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
-            fputcsv($handle, ['Node Identity', 'IP Address', 'Layer', 'Uptime', 'Status']);
+            fputcsv($handle, ['Node Identity', 'IP Address', 'Layer', 'Last Checked', 'Effective Status']);
 
             foreach ($devices as $device) {
                 fputcsv($handle, [
@@ -154,7 +166,7 @@ class DashboardController extends Controller
                     $device->ip_address,
                     'Network Device',
                     $device->checked_at ? $device->checked_at->diffForHumans() : '-',
-                    strtoupper($device->status),
+                    strtoupper($device->effectiveStatus()),
                 ]);
             }
 

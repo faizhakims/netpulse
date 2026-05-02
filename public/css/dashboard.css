@@ -988,3 +988,20 @@ body {
         gap: 10px;
     }
 }
+/* ── Unknown / Stale device status ──────────────────────────────────────── */
+.status-dot.gray {
+    background: #9ca3af;
+    box-shadow: none;
+}
+
+.status-badge[style*="fef3c7"] {
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.row-warning td {
+    opacity: 0.8;
+}

@@ -47,9 +47,9 @@
                             &nbsp;|&nbsp;
                             Last checked: {{ $status && $status->checked_at ? $status->checked_at->diffForHumans() : 'N/A' }}
                         </span>
-                        <span class="device-status-badge {{ $status && strtolower($status->status) === 'up' ? '' : 'offline' }}">
+                        <span class="device-status-badge {{ $effectiveStatus === 'up' ? '' : ($effectiveStatus === 'unknown' ? 'stale' : 'offline') }}">
                             <span class="dot"></span>
-                            {{ $status ? strtoupper($status->status) : 'UNKNOWN' }}
+                            {{ strtoupper($effectiveStatus) }}{{ $isStale ? ' ⚠' : '' }}
                         </span>
                     </div>
                 </div>
@@ -78,33 +78,50 @@
             <div class="stat-cards-row">
                 <div class="stat-card">
                     <div class="stat-card-label">Status</div>
-                    <div class="stat-card-value up">{{ $status ? strtoupper($status->status) : 'N/A' }}</div>
-                    <div class="stat-card-sub">Last checked: {{ $status && $status->checked_at ? $status->checked_at->diffForHumans() : '-' }}</div>
+                    <div class="stat-card-value {{ $effectiveStatus === 'up' ? 'up' : ($effectiveStatus === 'unknown' ? 'unknown' : 'down') }}">
+                        {{ strtoupper($effectiveStatus) }}
+                    </div>
+                    <div class="stat-card-sub">
+                        Last checked: {{ $status && $status->checked_at ? $status->checked_at->diffForHumans() : '-' }}
+                    </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-card-label">Latency</div>
                     <div class="stat-card-value good">
-                        {{ $status->latency_ms ?? '-' }}<span class="unit">{{ $status && $status->latency_ms ? ' ms' : '' }}</span>
+                        @if($effectiveStatus === 'unknown')
+                            -
+                        @else
+                            {{ $status->latency_ms ?? '-' }}<span class="unit">{{ $status && $status->latency_ms ? ' ms' : '' }}</span>
+                        @endif
                     </div>
                     <div class="stat-card-sub green">Optimal range</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-card-label">Uptime</div>
                     <div class="stat-card-value good">
-                        {{ $uptimePct }}<span class="unit">%</span>
+                        @if($effectiveStatus === 'unknown')
+                            -
+                        @else
+                            {{ $uptimePct }}<span class="unit">%</span>
+                        @endif
                     </div>
                     <div class="stat-card-sub">Last 30 days</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-card-label">Packet Loss</div>
                     <div class="stat-card-value">
-                        {{ $metrics->get('packetLoss') ? $metrics->get('packetLoss')->metric_value : '0' }}<span class="unit">%</span>
+                        @if($effectiveStatus === 'unknown')
+                            -
+                        @else
+                            {{ $metrics->get('packetLoss') ? $metrics->get('packetLoss')->metric_value : '0' }}<span class="unit">%</span>
+                        @endif
                     </div>
                     <div class="stat-card-sub">Stable connection</div>
                 </div>
             </div>
 
             {{-- ===================== Real-time Latency Chart ===================== --}}
+            @if($effectiveStatus !== 'unknown')
             <div class="chart-card">
                 <div class="chart-card-header">
                     <div>
@@ -130,6 +147,7 @@
                     <canvas id="latencyChart"></canvas>
                 </div>
             </div>
+            @endif
 
             {{-- ===================== Incident History + Device Info ===================== --}}
             <div class="two-col-section">
@@ -238,7 +256,7 @@
                         <div class="device-info-field">
                             <div class="device-info-field-label">Last Reboot</div>
                             <div class="device-info-field-value">
-                                {{ $metrics->get('sysUpTime') ? $metrics->get('sysUpTime')->metric_value . ' ticks' : '-' }}
+                                {{ $lastReboot ?? '-' }}
                             </div>
                         </div>
                         <div class="device-info-field">
@@ -371,6 +389,7 @@
     <script>
         (function () {
 
+            @if($effectiveStatus !== 'unknown')
             /* ── Latency Chart ── */
             const ctx = document.getElementById('latencyChart').getContext('2d');
 
@@ -453,79 +472,7 @@
                     }
                 }]
             });
-
-            // /* ── Ping Button ── */
-            // const pingBtn = document.getElementById('pingBtn');
-            // if (pingBtn) {
-            //     pingBtn.addEventListener('click', function () {
-            //         const icon = this.querySelector('.material-symbols-outlined');
-            //         const orig = icon.textContent;
-            //         icon.textContent = 'sync';
-            //         icon.style.animation = 'spin 0.8s linear infinite';
-            //         setTimeout(() => {
-            //             icon.textContent = orig;
-            //             icon.style.animation = '';
-            //         }, 1800);
-            //     });
-            // }
-
-            // /* ── Reboot Button Long Press (3 detik) ── */
-            // const rebootBtn = document.getElementById('rebootBtn');
-            // if (rebootBtn) {
-            //     let pressTimer = null;
-            //     let progressInterval = null;
-            //     const HOLD_DURATION = 3000; // 3 detik
-
-            //     function clearRebootTimers() {
-            //         if (pressTimer) clearTimeout(pressTimer);
-            //         if (progressInterval) clearInterval(progressInterval);
-            //         pressTimer = null;
-            //         progressInterval = null;
-            //     }
-
-            //     function startRebootHold() {
-            //         // Bersihkan timer sebelumnya
-            //         clearRebootTimers();
-
-            //         // Tambahkan kelas untuk memulai transisi CSS
-            //         rebootBtn.classList.add('rebooting');
-
-            //         // Set timeout utama untuk eksekusi reboot
-            //         pressTimer = setTimeout(() => {
-            //             // Lakukan aksi reboot di sini (misal kirim request)
-            //             alert('Device reboot initiated!'); // Ganti dengan fetch/axios POST
-            //             // Reset tampilan
-            //             rebootBtn.classList.remove('rebooting');
-            //             clearRebootTimers();
-            //         }, HOLD_DURATION);
-            //     }
-
-            //     function cancelRebootHold() {
-            //         if (rebootBtn.classList.contains('rebooting')) {
-            //             rebootBtn.classList.remove('rebooting');
-            //         }
-            //         clearRebootTimers();
-            //     }
-
-            //     // Event untuk mouse / touch
-            //     rebootBtn.addEventListener('mousedown', (e) => {
-            //         // Hanya trigger jika klik kiri
-            //         if (e.button !== 0) return;
-            //         startRebootHold();
-            //     });
-
-            //     rebootBtn.addEventListener('mouseup', cancelRebootHold);
-            //     rebootBtn.addEventListener('mouseleave', cancelRebootHold);
-
-            //     // Touch events untuk mobile
-            //     rebootBtn.addEventListener('touchstart', (e) => {
-            //         e.preventDefault(); // mencegah scroll atau zoom
-            //         startRebootHold();
-            //     }, { passive: false });
-
-            //     rebootBtn.addEventListener('touchend', cancelRebootHold);
-            //     rebootBtn.addEventListener('touchcancel', cancelRebootHold);
-            // }
+            @endif
 
             /* ── Log Activity Filters ── */
             const filterBtns = document.querySelectorAll('#logFilters .log-filter-btn');

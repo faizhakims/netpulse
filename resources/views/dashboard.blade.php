@@ -228,12 +228,12 @@
                     <h4 class="activity-title">Activity Feed</h4>
                     <div class="flex flex-col gap-4">
                         @forelse($latestDevices->take(5) as $act)
-                        @php $actUp = strtolower($act->status) === 'up'; @endphp
+                        @php $actStatus = $act->effectiveStatus(); $actUp = $actStatus === 'up'; @endphp
                         <div class="activity-item">
-                            <span class="status-dot {{ $actUp ? 'green' : 'red' }} activity-dot"></span>
+                            <span class="status-dot {{ $actStatus === 'up' ? 'green' : ($actStatus === 'unknown' ? 'gray' : 'red') }} activity-dot"></span>
                             <div>
                                 <p class="activity-text {{ $actUp ? '' : 'critical' }}">
-                                    {{ $act->device }} — {{ strtoupper($act->status) }}
+                                    {{ $act->device }} — {{ strtoupper($actStatus) }}
                                 </p>
                                 <p class="activity-time">
                                     {{ $act->checked_at ? $act->checked_at->diffForHumans() : '-' }}
@@ -275,14 +275,16 @@
                 <tbody>
                     @forelse($latestDevices as $dev)
                     @php
-                        $isUp     = strtolower($dev->status) === 'up';
-                        $rowClass = $isUp ? '' : 'row-critical';
+                        $devEff   = $dev->effectiveStatus();
+                        $isUp     = $devEff === 'up';
+                        $isUnknown = $devEff === 'unknown';
+                        $rowClass = $isUp ? '' : ($isUnknown ? 'row-warning' : 'row-critical');
                         $icon     = str_contains(strtolower($dev->device), 'switch') ? 'lan' : 'router';
                     @endphp
                     <tr class="{{ $rowClass }}">
                         <td>
                             <div class="device-icon-cell">
-                                <div class="device-icon {{ $isUp ? 'core' : 'critical' }}">
+                                <div class="device-icon {{ $isUp ? 'core' : ($isUnknown ? 'warning' : 'critical') }}">
                                     <span class="material-symbols-outlined" style="font-size:18px;font-variation-settings:'FILL' 1;">{{ $icon }}</span>
                                 </div>
                                 <div>
@@ -294,6 +296,7 @@
                         <td class="cell-layer {{ $isUp ? '' : 'critical' }}">Network Device</td>
                         <td class="cell-uptime {{ $isUp ? '' : 'critical' }} mono">
                             {{ $dev->checked_at ? $dev->checked_at->diffForHumans() : '-' }}
+                            @if($isUnknown)<br><small style="color:#f59e0b;">&#9888; Stale</small>@endif
                         </td>
                         <td>
                             <div class="load-cell">
@@ -305,10 +308,17 @@
                             </div>
                         </td>
                         <td>
+                            @if($isUnknown)
+                            <div class="status-badge" style="background:#fef3c7;color:#92400e;border-color:#fcd34d;">
+                                <span class="status-dot" style="background:#f59e0b;"></span>
+                                UNKNOWN
+                            </div>
+                            @else
                             <div class="status-badge {{ $isUp ? 'up' : 'down' }}">
                                 <span class="status-dot {{ $isUp ? 'green' : 'ping-ring' }}" style="{{ $isUp ? '' : 'background:#dc2626;' }}"></span>
-                                {{ strtoupper($dev->status) }}
+                                {{ strtoupper($devEff) }}
                             </div>
+                            @endif
                         </td>
                     </tr>
                     @empty
@@ -389,12 +399,12 @@
         </div>
         <div class="slide-panel-content">
             @forelse($allDevices as $device)
-                @php $status = strtolower($device->status); @endphp
+                @php $deviceEff = $device->effectiveStatus(); @endphp
                 <div class="device-row">
                     <span class="name">{{ $device->device }}</span>
                     <span class="flex items-center gap-2">
-                        <span class="status-dot {{ $status === 'up' ? 'green' : 'red' }}"></span>
-                        {{ strtoupper($device->status) }}
+                        <span class="status-dot {{ $deviceEff === 'up' ? 'green' : ($deviceEff === 'unknown' ? 'gray' : 'red') }}"></span>
+                        {{ strtoupper($deviceEff) }}
                     </span>
                 </div>
             @empty
