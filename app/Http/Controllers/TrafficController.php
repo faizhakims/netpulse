@@ -9,18 +9,24 @@ class TrafficController extends Controller
 {
     public function index()
     {
-        // Total bytes keseluruhan
-        $totals = DB::table('interface_traffic')
-            ->selectRaw('SUM(bytes_in) as total_in, SUM(bytes_out) as total_out,
-                         SUM(packets_in) as total_packets_in, SUM(packets_out) as total_packets_out')
-            ->first();
+        // Ambil record terbaru per device+interface saja (bukan SUM semua history
+        // karena bytes_in/out adalah counter kumulatif SNMP, bukan delta per interval)
+        $latestIds = DB::table('interface_traffic')
+            ->selectRaw('MAX(id) as id')
+            ->groupBy('device', 'interface_name')
+            ->pluck('id');
 
-        $totalIn    = $totals->total_in    ?? 0;
-        $totalOut   = $totals->total_out   ?? 0;
+        $latestSnapshots = DB::table('interface_traffic')
+            ->whereIn('id', $latestIds)
+            ->get();
+
+        $totalIn    = $latestSnapshots->sum('bytes_in');
+        $totalOut   = $latestSnapshots->sum('bytes_out');
         $totalBytes = $totalIn + $totalOut;
 
-        // Top busiest devices
+        // Top busiest devices — berdasarkan snapshot terbaru per device
         $topDevices = DB::table('interface_traffic')
+            ->whereIn('id', $latestIds)
             ->selectRaw('device, ip_address,
                          SUM(bytes_in) as total_in,
                          SUM(bytes_out) as total_out,

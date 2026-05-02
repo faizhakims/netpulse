@@ -47,10 +47,13 @@ class DeviceController extends Controller
             ->limit(20)
             ->get();
 
-        // Traffic interfaces
-        $traffic = InterfaceTraffic::where('device', $deviceName)
-            ->latest('collected_at')
-            ->get();
+        // Traffic interfaces — hanya record terbaru per interface (Bug #10 fix)
+        $traffic = InterfaceTraffic::whereIn('id', function ($q) use ($deviceName) {
+            $q->selectRaw('MAX(id)')
+              ->from('interface_traffic')
+              ->where('device', $deviceName)
+              ->groupBy('interface_name');
+        })->orderByDesc('bytes_in')->get();
 
         // SNMP metrics
         $metrics = SnmpMetric::where('device', $deviceName)
@@ -91,11 +94,16 @@ class DeviceController extends Controller
     {
         $request->validate(['device' => 'required|string']);
 
+        $apiUrl = config('services.monitoring.url');
+        if (empty($apiUrl)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'MONITORING_API_URL belum dikonfigurasi di .env. Hubungi administrator.',
+            ], 503);
+        }
+
         try {
-            $response = Http::timeout(5)->post(
-                config('services.monitoring.url') . '/ping',
-                ['device' => $request->device]
-            );
+            $response = Http::timeout(5)->post("{$apiUrl}/ping", ['device' => $request->device]);
             return response()->json($response->json());
         } catch (\Exception $e) {
             return response()->json([
@@ -109,11 +117,16 @@ class DeviceController extends Controller
     {
         $request->validate(['device' => 'required|string']);
 
+        $apiUrl = config('services.monitoring.url');
+        if (empty($apiUrl)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'MONITORING_API_URL belum dikonfigurasi di .env. Hubungi administrator.',
+            ], 503);
+        }
+
         try {
-            $response = Http::timeout(15)->post(
-                config('services.monitoring.url') . '/reboot',
-                ['device' => $request->device]
-            );
+            $response = Http::timeout(15)->post("{$apiUrl}/reboot", ['device' => $request->device]);
             return response()->json($response->json());
         } catch (\Exception $e) {
             return response()->json([

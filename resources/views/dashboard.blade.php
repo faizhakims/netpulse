@@ -26,14 +26,12 @@
         <section class="hero-section flex justify-between items-end fade-in-up" style="margin-bottom:32px;">
             <div>
                 <h1 class="hero-title">Dashboard</h1>
-                <div class="hero-sub">
-                    <span class="flex items-center gap-2">
+                <!-- <div class="hero-sub">
+                    <span class="flex items-center gap-2" id="refresh-indicator">
                         <span class="status-dot green pulse-dot"></span>
-                        Auto-refresh in 8s
+                        Auto-refresh in 60s
                     </span>
-                    <span class="hero-divider"></span>
-                    <span>Last updated: 2s ago</span>
-                </div>
+                </div> -->
             </div>
             <div class="health-panel">
                 <span class="health-label">System Health</span>
@@ -77,7 +75,7 @@
                         </div>
                     </div>
 
-                    <div class="flex flex-col gap-3 relative z-1">
+                    <div class="flex flex-col gap-3 relative z-1" style="max-height:276px;overflow-y:auto;padding-right:4px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.15) transparent;">
                         @forelse($activeIncidents as $incident)
                             @php
                                 $severity = strtolower($incident->severity ?? 'major');
@@ -138,17 +136,19 @@
                                 </linearGradient>
                             </defs>
                             @php
-                                $corePoints = $latencyCore ?? array_fill(0, 21, 100);
-                                $edgePoints = $latencyEdge ?? array_fill(0, 21, 80);
-                                $xStep = 1000 / (count($corePoints) - 1);
+                                $corePoints = $latencyCore ?? array_fill(0, 21, 0);
+                                $edgePoints = $latencyEdge ?? array_fill(0, 21, 0);
+                                $xStep = 1000 / max(count($corePoints) - 1, 1);
                                 $pathCore = '';
                                 $pathEdge = '';
-                                foreach ($corePoints as $i => $y) {
+                                foreach ($corePoints as $i => $ms) {
                                     $x = $i * $xStep;
+                                    $y = 200 - min(200, max(0, $ms)); // invert: 0ms=bottom, 200ms=top
                                     $pathCore .= ($i === 0 ? "M" : "L") . round($x,1) . ',' . round($y,1) . ' ';
                                 }
-                                foreach ($edgePoints as $i => $y) {
+                                foreach ($edgePoints as $i => $ms) {
                                     $x = $i * $xStep;
+                                    $y = 200 - min(200, max(0, $ms));
                                     $pathEdge .= ($i === 0 ? "M" : "L") . round($x,1) . ',' . round($y,1) . ' ';
                                 }
                                 $fillCore = $pathCore . 'L1000,200 L0,200 Z';
@@ -194,6 +194,12 @@
                     <div class="card stat-card offline">
                         <p class="stat-label" style="color:var(--red);">Offline</p>
                         <p class="stat-number-lg text-red mono">{{ $downDevices }}</p>
+                        @if($unknownDevices > 0)
+                        <p style="font-size:0.6rem;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;color:#b45309;margin:5px 0 0;display:flex;align-items:center;gap:4px;">
+                            <span style="width:6px;height:6px;border-radius:50%;background:#f59e0b;display:inline-block;flex-shrink:0;"></span>
+                            +{{ $unknownDevices }} unknown
+                        </p>
+                        @endif
                     </div>
                     <div class="card stat-card">
                         <p class="stat-label">Requests</p>
@@ -208,7 +214,13 @@
                             <p class="sla-title">Rolling SLA</p>
                             <p class="sla-value mono">{{ $healthScore }}%</p>
                         </div>
-                        <span class="badge badge-secure">Secure</span>
+                        @if($healthScore >= 80)
+                            <span class="badge badge-secure">Secure</span>
+                        @elseif($healthScore >= 50)
+                            <span class="badge badge-sla-warning">Warning</span>
+                        @else
+                            <span class="badge badge-sla-critical">Critical</span>
+                        @endif
                     </div>
                     <div class="sla-bars">
                         <div class="sla-bar" style="height:60%;"></div>
@@ -361,14 +373,30 @@
                 @endforeach
             </div>
 
-            {{-- Data Bulanan (hidden by default) --}}
+            {{-- Data Bulanan (hidden by default) — dikelompokkan per 6 hari --}}
             <div id="monthly-bars" class="perf-bars-container" style="display:none;">
-                @foreach($monthlyData as $day)
-                <div class="perf-bar-item">
+                @php
+                    $monthChunks = collect($monthlyData)->chunk(6);
+                @endphp
+                @foreach($monthChunks as $chunk)
+                @php
+                    $chunkArr    = $chunk->values();
+                    $avgPct      = round($chunkArr->avg('pct'));
+                    $chunkType   = $avgPct >= 80 ? 'green' : ($avgPct >= 50 ? 'orange' : 'red');
+                    // Label: ambil tanggal awal–akhir chunk, misal "May 01" → "1"
+                    $firstParts  = explode(' ', $chunkArr->first()['label']);
+                    $lastParts   = explode(' ', $chunkArr->last()['label']);
+                    $monthAbbr   = $firstParts[0];
+                    $dayStart    = (int) ($firstParts[1] ?? 1);
+                    $dayEnd      = (int) ($lastParts[1]  ?? $dayStart);
+                    $rangeLabel  = $dayStart . '–' . $dayEnd;
+                    $fullLabel   = $monthAbbr . ' ' . $rangeLabel;
+                @endphp
+                <div class="perf-bar-item" title="{{ $fullLabel }} — avg {{ $avgPct }}% uptime">
                     <div style="width:100%;flex:1;display:flex;align-items:flex-end;">
-                        <div class="perf-bar {{ $day['type'] }}" style="height:{{ $day['h'] ?: '2%' }};"></div>
+                        <div class="perf-bar {{ $chunkType }}" style="height:{{ max($avgPct, 2) }}%;"></div>
                     </div>
-                    <p class="perf-label {{ $day['type']==='red' ? 'red' : '' }}">{{ $day['label'] }}</p>
+                    <p class="perf-label {{ $chunkType === 'red' ? 'red' : '' }}">{{ $rangeLabel }}</p>
                 </div>
                 @endforeach
             </div>
@@ -414,7 +442,38 @@
     </div>
 
     <script>
-        // Fade-in animation
+        // ── Auto-refresh countdown ────────────────────────────────────────────
+        // (function() {
+        //     const INTERVAL = 60; // detik
+        //     let remaining = INTERVAL;
+        //     const loadedAt = Date.now();
+
+        //     const indicator = document.getElementById('refresh-indicator');
+        //     const lastUpdated = document.getElementById('last-updated-text');
+
+        //     // Tampilkan kapan halaman terakhir di-load
+        //     function updateLastUpdated() {
+        //         const secs = Math.round((Date.now() - loadedAt) / 1000);
+        //         if (secs < 5)       lastUpdated.textContent = 'Just updated';
+        //         else if (secs < 60) lastUpdated.textContent = secs + 's ago';
+        //         else                lastUpdated.textContent = Math.round(secs / 60) + 'm ago';
+        //     }
+
+        //     function tick() {
+        //         remaining--;
+        //         if (remaining <= 0) {
+        //             location.reload();
+        //             return;
+        //         }
+        //         indicator.innerHTML =
+        //             '<span class="status-dot green pulse-dot"></span> Auto-refresh in ' + remaining + 's';
+        //         updateLastUpdated();
+        //         setTimeout(tick, 1000);
+        //     }
+        //     setTimeout(tick, 1000);
+        // })();
+
+        // ── Fade-in animation ─────────────────────────────────────────────────
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry, i) => {
                 if (entry.isIntersecting) {

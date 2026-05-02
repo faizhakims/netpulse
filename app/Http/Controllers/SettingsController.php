@@ -7,6 +7,7 @@ use App\Models\SystemSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\Rules\Password;
 
 class SettingsController extends Controller
@@ -56,7 +57,34 @@ class SettingsController extends Controller
             SystemSetting::set($key, $value, 'monitoring');
         }
 
-        return response()->json(['ok' => true, 'message' => 'Monitoring settings saved.']);
+        // Coba notify Python service supaya reload interval dari DB.
+        // Jika endpoint /config/reload belum ada atau service mati, tetap return ok
+        // tapi sertakan peringatan agar user tahu perlu restart manual.
+        $reloadWarning = null;
+        $apiUrl = config('services.monitoring.url');
+        if (!empty($apiUrl)) {
+            try {
+                $resp = \Illuminate\Support\Facades\Http::timeout(3)->post("{$apiUrl}/config/reload", [
+                    'ping_interval' => (int) $data['polling_interval'],
+                    'snmp_interval' => (int) $data['polling_interval'],
+                    'bw_interval'   => (int) $data['polling_interval'],
+                ]);
+                // Jika endpoint belum ada (404) atau gagal, tampilkan warning
+                if (!$resp->successful()) {
+                    $reloadWarning = 'Settings saved. Perubahan polling interval memerlukan restart Python monitoring service agar berlaku.';
+                }
+            } catch (\Exception $e) {
+                $reloadWarning = 'Settings saved. Python monitoring service tidak dapat dihubungi — restart service secara manual agar perubahan polling interval berlaku.';
+            }
+        } else {
+            $reloadWarning = 'Settings saved. MONITORING_API_URL belum dikonfigurasi, perubahan polling interval tidak dapat dikirim ke monitoring service.';
+        }
+
+        return response()->json([
+            'ok'      => true,
+            'message' => $reloadWarning ?? 'Monitoring settings saved.',
+            'warning' => $reloadWarning !== null,
+        ]);
     }
 
     // ── Security settings ─────────────────────────────────────────────────────

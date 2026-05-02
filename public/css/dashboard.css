@@ -308,10 +308,16 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
-.badge-critical { background: var(--red); color: white; }
-.badge-major    { background: var(--amber-light); color: #5a3a00; }
-.badge-secure   { background: #dcfce7; color: #166534; }
-.badge-offline  { background: var(--red); color: white; border-radius: 8px; }
+.badge-critical      { background: var(--red); color: white; }
+.badge-major         { background: var(--amber-light); color: #5a3a00; }
+.badge-secure        { background: #dcfce7; color: #166534; }
+.badge-offline       { background: var(--red); color: white; border-radius: 8px; }
+.badge-sla-warning   { background: #fef3c7; color: #92400e; }
+.badge-sla-critical  { background: #fee2e2; color: #991b1b; animation: badge-pulse 1.8s ease-in-out infinite; }
+@keyframes badge-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.55; }
+}
 
 .status-dot {
     width: 8px; height: 8px;
