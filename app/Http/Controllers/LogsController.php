@@ -17,9 +17,10 @@ class LogsController extends Controller
             ->get()
             ->map(function ($row) {
                 return [
-                    'id'     => 'DS-' . $row->id,
-                    'date'   => $row->checked_at ? $row->checked_at->format('d M Y') : '-',
-                    'time'   => $row->checked_at ? $row->checked_at->format('H:i:s') : '-',
+                    'id'          => 'DS-' . $row->id,
+                    'date'        => $row->checked_at ? $row->checked_at->format('d M Y') : '-',
+                    'date_filter' => $row->checked_at ? $row->checked_at->format('Y-m-d') : '',
+                    'time'        => $row->checked_at ? $row->checked_at->format('H:i:s') : '-',
                     'level'  => strtolower($row->status) === 'up' ? 'Info' : 'Critical',
                     'device' => $row->device,
                     'ip'     => $row->ip_address,
@@ -39,16 +40,17 @@ class LogsController extends Controller
             ->get()
             ->map(function ($row) {
                 return [
-                    'id'     => 'DS-' . $row->id,
-                    'date'   => $row->collected_at ? $row->collected_at->format('d M Y') : '-',
-                    'time'   => $row->collected_at ? $row->collected_at->format('H:i:s') : '-',
-                    'level'  => 'Info',
-                    'device' => $row->device,
-                    'ip'     => $row->ip_address,
-                    'event'  => 'SNMP Metric collected: ' . $row->metric_name,
-                    'source' => 'SNMP Poller',
-                    'desc'   => $row->metric_name . ' = ' . $row->metric_value,
-                    'type'   => 'System',
+                    'id'          => 'SM-' . $row->id,
+                    'date'        => $row->collected_at ? $row->collected_at->format('d M Y') : '-',
+                    'date_filter' => $row->collected_at ? $row->collected_at->format('Y-m-d') : '',
+                    'time'        => $row->collected_at ? $row->collected_at->format('H:i:s') : '-',
+                    'level'       => 'Info',
+                    'device'      => $row->device,
+                    'ip'          => $row->ip_address,
+                    'event'       => 'SNMP Metric collected: ' . $row->metric_name,
+                    'source'      => 'SNMP Poller',
+                    'desc'        => $row->metric_name . ' = ' . $row->metric_value,
+                    'type'        => 'System',
                 ];
             });
 

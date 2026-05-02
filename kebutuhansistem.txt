@@ -1,10 +1,10 @@
-Isi sidebar :
+Laman :
 Overview DONE
 Devices DONE
 Details DONE
 Traffic
-Incidents Belum Responsive
-Alerts Belum Responsive
-Logs Done
+Incidents
+Alerts
+Logs DONE
 Settings
-Logout Done
+Logout
