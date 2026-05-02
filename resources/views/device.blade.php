@@ -35,14 +35,11 @@
         {{-- ── Header ── --}}
         <div class="header">
             <div>
-                <h1 class="page-title">Devices</h1>
-                <div class="sub-info">
-                    <span class="dot"></span>
-                    Auto-refresh in <span id="refreshCountdown">8</span>s
-                    &nbsp;&nbsp;·&nbsp;&nbsp;
-                    Last updated: <span id="lastUpdated">just now</span>
-                </div>
+                <h1 class="page-title" style="font-family: 'Space Grotesk', sans-serif; font-size: 3rem; font-weight: 700; letter-spacing: -0.05em; margin: 0;">
+                    Devices
+                </h1>
             </div>
+            {{-- Tombol ADD DEVICE sudah dihapus --}}
         </div>
 
         {{-- ── Device Grid ── --}}
@@ -91,13 +88,13 @@
                                 {{ $isUp && $device->latency_ms !== null ? $device->latency_ms . ' ms' : '-' }}
                             </span><br>
                             @if($isUp)
-                                UP &nbsp;&nbsp;<span>
+                                Uptime &nbsp;&nbsp;<span>
                                     {{ $uptimeSeconds !== null
                                         ? \App\Models\DeviceStatus::formatDuration($uptimeSeconds)
                                         : 'Uptime unavailable' }}
                                 </span><br>
                             @else
-                                LAST &nbsp;<span>
+                                Last Online &nbsp;<span>
                                     {{ $lastOnlineSeconds !== null
                                         ? \App\Models\DeviceStatus::formatDuration($lastOnlineSeconds) . ' ago'
                                         : '–' }}
@@ -122,26 +119,5 @@
         </div>
     </main>
 
-    <script>
-    /* ── Auto-refresh countdown (UI only — replace with actual polling jika perlu) ── */
-    (function () {
-        let seconds = 8;
-        const el = document.getElementById('refreshCountdown');
-        const lastEl = document.getElementById('lastUpdated');
-
-        if (!el) return;
-
-        setInterval(() => {
-            seconds--;
-            if (seconds <= 0) {
-                seconds = 8;
-                // TODO: fetch('/device/data') lalu update kartu secara dinamis
-                lastEl.textContent = 'just now';
-            }
-            el.textContent = seconds;
-        }, 1000);
-    })();
-
-    </script>
 </body>
 </html>
