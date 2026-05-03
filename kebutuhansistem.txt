@@ -4,7 +4,7 @@ Devices DONE
 Details DONE
 Traffic
 Incidents
-Alerts
+Alerts DONE
 Logs DONE
 Settings
 Logout

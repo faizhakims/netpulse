@@ -15,36 +15,36 @@
             <span class="nav-item-label">Overview</span>
         </a>
 
-        <a href="/device" class="nav-item {{ request()->is('device') ? 'active' : '' }}">
+        <a href="/device" class="nav-item {{ request()->is('device') || request()->is('device/*') ? 'active' : '' }}">
             <span class="material-symbols-outlined">router</span>
             <span class="nav-item-label">Devices</span>
         </a>
 
-        <a href="/traffic" class="nav-item">
+        <a href="/traffic" class="nav-item {{ request()->is('traffic') || request()->is('traffic/*') ? 'active' : '' }}">
             <span class="material-symbols-outlined">analytics</span>
             <span class="nav-item-label">Traffic</span>
         </a>
 
         <span class="sidebar-section-label">Monitoring</span>
 
-        <a href="/incidents" class="nav-item">
+        <a href="/incidents" class="nav-item {{ request()->is('incidents') || request()->is('incidents/*') ? 'active' : '' }}">
             <span class="material-symbols-outlined">E911_Emergency</span>
             <span class="nav-item-label">Incidents</span>
         </a>
 
-        <a href="/alert" class="nav-item">
+        <a href="/alert" class="nav-item {{ request()->is('alert') || request()->is('alert/*') ? 'active' : '' }}">
             <span class="material-symbols-outlined">notifications</span>
             <span class="nav-item-label">Alerts</span>
         </a>
 
         <span class="sidebar-section-label">System</span>
 
-        <a href="/logs" class="nav-item {{ request()->is('logs') ? 'active' : '' }}">
+        <a href="/logs" class="nav-item {{ request()->is('logs') || request()->is('logs/*') ? 'active' : '' }}">
             <span class="material-symbols-outlined">list_alt</span>
             <span class="nav-item-label">Logs</span>
         </a>
 
-        <a href="/settings" class="nav-item">
+        <a href="/settings" class="nav-item {{ request()->is('settings') || request()->is('settings/*') ? 'active' : '' }}">
             <span class="material-symbols-outlined">settings</span>
             <span class="nav-item-label">Settings</span>
         </a>
