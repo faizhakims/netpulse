@@ -855,3 +855,153 @@ body {
         font-size: 12px;
     }
 }
+/* ──────────────────────────────────────────────────
+   BANDWIDTH LOG TABLE
+────────────────────────────────────────────────── */
+.bandwidth-log {
+    margin-top: 24px;
+    border-top: 1px solid rgba(171,173,175,0.15);
+    padding-top: 20px;
+}
+
+.bandwidth-log-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.bandwidth-log-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #10B981;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.bandwidth-log-table-wrap {
+    overflow-x: auto;
+}
+
+.bandwidth-log-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.bandwidth-log-table thead tr {
+    border-bottom: 1px solid rgba(171,173,175,0.15);
+}
+
+.bandwidth-log-table th {
+    padding: 6px 12px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: #94a3b8;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.bandwidth-log-table td {
+    padding: 8px 12px;
+    color: #374151;
+    border-bottom: 1px solid rgba(171,173,175,0.08);
+}
+
+.bandwidth-log-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.bandwidth-log-table tbody tr:hover td {
+    background: rgba(16,185,129,0.04);
+}
+
+/* ──────────────────────────────────────────────────
+   LATENCY STATUS CHIPS
+────────────────────────────────────────────────── */
+.moderate-chip {
+    background: rgba(245,158,11,0.12);
+    color: #D97706;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 999px;
+    letter-spacing: 0.03em;
+}
+
+.high-chip {
+    background: rgba(239,68,68,0.12);
+    color: #DC2626;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 999px;
+    letter-spacing: 0.03em;
+}
+
+/* ──────────────────────────────────────────────────
+   BANDWIDTH LOG PANEL ITEMS
+────────────────────────────────────────────────── */
+.bwlog-item {
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(171,173,175,0.12);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: background 0.15s;
+}
+
+.bwlog-item:last-child {
+    border-bottom: none;
+}
+
+.bwlog-item:hover {
+    background: rgba(16,185,129,0.04);
+}
+
+.bwlog-date {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.bwlog-stats {
+    display: flex;
+    gap: 0;
+    border: 1px solid rgba(171,173,175,0.15);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.bwlog-stat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 12px;
+    border-right: 1px solid rgba(171,173,175,0.12);
+}
+
+.bwlog-stat:last-child {
+    border-right: none;
+}
+
+.bwlog-stat-label {
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+.bwlog-stat-value {
+    font-size: 13px;
+    color: #374151;
+    font-weight: 500;
+    font-family: 'Liberation Mono', monospace;
+}
+
+.bwlog-total {
+    background: rgba(16,185,129,0.04);
+}

@@ -18,7 +18,7 @@
     {{-- ==================== MAIN CONTENT ==================== --}}
     <div class="main" id="mainContent">
 
-        {{-- Page Header --}}
+        {{-- Page Header (tanpa "Updated xx ago" — sudah dihapus) --}}
         <div class="page-header">
             <div>
                 <h1 class="page-title">Traffic Monitoring</h1>
@@ -26,13 +26,13 @@
             </div>
             <div class="updated-badge">
                 <span class="live-dot"></span>
-                <span>Updated 3s ago</span>
+                <span>Live</span>
             </div>
         </div>
 
         {{-- Hero Row: Bandwidth Card + Stats Column --}}
         <div class="hero-row">
-            {{-- Main Hero Card --}}
+            {{-- Main Hero Card: Bandwidth Chart (real data 24h) --}}
             <div class="hero-card">
                 <div class="hero-card-top">
                     <div class="hero-card-header">
@@ -59,67 +59,78 @@
                         </div>
                     </div>
                 </div>
-                {{-- Chart --}}
-                <div class="chart-container">
-                    <svg class="chart-svg" viewBox="0 0 768 192" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stop-color="#10B981" stop-opacity="0.35" />
-                                <stop offset="100%" stop-color="#10B981" stop-opacity="0" />
-                            </linearGradient>
-                            <filter id="glow">
-                                <feGaussianBlur stdDeviation="3" result="blur" />
-                                <feMerge>
-                                    <feMergeNode in="blur" />
-                                    <feMergeNode in="SourceGraphic" />
-                                </feMerge>
-                            </filter>
-                        </defs>
-                        <path class="chart-area" d="M0,128 L38,118 L77,132 L115,108 L154,120 L192,95 L230,105 L269,88 L307,98 L346,78 L384,90 L422,72 L461,85 L499,68 L538,80 L576,62 L614,75 L653,58 L691,70 L730,55 L768,65 L768,192 L0,192 Z" />
-                        <path class="chart-line-glow" d="M0,128 L38,118 L77,132 L115,108 L154,120 L192,95 L230,105 L269,88 L307,98 L346,78 L384,90 L422,72 L461,85 L499,68 L538,80 L576,62 L614,75 L653,58 L691,70 L730,55 L768,65" filter="url(#glow)" />
-                        <path class="chart-line" d="M0,128 L38,118 L77,132 L115,108 L154,120 L192,95 L230,105 L269,88 L307,98 L346,78 L384,90 L422,72 L461,85 L499,68 L538,80 L576,62 L614,75 L653,58 L691,70 L730,55 L768,65" />
-                    </svg>
+
+                {{-- Chart SVG dirender via JS dari data real --}}
+                <div class="chart-container" style="position:relative;">
+                    <canvas id="bandwidthChart" style="width:100%;height:192px;display:block;"></canvas>
                 </div>
+
             </div>
 
             {{-- Stats Column --}}
             <div class="stats-column">
-                {{-- Latency Card --}}
+                {{-- Latency Card: dari device_status real --}}
                 <div class="stat-card latency-card">
                     <div class="stat-card-header-row">
                         <span class="stat-card-label">NETWORK LATENCY</span>
-                        <span class="material-symbols-outlined stat-card-icon">network_ping</span>
+                        
                     </div>
                     <div class="stat-card-body">
-                        <div class="stat-card-value-row">
-                            <span class="stat-card-value">24</span>
-                            <span class="stat-card-unit">ms</span>
-                        </div>
-                        <span class="stat-card-sub">Average</span>
+                        @if($avgLatency !== null)
+                            <div class="stat-card-value-row">
+                                <span class="stat-card-value">{{ $avgLatency }}</span>
+                                <span class="stat-card-unit">ms</span>
+                            </div>
+                            <span class="stat-card-sub">Average (active devices)</span>
+                        @else
+                            <div class="stat-card-value-row">
+                                <span class="stat-card-value" style="font-size:32px;color:#94a3b8;">—</span>
+                            </div>
+                            <span class="stat-card-sub">No active devices</span>
+                        @endif
                     </div>
                     <div class="stat-card-footer">
-                        <span class="stat-footer-text">Peak: 89ms</span>
-                        <span class="stat-chip stable-chip">Stable</span>
+                        @if($peakLatency !== null)
+                            <span class="stat-footer-text">Peak: {{ $peakLatency }}ms</span>
+                            <span class="stat-chip {{ $latencyStatus === 'Stable' ? 'stable-chip' : ($latencyStatus === 'Moderate' ? 'moderate-chip' : 'high-chip') }}">
+                                {{ $latencyStatus }}
+                            </span>
+                        @else
+                            <span class="stat-footer-text" style="color:#94a3b8;">All devices offline</span>
+                        @endif
                     </div>
                 </div>
 
-                {{-- Packet Loss Card --}}
+                {{-- Packet Loss Card: dari data nyata, atau "-" jika tidak ada --}}
                 <div class="stat-card packet-loss-card">
                     <div class="stat-card-header-row">
                         <span class="stat-card-label">PACKET LOSS</span>
-                        <span class="material-symbols-outlined stat-card-icon" style="color:#B31B25;">error</span>
+                        
                     </div>
                     <div class="stat-card-body">
-                        <div class="stat-card-value-row">
-                            <span class="stat-card-value">0.02</span>
-                            <span class="stat-card-unit">%</span>
-                        </div>
-                        <span class="stat-card-sub">Global Average</span>
+                        @if($packetLoss !== null)
+                            <div class="stat-card-value-row">
+                                <span class="stat-card-value">{{ $packetLoss }}</span>
+                                <span class="stat-card-unit">%</span>
+                            </div>
+                            <span class="stat-card-sub">Global Average (SNMP)</span>
+                        @else
+                            <div class="stat-card-value-row">
+                                <span class="stat-card-value" style="font-size:32px;color:#94a3b8;">—</span>
+                            </div>
+                            <span class="stat-card-sub">No SNMP data available</span>
+                        @endif
                     </div>
                     <div class="stat-card-footer packet-footer">
+                        @if($packetLoss !== null)
                         <div class="packet-bar">
-                            <div class="packet-bar-fill"></div>
+                            <div class="packet-bar-fill" style="width:{{ min($packetLoss * 10, 100) }}%;"></div>
                         </div>
+                        @else
+                        <span style="font-size:12px;color:#94a3b8;">
+                            Requires <code>packet_loss</code> metric in snmp_metrics
+                        </span>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -131,7 +142,7 @@
                 <h3 class="table-card-title">Top Busiest Devices</h3>
                 <button class="view-all-btn" id="viewAllBtn" onclick="openAllDevicesPanel()">
                     <span>View All</span>
-                    <span class="material-symbols-outlined" style="font-size:14px;">arrow_forward_ios</span>
+                    <span class="btn-arrow">&rarr;</span>
                 </button>
             </div>
             <div class="table-scroll">
@@ -140,29 +151,26 @@
                         <tr>
                             <th>DEVICE NAME</th>
                             <th>IP ADDRESS</th>
-                            <th>LOCATION</th>
                             <th>BANDWIDTH</th>
                             <th>STATUS</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($topDevices as $device)
+                        @forelse($topDevices as $device)
                         <tr>
                             <td>
                                 <div class="device-name-cell">
-                                    <span class="material-symbols-outlined device-icon">router</span>
+                                    
                                     <span>{{ $device->device }}</span>
                                 </div>
                             </td>
                             <td><span class="mono-text">{{ $device->ip_address }}</span></td>
-                            <td>{{ $device->location ?? '-' }}</td>
                             <td>{{ \App\Models\InterfaceTraffic::formatBytes($device->total_bytes) }}</td>
                             <td>
                                 @php
-                                    $status = strtolower($device->status ?? 'unknown');
-                                    $dotColor = $status === 'up' ? '#65F3B6' : ($status === 'down' ? '#ef4444' : '#94a3b8');
-                                    $label = $status === 'up' ? 'Active' : ($status === 'down' ? 'Offline' : 'Unknown');
-                                    $badgeClass = $status === 'up' ? 'load-badge-active' : ($status === 'down' ? 'load-badge-critical' : '');
+                                    $status    = strtolower($device->status ?? 'unknown');
+                                    $dotColor  = $status === 'up' ? '#65F3B6' : ($status === 'down' ? '#ef4444' : '#94a3b8');
+                                    $label     = $status === 'up' ? 'Active' : ($status === 'down' ? 'Offline' : 'Unknown');
                                 @endphp
                                 <div class="status-cell">
                                     <span class="status-dot" style="background:{{ $dotColor }};"></span>
@@ -170,7 +178,52 @@
                                 </div>
                             </td>
                         </tr>
-                        @endforeach
+                        @empty
+                        <tr>
+                            <td colspan="4" style="text-align:center;color:#94a3b8;padding:24px;">
+                                No traffic data available
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {{-- Bandwidth Log Card --}}
+        <div class="table-card">
+            <div class="table-card-header">
+                <h3 class="table-card-title">Bandwidth Log</h3>
+                <button class="view-all-btn" onclick="openBandwidthLogPanel()">
+                    <span>View All</span>
+                    <span class="btn-arrow">&rarr;</span>
+                </button>
+            </div>
+            <div class="table-scroll">
+                <table class="devices-table">
+                    <thead>
+                        <tr>
+                            <th>DATE</th>
+                            <th>UPLOAD</th>
+                            <th>DOWNLOAD</th>
+                            <th>TOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($bandwidthLog->take(7) as $log)
+                        <tr>
+                            <td><span class="mono-text">{{ \Carbon\Carbon::parse($log->date)->format('d M Y') }}</span></td>
+                            <td>{{ \App\Models\InterfaceTraffic::formatBytes($log->total_in) }}</td>
+                            <td>{{ \App\Models\InterfaceTraffic::formatBytes($log->total_out) }}</td>
+                            <td><strong>{{ \App\Models\InterfaceTraffic::formatBytes($log->total_bytes) }}</strong></td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="4" style="text-align:center;color:#94a3b8;padding:24px;">
+                                No bandwidth log data available
+                            </td>
+                        </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
@@ -192,29 +245,29 @@
     {{-- ==================== ALL DEVICES SLIDE PANEL ==================== --}}
     <div class="all-devices-panel" id="allDevicesPanel">
         <div class="panel-header">
-            <span class="panel-title">All Devices</span>
+            <span class="panel-title">All Devices ({{ $allDevices->count() }})</span>
             <button class="panel-close-btn" onclick="closeAllDevicesPanel()" aria-label="Close panel">
-                <span class="material-symbols-outlined" style="font-size:20px;">close</span>
-                <span class="fallback-x" style="display:none;">&times;</span>
+                
+                &times;
             </button>
         </div>
 
         <div class="panel-search-wrap">
-            <span class="material-symbols-outlined panel-search-icon">search</span>
+            
             <input type="text" class="panel-search-input" id="panelSearchInput" placeholder="Search devices..." oninput="filterPanelDevices()">
         </div>
 
         <div class="panel-device-list" id="panelDeviceList">
-            @foreach($topDevices as $device)
+            @forelse($allDevices as $device)
             @php
-                $status = strtolower($device->status ?? 'unknown');
-                $dotColor = $status === 'up' ? '#65F3B6' : ($status === 'down' ? '#ef4444' : '#94a3b8');
-                $label = $status === 'up' ? 'Active' : ($status === 'down' ? 'Offline' : 'Unknown');
+                $status    = strtolower($device->status ?? 'unknown');
+                $dotColor  = $status === 'up' ? '#65F3B6' : ($status === 'down' ? '#ef4444' : '#94a3b8');
+                $label     = $status === 'up' ? 'Active' : ($status === 'down' ? 'Offline' : 'Unknown');
                 $badgeClass = $status === 'up' ? 'load-badge-active' : ($status === 'down' ? 'load-badge-critical' : '');
             @endphp
             <div class="panel-device-item" data-search="{{ strtolower($device->device) }} {{ strtolower($device->ip_address) }}">
                 <div class="panel-device-left">
-                    <span class="material-symbols-outlined panel-device-icon">router</span>
+                    
                     <div class="panel-device-info">
                         <span class="panel-device-name">{{ $device->device }}</span>
                         <span class="panel-device-ip mono-text">{{ $device->ip_address }}</span>
@@ -229,20 +282,100 @@
                     <span class="load-badge {{ $badgeClass }}">{{ $label }}</span>
                 </div>
             </div>
-            @endforeach
+            @empty
+            <div style="text-align:center;padding:40px;color:#94a3b8;">
+                
+                <p>No devices found</p>
+            </div>
+            @endforelse
             <div class="panel-no-results" id="panelNoResults" style="display:none;">
-                <span class="material-symbols-outlined" style="font-size:40px;color:#CBD5E1;">search_off</span>
+                
                 <p>No devices found</p>
             </div>
         </div>
     </div>
 
-    {{-- Panel Overlay (mobile) --}}
-    <div class="panel-overlay" id="panelOverlay" onclick="closeAllDevicesPanel()"></div>
+    {{-- ==================== BANDWIDTH LOG SLIDE PANEL ==================== --}}
+    <div class="all-devices-panel" id="bandwidthLogPanel">
+        <div class="panel-header">
+            <span class="panel-title">Bandwidth Log ({{ $bandwidthLog->count() }} days)</span>
+            <button class="panel-close-btn" onclick="closeBandwidthLogPanel()" aria-label="Close panel">
+                
+                &times;
+            </button>
+        </div>
+
+        <div class="panel-search-wrap">
+            
+            <input type="text" class="panel-search-input" id="bwLogSearchInput" placeholder="Search by date " oninput="filterBwLog()">
+        </div>
+
+        <div class="panel-device-list" id="bwLogList">
+            @forelse($bandwidthLog as $log)
+            @php $dateStr = \Carbon\Carbon::parse($log->date)->format('d M Y'); @endphp
+            <div class="bwlog-item" data-search="{{ strtolower($dateStr) }}">
+                <div class="bwlog-date">
+                    
+                    <span class="mono-text" style="font-weight:600;color:#2C2F31;">{{ $dateStr }}</span>
+                </div>
+                <div class="bwlog-stats">
+                    <div class="bwlog-stat">
+                        <span class="bwlog-stat-label">
+                            <span class="breakdown-dot upload-dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#10B981;margin-right:4px;"></span>
+                            Upload
+                        </span>
+                        <span class="bwlog-stat-value">{{ \App\Models\InterfaceTraffic::formatBytes($log->total_in) }}</span>
+                    </div>
+                    <div class="bwlog-stat">
+                        <span class="bwlog-stat-label">
+                            <span class="breakdown-dot download-dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#3B82F6;margin-right:4px;"></span>
+                            Download
+                        </span>
+                        <span class="bwlog-stat-value">{{ \App\Models\InterfaceTraffic::formatBytes($log->total_out) }}</span>
+                    </div>
+                    <div class="bwlog-stat bwlog-total">
+                        <span class="bwlog-stat-label">Total</span>
+                        <span class="bwlog-stat-value" style="font-weight:700;color:#2C2F31;">{{ \App\Models\InterfaceTraffic::formatBytes($log->total_bytes) }}</span>
+                    </div>
+                </div>
+            </div>
+            @empty
+            <div style="text-align:center;padding:40px;color:#94a3b8;">
+                
+                <p>No bandwidth log data</p>
+            </div>
+            @endforelse
+            <div class="panel-no-results" id="bwLogNoResults" style="display:none;">
+                
+                <p>No results found</p>
+            </div>
+        </div>
+    </div>
+
+    {{-- Panel Overlay (shared for all panels) --}}
+    <div class="panel-overlay" id="panelOverlay" onclick="closeAllPanels()"></div>
+
+    {{-- Pass PHP data to JS --}}
+    <script>
+        const chartHours  = @json($chartHours);
+        const chartValues = @json($chartValues);
+    </script>
 
     {{-- JavaScript --}}
     <script>
+        // ── Shared helper ─────────────────────────────────────────────────────
+        function closeAllPanels() {
+            ['allDevicesPanel', 'bandwidthLogPanel'].forEach(id => {
+                document.getElementById(id).classList.remove('open');
+            });
+            document.getElementById('mainContent').classList.remove('panel-open');
+            document.getElementById('panelOverlay').classList.remove('visible');
+            document.body.style.overflow = '';
+        }
+
+        // ── Devices panel ─────────────────────────────────────────────────────
         function openAllDevicesPanel() {
+            closeAllPanels();
             document.getElementById('allDevicesPanel').classList.add('open');
             document.getElementById('mainContent').classList.add('panel-open');
             document.getElementById('panelOverlay').classList.add('visible');
@@ -251,53 +384,133 @@
             filterPanelDevices();
         }
 
-        function closeAllDevicesPanel() {
-            document.getElementById('allDevicesPanel').classList.remove('open');
-            document.getElementById('mainContent').classList.remove('panel-open');
-            document.getElementById('panelOverlay').classList.remove('visible');
-            document.body.style.overflow = '';
-        }
+        function closeAllDevicesPanel() { closeAllPanels(); }
 
         function filterPanelDevices() {
             const search = document.getElementById('panelSearchInput').value.toLowerCase();
-            const items = document.querySelectorAll('.panel-device-item');
+            const items  = document.querySelectorAll('.panel-device-item');
             let found = 0;
             items.forEach(item => {
-                const haystack = item.dataset.search || '';
-                if (search === '' || haystack.includes(search)) {
-                    item.style.display = '';
-                    found++;
-                } else {
-                    item.style.display = 'none';
-                }
+                const hay = item.dataset.search || '';
+                const show = search === '' || hay.includes(search);
+                item.style.display = show ? '' : 'none';
+                if (show) found++;
             });
             document.getElementById('panelNoResults').style.display = found ? 'none' : 'flex';
         }
 
         document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') closeAllDevicesPanel();
+            if (e.key === 'Escape') closeAllPanels();
         });
 
-        // Simulasi live update
-        (function() {
-            const badge = document.querySelector('.updated-badge span:last-child');
-            let counter = 3;
-            if (badge) {
-                setInterval(() => {
-                    counter = counter >= 15 ? 1 : counter + 1;
-                    badge.textContent = 'Updated ' + counter + 's ago';
-                }, 3000);
+        // ── Bandwidth Log panel ───────────────────────────────────────────────
+        function openBandwidthLogPanel() {
+            closeAllPanels();
+            document.getElementById('bandwidthLogPanel').classList.add('open');
+            document.getElementById('mainContent').classList.add('panel-open');
+            document.getElementById('panelOverlay').classList.add('visible');
+            document.body.style.overflow = 'hidden';
+            document.getElementById('bwLogSearchInput').value = '';
+            filterBwLog();
+        }
+
+        function closeBandwidthLogPanel() { closeAllPanels(); }
+
+        function filterBwLog() {
+            const search = document.getElementById('bwLogSearchInput').value.toLowerCase();
+            const items  = document.querySelectorAll('.bwlog-item');
+            let found = 0;
+            items.forEach(item => {
+                const hay  = item.dataset.search || '';
+                const show = search === '' || hay.includes(search);
+                item.style.display = show ? '' : 'none';
+                if (show) found++;
+            });
+            document.getElementById('bwLogNoResults').style.display = found ? 'none' : 'flex';
+        }
+
+        // ── Bandwidth Chart (Canvas, data real dari server) ───────────────────
+        (function () {
+            const canvas = document.getElementById('bandwidthChart');
+            if (!canvas) return;
+
+            const dpr = window.devicePixelRatio || 1;
+            const W   = canvas.offsetWidth  || canvas.parentElement.offsetWidth;
+            const H   = 192;
+            canvas.width  = W * dpr;
+            canvas.height = H * dpr;
+            canvas.style.height = H + 'px';
+
+            const ctx = canvas.getContext('2d');
+            ctx.scale(dpr, dpr);
+
+            const values = chartValues;  // array 24 nilai dari PHP
+            const labels = chartHours;   // array 24 label jam
+
+            if (!values || values.length === 0) {
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '14px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Belum ada data 24 jam terakhir', W / 2, H / 2);
+                return;
             }
+
+            const maxVal = Math.max(...values, 1);
+            const padTop = 16, padBot = 24, padL = 4, padR = 4;
+            const chartW = W - padL - padR;
+            const chartH = H - padTop - padBot;
+
+            // Titik koordinat
+            const pts = values.map((v, i) => ({
+                x: padL + (i / (values.length - 1)) * chartW,
+                y: padTop + chartH - (v / maxVal) * chartH,
+            }));
+
+            // Area gradient
+            const grad = ctx.createLinearGradient(0, padTop, 0, padTop + chartH);
+            grad.addColorStop(0,   'rgba(16,185,129,0.35)');
+            grad.addColorStop(1,   'rgba(16,185,129,0)');
+
+            ctx.beginPath();
+            ctx.moveTo(pts[0].x, pts[0].y);
+            for (let i = 1; i < pts.length; i++) {
+                ctx.lineTo(pts[i].x, pts[i].y);
+            }
+            ctx.lineTo(pts[pts.length - 1].x, padTop + chartH);
+            ctx.lineTo(pts[0].x, padTop + chartH);
+            ctx.closePath();
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            // Line
+            ctx.beginPath();
+            ctx.moveTo(pts[0].x, pts[0].y);
+            for (let i = 1; i < pts.length; i++) {
+                ctx.lineTo(pts[i].x, pts[i].y);
+            }
+            ctx.strokeStyle = '#10B981';
+            ctx.lineWidth   = 2;
+            ctx.stroke();
+
+            // Label jam (setiap 4 jam)
+            ctx.fillStyle   = '#94a3b8';
+            ctx.font        = '10px Inter, sans-serif';
+            ctx.textAlign   = 'center';
+            labels.forEach((label, i) => {
+                if (i % 4 === 0) {
+                    ctx.fillText(label, pts[i].x, H - 6);
+                }
+            });
         })();
 
-        // Fallback X jika Material Icons gagal load
-        window.addEventListener('load', function() {
+        // ── Fallback X jika Material Icons gagal load ─────────────────────────
+        window.addEventListener('load', function () {
             const closeBtn = document.querySelector('.panel-close-btn');
             if (closeBtn) {
-                const icon = closeBtn.querySelector('.material-symbols-outlined');
+                const icon     = closeBtn.querySelector('.material-symbols-outlined');
                 const fallback = closeBtn.querySelector('.fallback-x');
                 if (icon && icon.offsetWidth === 0 && fallback) {
-                    icon.style.display = 'none';
+                    icon.style.display     = 'none';
                     fallback.style.display = 'inline';
                 }
             }
