@@ -59,10 +59,6 @@
 
                 <div class="device-hero-actions">
                     {{-- REVISI 6: Edit, Ping, Reboot, Hapus tidak diubah fungsionalitasnya --}}
-                    <button class="btn-action btn-edit">
-                        <span class="material-symbols-outlined">edit</span>
-                        Edit
-                    </button>
                     <button class="btn-action btn-ping" id="pingBtn">
                         <span class="material-symbols-outlined">wifi_tethering</span>
                         Ping Now
@@ -117,7 +113,7 @@
                         @if($effectiveStatus === 'unknown')
                             -
                         @else
-                            {{ $metrics->get('packetLoss') ? $metrics->get('packetLoss')->metric_value : '0' }}<span class="unit">%</span>
+                            {{ $metrics->get('packet_loss') ? $metrics->get('packet_loss')->metric_value : '0' }}<span class="unit">%</span>
                         @endif
                     </div>
                     <div class="stat-card-sub">Stable connection</div>
