@@ -86,10 +86,21 @@ class DashboardController extends Controller
         while (count($latencyEdge) < 21) $latencyEdge[] = 0;
 
         // ── Active Incidents ───────────────────────────────────────────────
+        // Only show incidents for devices that exist in device_status
+        // (same logic as IncidentController to keep both pages in sync)
+        $monitoredDevices = DB::table('device_status')
+            ->select('device')->distinct()->pluck('device');
+
         $activeIncidents = \App\Models\Incident::whereNull('resolved_at')
+            ->when($monitoredDevices->isNotEmpty(), fn($q) => $q->whereIn('device', $monitoredDevices))
+            ->orderByRaw("FIELD(status,'Critical','Warning','Monitoring','Info')")
             ->orderByDesc('started_at')
             ->get();
-        $maxSeverity = $activeIncidents->max('status') ?? 'NONE';
+
+        // Severity priority: Critical > Warning > Monitoring > Info
+        $severityOrder = ['Critical' => 4, 'Warning' => 3, 'Monitoring' => 2, 'Info' => 1];
+        $maxSeverity = $activeIncidents->sortByDesc(fn($i) => $severityOrder[$i->status] ?? 0)
+            ->first()?->status ?? 'NONE';
 
         // ── Semua device untuk slide panel ────────────────────────────────
         $allDevices = $latestDevices;

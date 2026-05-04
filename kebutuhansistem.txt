@@ -2,8 +2,8 @@ Laman :
 Overview DONE
 Devices DONE
 Details DONE
-Traffic
-Incidents
+Traffic DONE
+Incidents DONE
 Alerts DONE
 Logs DONE
 Settings

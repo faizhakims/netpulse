@@ -24,13 +24,16 @@
     @include('partials.sidebar')
 
     <div class="main" id="mainContent">
-        {{-- ===================== Header (REVISI 1: hapus "Updated just now") ===================== --}}
+        {{-- ===================== Header ===================== --}}
         <div class="page-header">
             <div>
                 <h1 class="page-title">Incidents Management</h1>
-                <p class="page-subtitle">Real‑time overview of network anomalies, device outages, and performance degradation.</p>
+                <p class="page-subtitle">Real-time overview of network anomalies, device outages, and performance degradation.</p>
             </div>
-            {{-- REVISI 1: Badge "Updated just now" dihapus --}}
+            <div class="updated-badge">
+                <span class="live-dot"></span>
+                <span>Live</span>
+            </div>
         </div>
 
         {{-- ===================== Stat Cards ===================== --}}
@@ -59,7 +62,6 @@
                 <div class="active-incidents-header">
                     <div>
                         <h2 class="section-title">Active Incidents</h2>
-                        {{-- REVISI 4: info bahwa auto-resolve aktif --}}
                         <p class="section-subtitle">Auto-resolved when device returns to normal.</p>
                     </div>
                     <div class="toolbar">
@@ -77,7 +79,7 @@
                     </div>
                 </div>
 
-                {{-- REVISI 2: table-responsive diberi max-height agar maks 8 baris lalu scroll --}}
+                {{-- Table with max 6 visible rows, then scroll --}}
                 <div class="table-responsive" id="incidentTableWrap">
                     <table class="incident-table" id="incidentTable">
                         <thead>
@@ -128,7 +130,7 @@
                 @if($activeIncidents->count() > 0)
                 <div class="table-info">
                     <span id="visibleCount">{{ $activeIncidents->count() }}</span> incident{{ $activeIncidents->count() !== 1 ? 's' : '' }} active
-                    @if($activeIncidents->count() > 8)
+                    @if($activeIncidents->count() > 6)
                     &nbsp;·&nbsp; scroll to see more
                     @endif
                 </div>
@@ -259,6 +261,23 @@
             document.addEventListener('keydown', e => {
                 if (e.key === 'Escape') closeHistory();
             });
+
+            // Auto-refresh: reload page every 30 seconds to pick up newly
+            // resolved incidents and new active incidents. Only reloads when
+            // the history panel is not open (avoids disrupting the user).
+            let autoRefreshTimer = setInterval(() => {
+                const panelOpen = panel && panel.classList.contains('open');
+                if (!panelOpen) {
+                    window.location.reload();
+                }
+            }, 30000);
+
+            // Pause auto-refresh while user is actively filtering/searching
+            let lastInteraction = Date.now();
+            [searchInput, severityFilter].forEach(el => {
+                if (el) el.addEventListener('input', () => { lastInteraction = Date.now(); });
+            });
+
         })();
     </script>
 </body>

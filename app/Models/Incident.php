@@ -46,7 +46,9 @@ class Incident extends Model
     }
 
     /**
-     * Hitung durasi otomatis dari started_at jika kolom duration kosong.
+     * Hitung durasi otomatis dari started_at.
+     * Jika duration sudah tersimpan, gunakan itu.
+     * Guard terhadap durasi negatif (data seeder tidak konsisten).
      */
     public function displayDuration(): string
     {
@@ -54,15 +56,22 @@ class Incident extends Model
             return $this->duration;
         }
 
-        $end = $this->resolved_at ?? now();
-        $diff = $this->started_at->diff($end);
+        if (!$this->started_at) return '—';
 
-        if ($diff->h > 0) {
-            return "{$diff->h}h {$diff->i}m";
+        $end  = $this->resolved_at ?? now();
+        $secs = (int) $this->started_at->diffInSeconds($end, false); // false = signed
+
+        // Negatif berarti started_at > end — data tidak valid, tampilkan —
+        if ($secs < 0) return '—';
+
+        if ($secs < 60)   return "{$secs}s";
+        if ($secs < 3600) {
+            $m = intdiv($secs, 60);
+            $s = $secs % 60;
+            return $s > 0 ? "{$m}m {$s}s" : "{$m}m";
         }
-        if ($diff->i > 0) {
-            return "{$diff->i}m {$diff->s}s";
-        }
-        return "{$diff->s}s";
+        $h = intdiv($secs, 3600);
+        $m = intdiv($secs % 3600, 60);
+        return $m > 0 ? "{$h}h {$m}m" : "{$h}h";
     }
 }

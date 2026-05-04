@@ -79,12 +79,13 @@ class IncidentAlertSeeder extends Seeder
         }
 
         // ── Sample Incidents ──────────────────────────────────────────────────
+        // Active incidents use real device names that match device_status entries
+        // so the auto-resolve logic can properly evaluate them
         $active = [
-            ['device' => 'Core Router Alpha-01', 'ip_address' => '10.0.0.1',  'issue' => 'Connection lost – no traffic',     'status' => 'Critical',   'started_at' => now()->subHours(1)->subMinutes(12)],
-            ['device' => 'Switch 12F – Floor 3', 'ip_address' => '10.0.1.12', 'issue' => 'Packet loss > 15%',                'status' => 'Warning',    'started_at' => now()->subMinutes(45)],
-            ['device' => 'AP Lobby-02',          'ip_address' => '10.0.2.2',  'issue' => 'Latency spike – 120ms',            'status' => 'Monitoring', 'started_at' => now()->subMinutes(2)->subSeconds(14)],
-            ['device' => 'Firewall Perimeter',   'ip_address' => '10.0.0.254','issue' => 'Interface flapping',               'status' => 'Info',       'started_at' => now()->subSeconds(18)],
-            ['device' => 'Switch-Core-01',       'ip_address' => '10.0.0.2',  'issue' => 'Spanning Tree Topology Change',    'status' => 'Warning',    'started_at' => now()->subMinutes(3)->subSeconds(5)],
+            ['device' => 'main-router',   'ip_address' => '192.168.99.1', 'issue' => 'Connection lost – no traffic',  'status' => 'Critical',   'started_at' => now()->subHours(1)->subMinutes(12)],
+            ['device' => 'router-kantor', 'ip_address' => '192.168.99.3', 'issue' => 'Packet loss > 15%',             'status' => 'Warning',    'started_at' => now()->subMinutes(45)],
+            ['device' => 'openWRT',       'ip_address' => '192.168.99.4', 'issue' => 'Latency spike – 120ms',         'status' => 'Monitoring', 'started_at' => now()->subMinutes(2)->subSeconds(14)],
+            ['device' => 'Switch-1',      'ip_address' => '192.168.99.5', 'issue' => 'Interface flapping',            'status' => 'Info',       'started_at' => now()->subSeconds(18)],
         ];
 
         foreach ($active as $row) {
@@ -95,11 +96,11 @@ class IncidentAlertSeeder extends Seeder
         }
 
         $resolved = [
-            ['device' => 'Router AB1',    'ip_address' => '10.0.0.10', 'issue' => 'Packet loss',         'status' => 'Warning',  'started_at' => now()->subHours(3), 'resolved_at' => now()->subHours(2)->subMinutes(58), 'duration' => '2m'],
-            ['device' => 'Switch Core',   'ip_address' => '10.0.0.3',  'issue' => 'High CPU usage',      'status' => 'Warning',  'started_at' => now()->subHours(4), 'resolved_at' => now()->subHours(3)->subMinutes(55), 'duration' => '5m'],
-            ['device' => 'AP Office',     'ip_address' => '10.0.2.5',  'issue' => 'Latency spike',       'status' => 'Monitoring','started_at' => now()->subHours(5),'resolved_at' => now()->subHours(4)->subMinutes(59), 'duration' => '1m'],
-            ['device' => 'Firewall',      'ip_address' => '10.0.0.254','issue' => 'Interface down',      'status' => 'Critical', 'started_at' => now()->subHours(6), 'resolved_at' => now()->subHours(5)->subMinutes(59)->subSeconds(30), 'duration' => '30s'],
-            ['device' => 'Router AB1',    'ip_address' => '10.0.0.10', 'issue' => 'Connection lost',     'status' => 'Critical', 'started_at' => now()->subHours(8), 'resolved_at' => now()->subHours(7), 'duration' => '1h'],
+            ['device' => 'main-router',   'ip_address' => '192.168.99.1', 'issue' => 'Packet loss',        'status' => 'Warning',   'started_at' => now()->subHours(3), 'resolved_at' => now()->subHours(2)->subMinutes(58), 'duration' => '2m'],
+            ['device' => 'Switch-2',      'ip_address' => '192.168.99.6', 'issue' => 'High CPU usage',     'status' => 'Warning',   'started_at' => now()->subHours(4), 'resolved_at' => now()->subHours(3)->subMinutes(55), 'duration' => '5m'],
+            ['device' => 'openWRT',       'ip_address' => '192.168.99.4', 'issue' => 'Latency spike',      'status' => 'Monitoring','started_at' => now()->subHours(5), 'resolved_at' => now()->subHours(4)->subMinutes(59), 'duration' => '1m'],
+            ['device' => 'router-kantor', 'ip_address' => '192.168.99.3', 'issue' => 'Interface down',     'status' => 'Critical',  'started_at' => now()->subHours(6), 'resolved_at' => now()->subHours(5)->subMinutes(59)->subSeconds(30), 'duration' => '30s'],
+            ['device' => 'main-router',   'ip_address' => '192.168.99.1', 'issue' => 'Connection lost',    'status' => 'Critical',  'started_at' => now()->subHours(8), 'resolved_at' => now()->subHours(7), 'duration' => '1h'],
         ];
 
         foreach ($resolved as $row) {

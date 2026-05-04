@@ -18,7 +18,7 @@ body {
 }
 
 /* ============================
-   Header (REVISI 1: .updated-badge dihapus)
+   Page Header
    ============================ */
 .page-header {
     display: flex;
@@ -32,9 +32,34 @@ body {
     font-family: 'Space Grotesk', sans-serif;
     font-size: 32px; font-weight: 700; letter-spacing: -0.5px;
     color: #0f172a; line-height: 1.1;
-    margin-bottom: 4px;
+    margin: 0 0 4px;
 }
-.page-subtitle { font-size: 14px; color: #64748B; }
+.page-subtitle { font-size: 14px; color: #64748B; margin: 0; }
+
+.updated-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #747779;
+    font-weight: 400;
+    padding: 8px 16px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(171,173,175,0.1);
+    border-radius: 9999px;
+    white-space: nowrap;
+}
+.live-dot {
+    width: 8px; height: 8px;
+    background: #047857;
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+}
 
 /* ============================
    Stat Cards
@@ -151,11 +176,11 @@ body {
     cursor: pointer;
 }
 
-/* REVISI 2: Table container dengan max-height 8 baris + scroll */
+/* Table container: max 6 baris terlihat lalu scroll */
 .table-responsive {
     overflow-x: auto;
     overflow-y: auto;
-    max-height: calc(8 * 57px + 44px); /* 8 baris + 1 thead */
+    max-height: calc(6 * 57px + 44px); /* 6 baris + 1 thead */
     min-width: 0;
     width: 100%;
     -webkit-overflow-scrolling: touch;

@@ -60,7 +60,13 @@
                                 <span class="status-dot ping-ring" style="background:#ef4444;width:10px;height:10px;"></span>
                                 Active Incidents
                             </h2>
-                            <p class="incidents-sub">Immediate attention required for {{ $activeIncidents->count() }} critical issues</p>
+                            <p class="incidents-sub">
+                                @if($activeIncidents->count() === 0)
+                                    All systems operational
+                                @else
+                                    {{ $activeIncidents->count() }} active incident{{ $activeIncidents->count() !== 1 ? 's' : '' }} require{{ $activeIncidents->count() === 1 ? 's' : '' }} attention
+                                @endif
+                            </p>
                         </div>
                         <div class="incidents-stats">
                             <div class="stat-block">
@@ -78,9 +84,15 @@
                     <div class="flex flex-col gap-3 relative z-1" style="max-height:276px;overflow-y:auto;padding-right:4px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.15) transparent;">
                         @forelse($activeIncidents as $incident)
                             @php
-                                $severity = strtolower($incident->severity ?? 'major');
-                                $iconName = $severity === 'critical' ? 'priority_high' : 'warning';
-                                $badgeClass = $severity === 'critical' ? 'badge-critical' : 'badge-major';
+                                // Map status (Critical/Warning/Monitoring/Info) → severity class
+                                $severity  = match($incident->status) {
+                                    'Critical'   => 'critical',
+                                    'Warning'    => 'major',
+                                    'Monitoring' => 'normal',
+                                    default      => 'info',
+                                };
+                                $iconName  = $incident->status === 'Critical' ? 'priority_high' : 'warning';
+                                $badgeClass = $incident->status === 'Critical' ? 'badge-critical' : 'badge-major';
                             @endphp
                             <div class="incident-row">
                                 <div class="flex items-center gap-4">
@@ -89,17 +101,17 @@
                                     </div>
                                     <div class="incident-info">
                                         <div class="incident-meta">
-                                            <span class="incident-id mono">#INC-{{ $incident->id }}</span>
-                                            <span class="badge {{ $badgeClass }}">{{ ucfirst($severity) }}</span>
+                                            <span class="incident-id mono">#INC-{{ str_pad($incident->id, 4, '0', STR_PAD_LEFT) }}</span>
+                                            <span class="badge {{ $badgeClass }}">{{ $incident->status }}</span>
                                         </div>
-                                        <p class="incident-desc">{{ $incident->description }}</p>
-                                        <p class="incident-time">{{ $incident->location ?? '' }} • Active for {{ $incident->duration ?? '' }}</p>
+                                        <p class="incident-desc">{{ $incident->issue }}</p>
+                                        <p class="incident-time">{{ $incident->device }}@if($incident->ip_address) · {{ $incident->ip_address }}@endif • Active for {{ $incident->displayDuration() }}</p>
                                     </div>
                                 </div>
-                                <a href="{{ $incident->device ? route('device.show', $incident->device) : '#' }}" class="investigate-btn">Investigate</a>
+                                <a href="{{ route('device.show', $incident->device) }}" class="investigate-btn">Investigate</a>
                             </div>
                         @empty
-                            <p style="color:#94a3b8; font-size:0.9375rem; text-align:center; padding:20px;">No Incidents</p>
+                            <p style="color:#94a3b8; font-size:0.9375rem; text-align:center; padding:20px;">No active incidents — all systems operational.</p>
                         @endforelse
                     </div>
                 </div>
