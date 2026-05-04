@@ -88,10 +88,7 @@
 
     {{-- Tab Navigation --}}
     <div class="settings-tabs">
-        <button class="settings-tab active" data-tab="general">
-            <span class="material-symbols-outlined">tune</span> General
-        </button>
-        <button class="settings-tab" data-tab="users">
+        <button class="settings-tab active" data-tab="users">
             <span class="material-symbols-outlined">group</span> Users
         </button>
         <button class="settings-tab" data-tab="monitoring">
@@ -106,61 +103,6 @@
         <button class="settings-tab" data-tab="system">
             <span class="material-symbols-outlined">dns</span> System
         </button>
-    </div>
-
-    {{-- ══ TAB: GENERAL ══ --}}
-    <div class="tab-panel active" id="tab-general">
-        <div class="section-card">
-            <div class="section-card-header">
-                <div class="section-card-title-group">
-                    <div class="section-icon"><span class="material-symbols-outlined">tune</span></div>
-                    <div>
-                        <p class="section-title">General Settings</p>
-                        <p class="section-sub">Application name, timezone, and regional preferences</p>
-                    </div>
-                </div>
-            </div>
-            <div class="field-grid">
-                <div class="field-grid-2">
-                    <div>
-                        <label class="field-label">Application Name</label>
-                        <input class="field-input" id="g_site_name" type="text"
-                               value="{{ $general['site_name'] ?? 'NetPulse' }}" placeholder="NetPulse">
-                    </div>
-                    <div>
-                        <label class="field-label">Language</label>
-                        <select class="field-select" id="g_site_language">
-                            <option value="en" {{ ($general['site_language'] ?? 'en') === 'en' ? 'selected' : '' }}>English</option>
-                            <option value="id" {{ ($general['site_language'] ?? '') === 'id' ? 'selected' : '' }}>Bahasa Indonesia</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="field-grid-2">
-                    <div>
-                        <label class="field-label">Timezone</label>
-                        <select class="field-select" id="g_site_timezone">
-                            <option value="Asia/Jakarta" {{ ($general['site_timezone'] ?? 'Asia/Jakarta') === 'Asia/Jakarta' ? 'selected' : '' }}>WIB — Asia/Jakarta (UTC+7)</option>
-                            <option value="Asia/Makassar" {{ ($general['site_timezone'] ?? '') === 'Asia/Makassar' ? 'selected' : '' }}>WITA — Asia/Makassar (UTC+8)</option>
-                            <option value="Asia/Jayapura" {{ ($general['site_timezone'] ?? '') === 'Asia/Jayapura' ? 'selected' : '' }}>WIT — Asia/Jayapura (UTC+9)</option>
-                            <option value="UTC" {{ ($general['site_timezone'] ?? '') === 'UTC' ? 'selected' : '' }}>UTC (UTC+0)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="field-label">Date Format</label>
-                        <select class="field-select" id="g_date_format">
-                            <option value="d M Y H:i" {{ ($general['date_format'] ?? 'd M Y H:i') === 'd M Y H:i' ? 'selected' : '' }}>29 Apr 2026 14:30</option>
-                            <option value="Y-m-d H:i:s" {{ ($general['date_format'] ?? '') === 'Y-m-d H:i:s' ? 'selected' : '' }}>2026-04-29 14:30:00</option>
-                            <option value="d/m/Y H:i" {{ ($general['date_format'] ?? '') === 'd/m/Y H:i' ? 'selected' : '' }}>29/04/2026 14:30</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <div class="card-actions">
-                <button class="btn-primary" id="saveGeneralBtn">
-                    <span class="material-symbols-outlined">save</span> Save Changes
-                </button>
-            </div>
-        </div>
     </div>
 
     {{-- ══ TAB: USERS ══ --}}
@@ -595,6 +537,11 @@ document.querySelectorAll('.settings-tab').forEach(tab => {
     });
 });
 
+const defaultTab = document.querySelector('.settings-tab.active');
+if (defaultTab) {
+    defaultTab.click();
+}
+
 // ── Eye toggles ───────────────────────────────────────────────────────────────
 document.querySelectorAll('.field-eye-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -621,16 +568,6 @@ async function saveSettings(url, body, btn) {
     } catch(e) { showToast('Network error.', 'error'); }
     btn.disabled = false; btn.innerHTML = orig;
 }
-
-// ── General ───────────────────────────────────────────────────────────────────
-document.getElementById('saveGeneralBtn').addEventListener('click', function() {
-    saveSettings('/settings/general', {
-        site_name:     document.getElementById('g_site_name').value,
-        site_timezone: document.getElementById('g_site_timezone').value,
-        date_format:   document.getElementById('g_date_format').value,
-        site_language: document.getElementById('g_site_language').value,
-    }, this);
-});
 
 // ── Monitoring ────────────────────────────────────────────────────────────────
 document.getElementById('saveMonitoringBtn').addEventListener('click', function() {
