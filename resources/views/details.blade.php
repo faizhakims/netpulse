@@ -439,7 +439,8 @@
 
     {{-- Chart.js & Scripts --}}
     <script>
-        window.DEVICE_NAME = "{{ $deviceName }}";
+        // window.DEVICE_NAME = "{{ $deviceName }}";
+        window.DEVICE_NAME = @json($deviceName);
         window.CSRF_TOKEN  = "{{ csrf_token() }}";
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

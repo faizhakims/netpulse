@@ -103,7 +103,7 @@ class DeviceController extends Controller
             'uptimePct', 'isStale', 'effectiveStatus', 'lastReboot',
             'incidents', 'alertChannels'
         ));
-        
+
     }
 
     public function ping(Request $request)
@@ -148,6 +148,49 @@ class DeviceController extends Controller
             return response()->json([
                 'status'  => 'error',
                 'message' => 'Reboot gagal: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function deleteDevice(string $deviceName)
+    {
+        $apiUrl = config('services.monitoring.url');
+
+        if (empty($apiUrl)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'MONITORING_API_URL belum dikonfigurasi.',
+            ], 503);
+        }
+
+        try {
+            // Cari ID device dari Python API
+            $listResponse = Http::timeout(10)->get("{$apiUrl}/api/devices");
+            $devices      = collect($listResponse->json()['data'] ?? []);
+            $device       = $devices->firstWhere('name', $deviceName);
+
+            if (!$device) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => "Device '{$deviceName}' tidak ditemukan.",
+                ], 404);
+            }
+
+            // Hapus via Python API — akan archive ke Supabase otomatis
+            $response = Http::timeout(60)->delete("{$apiUrl}/api/devices/{$device['id']}");
+            $data     = $response->json();
+
+            return response()->json([
+                'status'  => $response->successful() ? 'ok'    : 'error',
+                'message' => $data['message'] ?? ($response->successful()
+                    ? "Device '{$deviceName}' berhasil dihapus"
+                    : 'Gagal menghapus device'),
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Gagal terhubung ke monitoring API: ' . $e->getMessage(),
             ], 500);
         }
     }

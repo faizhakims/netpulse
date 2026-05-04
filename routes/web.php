@@ -57,4 +57,6 @@ Route::middleware('auth')->group(function () {
     // ── flash api Route──────────────────────────────────────────────────────────────
     Route::post('/device/ping',   [DeviceController::class, 'ping'])->name('device.ping');
     Route::post('/device/reboot', [DeviceController::class, 'reboot'])->middleware('throttle:3,1');
+    Route::post('/device/add',    [DeviceController::class, 'addDevice'])->name('device.add');
+    Route::delete('/device/{name}/delete', [DeviceController::class, 'deleteDevice'])->name('device.delete');
 });
