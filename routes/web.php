@@ -8,6 +8,7 @@ use App\Http\Controllers\TrafficController;
 use App\Http\Controllers\LogsController;
 use App\Http\Controllers\IncidentController;
 use App\Http\Controllers\AlertController;
+use App\Http\Controllers\SettingsController;
 
 // ── Auth (guest only) ─────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
@@ -59,4 +60,5 @@ Route::middleware('auth')->group(function () {
     Route::post('/device/reboot', [DeviceController::class, 'reboot'])->middleware('throttle:3,1');
     Route::post('/device/add',    [DeviceController::class, 'addDevice'])->name('device.add');
     Route::delete('/device/{name}/delete', [DeviceController::class, 'deleteDevice'])->name('device.delete');
+    Route::post('/settings/backup/manual', [SettingsController::class, 'triggerManualBackup'])->name('settings.backup.manual');
 });

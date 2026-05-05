@@ -485,6 +485,60 @@
                 The scheduler runs <code style="background:#F1F5F9;padding:1px 6px;border-radius:5px;">alerts:check</code> every minute.
                 For development, run <code style="background:#F1F5F9;padding:1px 6px;border-radius:5px;">php artisan schedule:work</code> in terminal.
             </p>
+            <div style="
+                margin-top: 16px;
+                padding: 14px 16px;
+                background: #F8FAFC;
+                border: 1px solid #E2E8F0;
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 12px;
+            ">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div id="cronStatusDot" style="
+                        width: 10px; height: 10px;
+                        border-radius: 50%;
+                        background: #94A3B8;
+                        flex-shrink: 0;
+                    "></div>
+                    <div>
+                        <p style="margin:0; font-family:'Inter',sans-serif; font-size:13px; font-weight:600; color:#0F172A;" id="cronStatusText">
+                            Checking scheduler...
+                        </p>
+                        <p style="margin:0; font-family:'Inter',sans-serif; font-size:11px; color:#94A3B8;" id="cronStatusSub">
+                            Last checked: —
+                        </p>
+                    </div>
+                </div>
+                <button class="btn-secondary" id="refreshCronBtn" style="font-size:12px; padding:6px 14px;">
+                    <span class="material-symbols-outlined" style="font-size:14px;">refresh</span> Check Status
+                </button>
+            </div>
+        </div>
+
+        {{-- Cloud Backup --}}
+        <div class="section-card">
+            <div class="section-card-header">
+                <div class="section-card-title-group">
+                    <div class="section-icon"><span class="material-symbols-outlined">cloud_upload</span></div>
+                    <div>
+                        <p class="section-title">Manual Cloud Backup</p>
+                        <p class="section-sub">Push current database records to Supabase immediately</p>
+                    </div>
+                </div>
+            </div>
+            <div style="padding: 16px; background:#F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                <div>
+                    <p style="margin: 0 0 4px; font-family:'Inter',sans-serif; font-weight: 600; font-size: 14px; color: #0F172A;">Trigger Backup to Supabase</p>
+                    <p style="margin: 0; font-family:'Inter',sans-serif; font-size: 12px; color: #64748B;">This action runs in the background via the Python API and might take a few minutes.</p>
+                </div>
+                <button class="btn-primary" id="manualBackupBtn">
+                    <span class="material-symbols-outlined">cloud_sync</span> Run Backup
+                </button>
+            </div>
         </div>
 
         {{-- Danger Zone --}}
@@ -627,6 +681,81 @@ document.getElementById('addUserBtn').addEventListener('click', () => {
     document.getElementById('pwdHint').textContent = '';
     openUserDrawer();
 });
+
+// ── Manual Backup ─────────────────────────────────────────────────────────────
+document.getElementById('manualBackupBtn').addEventListener('click', async function() {
+    const btn      = this;
+    const origHTML = btn.innerHTML;
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;animation:spin 1s linear infinite;">progress_activity</span> Processing...';
+
+    try {
+        const response = await fetch('/settings/backup/manual', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept':       'application/json',
+                'X-CSRF-TOKEN': CSRF
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.ok) {
+            showToast(data.message || 'Backup dimulai di background!', 'success');
+        } else {
+            showToast(data.message || 'Gagal memulai backup.', 'error');
+        }
+
+    } catch(e) {
+        showToast('Network error — tidak dapat menghubungi server.', 'error');
+    }
+
+    btn.disabled  = false;
+    btn.innerHTML = origHTML;
+});
+
+// ── Cron Status Check ─────────────────────────────────────────────────────────
+async function checkCronStatus() {
+    const dot  = document.getElementById('cronStatusDot');
+    const text = document.getElementById('cronStatusText');
+    const sub  = document.getElementById('cronStatusSub');
+
+    try {
+        // Cek apakah ada incident atau alert yang baru diproses
+        // sebagai indikator scheduler jalan (via system-info endpoint)
+        const r = await fetch('/settings/system-info');
+        const d = await r.json();
+
+        if (d.ok) {
+            // Scheduler dianggap aktif jika ada data log yang masuk
+            const hasData = d.log_count > 0;
+            dot.style.background  = hasData ? '#10B981' : '#F59E0B';
+            dot.style.animation   = hasData ? 'pulse 2s infinite' : 'none';
+            text.textContent      = hasData
+                ? 'Scheduler Active — Data is being collected'
+                : 'No data yet — Run scheduler manually';
+            sub.textContent = `Last checked: ${new Date().toLocaleTimeString()}`;
+        }
+    } catch(e) {
+        dot.style.background  = '#EF4444';
+        text.textContent      = 'Cannot connect to check scheduler status';
+        sub.textContent       = `Last checked: ${new Date().toLocaleTimeString()}`;
+    }
+}
+
+document.getElementById('refreshCronBtn')?.addEventListener('click', checkCronStatus);
+
+// Pulse animation untuk dot aktif
+const pulseStyle = document.createElement('style');
+pulseStyle.textContent = `
+    @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50%       { opacity: 0.6; transform: scale(1.3); }
+    }
+`;
+document.head.appendChild(pulseStyle);
 
 function openEditUser(id, name, email, role) {
     document.getElementById('userDrawerTitle').textContent = 'Edit User';

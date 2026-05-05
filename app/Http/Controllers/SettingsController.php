@@ -108,21 +108,41 @@ class SettingsController extends Controller
     // ── Profile (change own name/email/password) ──────────────────────────────
     public function saveProfile(Request $request)
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        $data = $request->validate([
-            'name'  => 'required|string|max:80',
-            'email' => 'required|email|unique:users,email,' . $user->id,
-        ]);
-
-        if ($request->filled('new_password')) {
-            $request->validate([
-                'current_password' => 'required',
-                'new_password'     => ['required', 'confirmed', Password::min(8)],
+        // Validasi dasar
+        try {
+            $data = $request->validate([
+                'name'  => 'required|string|max:80',
+                'email' => 'required|email|unique:users,email,' . $user->id,
             ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'ok'      => false,
+                'message' => collect($e->errors())->flatten()->first(),
+            ], 422);
+        }
+
+        // Ganti password jika diisi
+        if ($request->filled('new_password')) {
+            try {
+                $request->validate([
+                    'current_password' => 'required',
+                    'new_password'     => ['required', 'confirmed', Password::min(8)],
+                ]);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                return response()->json([
+                    'ok'      => false,
+                    'message' => collect($e->errors())->flatten()->first(),
+                ], 422);
+            }
 
             if (!Hash::check($request->current_password, $user->password)) {
-                return response()->json(['ok' => false, 'message' => 'Current password is incorrect.']);
+                return response()->json([
+                    'ok'      => false,
+                    'message' => 'Current password is incorrect.',
+                ], 422);
             }
 
             $data['password'] = Hash::make($request->new_password);
@@ -130,7 +150,10 @@ class SettingsController extends Controller
 
         $user->update($data);
 
-        return response()->json(['ok' => true, 'message' => 'Profile updated successfully.']);
+        return response()->json([
+            'ok'      => true,
+            'message' => 'Profile updated successfully.',
+        ]);
     }
 
     // ── User management ───────────────────────────────────────────────────────
@@ -235,5 +258,34 @@ class SettingsController extends Controller
             'laravel_version' => app()->version(),
             'server_time'  => now()->format('d M Y H:i:s') . ' WIB',
         ]);
+    }
+
+    public function triggerManualBackup()
+    {
+        $apiUrl = config('services.monitoring.url');
+
+        if (empty($apiUrl)) {
+            return response()->json([
+                'ok'      => false,
+                'message' => 'MONITORING_API_URL belum dikonfigurasi di .env.',
+            ], 503);
+        }
+
+        try {
+            $response = Http::timeout(10)->post("{$apiUrl}/api/backup/manual");
+            $data     = $response->json();
+
+            return response()->json([
+                'ok'      => true,
+                'message' => $data['message'] ?? 'Backup sedang diproses di background.',
+                'status'  => $data['status']  ?? 'accepted',
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'ok'      => false,
+                'message' => 'Gagal menghubungi monitoring API: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }
