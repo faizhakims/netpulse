@@ -128,7 +128,7 @@
                         </div>
                         @else
                         <span style="font-size:12px;color:#94a3b8;">
-                            Requires <code>packet_loss</code> metric in snmp_metrics
+                            <!-- Requires <code>packet_loss</code> metric in snmp_metrics -->
                         </span>
                         @endif
                     </div>
