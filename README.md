@@ -34,7 +34,7 @@ NetPulse adalah dashboard monitoring jaringan berbasis web yang dibangun dengan 
 ### 1. Clone repositori
 
 ```bash
-git clone <url-repositori> netpulse
+git clone https://github.com/faizhakims/netpulse.git
 cd netpulse
 ```
 
