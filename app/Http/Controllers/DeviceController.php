@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\DeviceStatus;
+use App\Http\Requests\DeviceActionRequest;
 use App\Services\DeviceService;
-use Illuminate\Http\Request;
 
 class DeviceController extends Controller
 {
@@ -24,13 +24,11 @@ class DeviceController extends Controller
         return view('details', $data);
     }
 
-    public function ping(Request $request)
+    public function ping(DeviceActionRequest $request)
     {
-        abort_unless(auth()->user()->can('manage devices'), 403, 'Access denied.');
-        $request->validate(['device' => 'required|string']);
-
+        // authorize() in DeviceActionRequest checks 'manage devices'
         try {
-            $result = $this->deviceService->ping($request->device);
+            $result = $this->deviceService->ping($request->validated()['device']);
             return response()->json($result);
         } catch (\Exception $e) {
             $code = $e->getCode();
@@ -42,13 +40,11 @@ class DeviceController extends Controller
         }
     }
 
-    public function reboot(Request $request)
+    public function reboot(DeviceActionRequest $request)
     {
-        abort_unless(auth()->user()->can('manage devices'), 403, 'Access denied.');
-        $request->validate(['device' => 'required|string']);
-
+        // authorize() in DeviceActionRequest checks 'manage devices'
         try {
-            $result = $this->deviceService->reboot($request->device);
+            $result = $this->deviceService->reboot($request->validated()['device']);
             return response()->json($result);
         } catch (\Exception $e) {
             $code = $e->getCode();
