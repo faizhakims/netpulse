@@ -10,32 +10,36 @@ return new class extends Migration
      * MariaDB tidak support ALTER COLUMN untuk enum secara langsung,
      * jadi kita pakai MODIFY COLUMN.
      *
-     * Sebelum menjalankan migration ini, pastikan tidak ada rule aktif
-     * dengan metric_type = 'cpu' atau 'memory' (tidak akan pernah trigger).
+     * SQLite (used in testing) does not support MODIFY COLUMN / ENUM.
+     * We skip the DDL statement on SQLite since the column is already a string.
      */
     public function up(): void
     {
-        // Hapus rule lama dengan metric cpu/memory (tidak ada data sumbernya)
+        // Remove any stale rules with metric cpu/memory (not supported by monitoring engine)
         DB::table('alert_rules')
             ->whereIn('metric_type', ['cpu', 'memory'])
             ->delete();
 
-        // Update enum kolom metric_type
-        DB::statement("
-            ALTER TABLE alert_rules
-            MODIFY COLUMN metric_type
-            ENUM('latency','status','bandwidth','packet_loss')
-            NOT NULL DEFAULT 'latency'
-        ");
+        // Only run the MySQL/MariaDB-specific ENUM narrowing on real MySQL connections
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("
+                ALTER TABLE alert_rules
+                MODIFY COLUMN metric_type
+                ENUM('latency','status','bandwidth','packet_loss')
+                NOT NULL DEFAULT 'latency'
+            ");
+        }
     }
 
     public function down(): void
     {
-        DB::statement("
-            ALTER TABLE alert_rules
-            MODIFY COLUMN metric_type
-            ENUM('latency','status','cpu','memory','bandwidth','packet_loss')
-            NOT NULL DEFAULT 'latency'
-        ");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("
+                ALTER TABLE alert_rules
+                MODIFY COLUMN metric_type
+                ENUM('latency','status','cpu','memory','bandwidth','packet_loss')
+                NOT NULL DEFAULT 'latency'
+            ");
+        }
     }
 };

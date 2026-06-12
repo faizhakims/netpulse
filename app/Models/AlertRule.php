@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class AlertRule extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'severity', 'title', 'description', 'channels', 'is_active',
         'target_device', 'metric_type', 'condition', 'threshold_value',

@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Incident extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'device', 'ip_address', 'issue', 'status', 'duration',
         'started_at', 'resolved_at',
