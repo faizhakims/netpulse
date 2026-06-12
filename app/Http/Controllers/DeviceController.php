@@ -108,6 +108,7 @@ class DeviceController extends Controller
 
     public function ping(Request $request)
     {
+        abort_unless(auth()->user()->can('manage devices'), 403, 'Access denied.');
         $request->validate(['device' => 'required|string']);
 
         $apiUrl = config('services.monitoring.url');
@@ -131,6 +132,7 @@ class DeviceController extends Controller
 
     public function reboot(Request $request)
     {
+        abort_unless(auth()->user()->can('manage devices'), 403, 'Access denied.');
         $request->validate(['device' => 'required|string']);
 
         $apiUrl = config('services.monitoring.url');
@@ -154,6 +156,7 @@ class DeviceController extends Controller
 
     public function deleteDevice(string $deviceName)
     {
+        abort_unless(auth()->user()->can('manage devices'), 403, 'Access denied.');
         $apiUrl = config('services.monitoring.url');
 
         if (empty($apiUrl)) {

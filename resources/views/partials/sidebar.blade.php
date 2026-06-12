@@ -44,10 +44,12 @@
             <span class="nav-item-label">Logs</span>
         </a>
 
+        @can('manage settings')
         <a href="/settings" class="nav-item {{ request()->is('settings') || request()->is('settings/*') ? 'active' : '' }}">
             <span class="material-symbols-outlined">settings</span>
             <span class="nav-item-label">Settings</span>
         </a>
+        @endcan
 
     </div>
 

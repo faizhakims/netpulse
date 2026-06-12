@@ -26,6 +26,7 @@ class AlertController extends Controller
 
     public function saveChannel(Request $request)
     {
+        abort_unless(auth()->user()->can('manage alerts'), 403, 'Access denied.');
         $type    = $request->input('type');
         $channel = AlertChannel::firstOrNew(['type' => $type]);
         $channel->is_active = $request->boolean('is_active');
@@ -36,6 +37,7 @@ class AlertController extends Controller
 
     public function testChannel(Request $request)
     {
+        abort_unless(auth()->user()->can('manage alerts'), 403, 'Access denied.');
         $type = $request->input('type');
 
         // Ambil token/config dari request (user mungkin belum save ke DB)
@@ -158,6 +160,7 @@ class AlertController extends Controller
 
     public function storeRule(Request $request)
     {
+        abort_unless(auth()->user()->can('manage alerts'), 403, 'Access denied.');
         $data = $request->validate([
             'title'           => 'required|string|max:120',
             'target_device'   => 'nullable|string|max:100',
@@ -190,6 +193,7 @@ class AlertController extends Controller
 
     public function updateRule(Request $request, $id)
     {
+        abort_unless(auth()->user()->can('manage alerts'), 403, 'Access denied.');
         $rule = AlertRule::findOrFail($id);
         $data = $request->validate([
             'title'           => 'required|string|max:120',
@@ -222,6 +226,7 @@ class AlertController extends Controller
 
     public function toggleRule($id)
     {
+        abort_unless(auth()->user()->can('manage alerts'), 403, 'Access denied.');
         $rule = AlertRule::findOrFail($id);
         $rule->is_active = !$rule->is_active;
         $rule->save();
@@ -251,12 +256,14 @@ class AlertController extends Controller
 
     public function deleteRule($id)
     {
+        abort_unless(auth()->user()->can('manage alerts'), 403, 'Access denied.');
         AlertRule::findOrFail($id)->delete();
         return response()->json(['ok' => true, 'message' => 'Rule deleted.']);
     }
 
     public function duplicateRule($id)
     {
+        abort_unless(auth()->user()->can('manage alerts'), 403, 'Access denied.');
         $original = AlertRule::findOrFail($id);
         $copy = $original->replicate();
         $copy->title      = $original->title . ' (Copy)';

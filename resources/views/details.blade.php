@@ -58,11 +58,12 @@
                 </div>
 
                 <div class="device-hero-actions">
-                    {{-- REVISI 6: Edit, Ping, Reboot, Hapus tidak diubah fungsionalitasnya --}}
+                    {{-- REVISI 6: Ping always visible; Reboot & Delete require manage devices --}}
                     <button class="btn-action btn-ping" id="pingBtn">
                         <span class="material-symbols-outlined">wifi_tethering</span>
                         Ping Now
                     </button>
+                    @can('manage devices')
                     <button class="btn-action btn-restart" id="rebootBtn">
                         <span class="material-symbols-outlined">restart_alt</span>
                         <span class="reboot-text">Reboot Device</span>
@@ -71,6 +72,7 @@
                     <button class="btn-action btn-delete" title="Delete device">
                         <span class="material-symbols-outlined">delete</span>
                     </button>
+                    @endcan
                 </div>
             </div>
 

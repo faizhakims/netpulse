@@ -15,6 +15,8 @@ class SettingsController extends Controller
     // ── Main page ─────────────────────────────────────────────────────────────
     public function index()
     {
+        abort_unless(auth()->user()->can('manage settings'), 403, 'Access denied.');
+
         $users    = User::orderBy('created_at')->get();
         $general  = SystemSetting::group('general');
         $monitoring = SystemSetting::group('monitoring');
@@ -27,6 +29,7 @@ class SettingsController extends Controller
     // ── General settings ──────────────────────────────────────────────────────
     public function saveGeneral(Request $request)
     {
+        abort_unless(auth()->user()->can('manage settings'), 403, 'Access denied.');
         $data = $request->validate([
             'site_name'    => 'required|string|max:80',
             'site_timezone'=> 'required|string|max:60',
@@ -44,6 +47,7 @@ class SettingsController extends Controller
     // ── Monitoring / polling settings ─────────────────────────────────────────
     public function saveMonitoring(Request $request)
     {
+        abort_unless(auth()->user()->can('manage settings'), 403, 'Access denied.');
         $data = $request->validate([
             'polling_interval'   => 'required|integer|min:10|max:3600',
             'latency_threshold'  => 'required|numeric|min:1',
@@ -90,6 +94,7 @@ class SettingsController extends Controller
     // ── Security settings ─────────────────────────────────────────────────────
     public function saveSecurity(Request $request)
     {
+        abort_unless(auth()->user()->can('manage settings'), 403, 'Access denied.');
         $data = $request->validate([
             'session_timeout'    => 'required|integer|min:5|max:1440',
             'max_login_attempts' => 'required|integer|min:3|max:20',
@@ -159,6 +164,7 @@ class SettingsController extends Controller
     // ── User management ───────────────────────────────────────────────────────
     public function storeUser(Request $request)
     {
+        abort_unless(auth()->user()->can('manage users'), 403, 'Access denied.');
         $data = $request->validate([
             'name'     => 'required|string|max:80',
             'email'    => 'required|email|unique:users,email',
@@ -169,6 +175,7 @@ class SettingsController extends Controller
         $data['password']  = Hash::make($data['password']);
         $data['is_active'] = true;
         $user = User::create($data);
+        $user->syncRoles([$data['role']]); // Sync Spatie role
 
         return response()->json(['ok' => true, 'message' => 'User created.', 'user' => [
             'id' => $user->id, 'name' => $user->name, 'email' => $user->email,
@@ -179,6 +186,7 @@ class SettingsController extends Controller
 
     public function updateUser(Request $request, $id)
     {
+        abort_unless(auth()->user()->can('manage users'), 403, 'Access denied.');
         $user = User::findOrFail($id);
 
         $data = $request->validate([
@@ -193,6 +201,7 @@ class SettingsController extends Controller
         }
 
         $user->update($data);
+        $user->syncRoles([$data['role']]); // Sync Spatie role
 
         return response()->json(['ok' => true, 'message' => 'User updated.', 'user' => [
             'id' => $user->id, 'name' => $user->name, 'email' => $user->email,
@@ -203,6 +212,7 @@ class SettingsController extends Controller
 
     public function toggleUser($id)
     {
+        abort_unless(auth()->user()->can('manage users'), 403, 'Access denied.');
         $user = User::findOrFail($id);
         if ($user->id === Auth::id()) {
             return response()->json(['ok' => false, 'message' => 'Cannot deactivate your own account.']);
@@ -215,6 +225,7 @@ class SettingsController extends Controller
 
     public function deleteUser($id)
     {
+        abort_unless(auth()->user()->can('manage users'), 403, 'Access denied.');
         $user = User::findOrFail($id);
         if ($user->id === Auth::id()) {
             return response()->json(['ok' => false, 'message' => 'Cannot delete your own account.']);

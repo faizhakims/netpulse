@@ -298,7 +298,8 @@
         </div>
     </div>
 
-    {{-- ══ Channel Settings ══ --}}
+    {{-- ══ Channel Settings — Admin only ══ --}}
+    @can('manage alerts')
     <div class="settings-row">
 
         {{-- Telegram --}}
@@ -425,6 +426,7 @@
             </div>
         </div>
     </div>
+    @endcan
 
     {{-- ══ Threshold Rules ══ --}}
     <div class="section-header" style="margin-top:8px;">
@@ -434,10 +436,12 @@
                 Automated alert conditions triggered by network metrics
             </p>
         </div>
+        @can('manage alerts')
         <button class="btn-add-rule" id="addRuleBtn">
             <span class="material-symbols-outlined" style="font-size:15px;">add</span>
             Add Rule
         </button>
+        @endcan
     </div>
 
     {{-- Toolbar: search + filter chips --}}
@@ -466,11 +470,13 @@
 
             <div class="rule-card-top">
                 <span class="severity-badge {{ $rule->severity }}">{{ strtoupper($rule->severity) }}</span>
+                @can('manage alerts')
                 <label class="toggle-wrap rule-toggle" title="{{ $rule->is_active ? 'Disable' : 'Enable' }}">
                     <input type="checkbox" {{ $rule->is_active ? 'checked' : '' }}
                            onchange="toggleRule({{ $rule->id }}, this)">
                     <span class="toggle-track"></span>
                 </label>
+                @endcan
             </div>
 
             <p class="rule-title">{{ $rule->title }}</p>
@@ -504,6 +510,7 @@
                     @endif
                 </div>
                 <div class="rule-actions">
+                    @can('manage alerts')
                     <button class="icon-btn" title="Duplicate" onclick="duplicateRule({{ $rule->id }})">
                         <span class="material-symbols-outlined">content_copy</span>
                     </button>
@@ -513,6 +520,7 @@
                     <button class="icon-btn danger" title="Delete" onclick="confirmDelete({{ $rule->id }})">
                         <span class="material-symbols-outlined">delete</span>
                     </button>
+                    @endcan
                 </div>
             </div>
         </div>

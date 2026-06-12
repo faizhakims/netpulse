@@ -269,11 +269,13 @@
                 </h1>
             </div>
 
-            {{-- Tombol Add Device --}}
+            {{-- Tombol Add Device — visible to admins & operators only --}}
+            @can('manage devices')
             <button class="btn-add-device" onclick="openAddModal()">
                 <span class="material-symbols-outlined">add</span>
                 Add Device
             </button>
+            @endcan
         </div>
 
         {{-- ── Device Grid ── --}}

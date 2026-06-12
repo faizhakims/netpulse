@@ -57,10 +57,12 @@
                     </div>
                 </div>
                 <div class="dropdown-divider"></div>
+                @can('manage settings')
                 <a href="{{ route('settings') }}" class="dropdown-item">
                     <span class="material-symbols-outlined">settings</span>
                     Settings
                 </a>
+                @endcan
                 <form action="{{ route('logout') }}" method="POST" class="dropdown-item-form">
                     @csrf
                     <button type="submit" class="dropdown-item dropdown-item-btn">
