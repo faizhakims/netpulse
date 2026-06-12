@@ -268,7 +268,10 @@
                         <p style="color:#94A3B8;font-size:13px;">No recent activity.</p>
                         @endforelse
                     </div>
-                    <button class="view-log-btn">View Logs</button>
+                    <!-- <button class="view-log-btn">View Logs</button> -->
+                    <button class="view-log-btn" onclick="window.location.href='logs'">
+                        View Logs
+                    </button>
                 </div>
             </div>
         </div>
@@ -356,7 +359,7 @@
             </table>
 
             <div class="table-footer">
-                <button id="viewAllNodesBtn" class="view-all-link">View All Managed Nodes →</button>
+                <button id="viewAllNodesBtn" class="view-all-link">View All Managed Nodes</button>
             </div>
         </section>
 

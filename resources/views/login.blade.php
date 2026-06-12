@@ -21,11 +21,11 @@ html,body{
 
 body{
     overflow:hidden;
-    background:#000;
+    background:#f1f5f9;
     font-family:'Poppins',sans-serif;
 }
 
-/* ================= FINISHER BG ================= */
+/* ================= VANTA BG ================= */
 .finisher-header{
     position:fixed;
     inset:0;
@@ -37,7 +37,7 @@ body{
 .overlay{
     position:fixed;
     inset:0;
-    background:rgba(0,0,0,.05);
+    background:rgba(241,245,249,.10);
     z-index:-2;
 }
 
@@ -59,7 +59,7 @@ body{
     opacity:.92;
 }
 
-/* ================= CLEAR GLASS CARD ================= */
+/* ================= GLASS CARD ================= */
 .login-card{
     position:absolute;
 
@@ -75,18 +75,18 @@ body{
     background:
         linear-gradient(
             135deg,
-            rgba(255,255,255,.04),
-            rgba(255,255,255,.01)
+            rgba(255,255,255,.18),
+            rgba(255,255,255,.08)
         );
 
-    backdrop-filter: blur(14px) saturate(160%);
-    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
 
-    border:1px solid rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.35);
 
     box-shadow:
-        0 8px 20px rgba(0,0,0,.08),
-        inset 0 1px 0 rgba(255,255,255,.08);
+        0 8px 32px rgba(0,0,0,.08),
+        inset 0 1px 0 rgba(255,255,255,.40);
 
     padding:34px 42px;
 
@@ -101,10 +101,10 @@ body{
     background:
         linear-gradient(
             120deg,
-            rgba(255,255,255,.05),
+            rgba(255,255,255,.15),
             transparent 28%,
             transparent 70%,
-            rgba(255,255,255,.01)
+            rgba(255,255,255,.05)
         );
     pointer-events:none;
 }
@@ -115,7 +115,7 @@ body{
     font-family:'Inter',sans-serif;
     font-size:38px;
     font-weight:300;
-    color:#fff;
+    color:#111;
     margin-bottom:28px;
 }
 
@@ -126,7 +126,7 @@ body{
 
 .form-group label{
     display:block;
-    color:rgba(255,255,255,.92);
+    color:rgba(0,0,0,.75);
     font-size:16px;
     margin-bottom:8px;
 }
@@ -137,20 +137,20 @@ body{
 
     background:transparent;
     border:none;
-    border-bottom:1px solid rgba(255,255,255,.20);
+    border-bottom:1px solid rgba(0,0,0,.20);
     outline:none;
 
-    color:#fff;
+    color:#111;
     font-size:16px;
     padding:0 2px 8px;
 }
 
 .form-control::placeholder{
-    color:rgba(255,255,255,.35);
+    color:rgba(0,0,0,.30);
 }
 
 .form-control:focus{
-    border-bottom:1px solid rgba(255,255,255,.75);
+    border-bottom:1px solid rgba(0,0,0,.65);
 }
 
 /* ================= BUTTON ================= */
@@ -175,8 +175,21 @@ body{
 .arrow{
     width:48px;
     height:auto;
-    opacity:.85;
+    opacity:.70;
+    filter: brightness(0);
     transition:.25s ease;
+}
+
+/* ================= ERROR ================= */
+.error-box{
+    background:rgba(220,38,38,.10);
+    border:1px solid rgba(220,38,38,.35);
+    border-radius:10px;
+    padding:10px 14px;
+    margin-bottom:20px;
+    color:#b91c1c;
+    font-size:13px;
+    text-align:center;
 }
 
 /* ================= MOBILE ================= */
@@ -238,7 +251,7 @@ body{
 <div class="wrapper">
 
     <!-- LOGO -->
-    <img src="{{ asset('images/netpulse.svg') }}" class="logo">
+    <img src="{{ asset('images/netpulseHijau.svg') }}" class="logo">
 
     <!-- LOGIN CARD -->
     <div class="login-card">
@@ -248,18 +261,8 @@ body{
         <form method="POST" action="{{ route('login') }}">
             @csrf
 
-            {{-- Error message --}}
             @if ($errors->any())
-            <div style="
-                background:rgba(220,38,38,.15);
-                border:1px solid rgba(220,38,38,.4);
-                border-radius:10px;
-                padding:10px 14px;
-                margin-bottom:20px;
-                color:#fca5a5;
-                font-size:13px;
-                text-align:center;
-            ">
+            <div class="error-box">
                 {{ $errors->first('email') }}
             </div>
             @endif
@@ -299,44 +302,22 @@ body{
 
 </div>
 
-<script src="{{ asset('js/finisher-header.es5.min.js') }}" type="text/javascript"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
 
-<script type="text/javascript">
-new FinisherHeader({
-  "count": 5,
-  "size": {
-    "min": 900,
-    "max": 1500,
-    "pulse": 0
-  },
-  "speed": {
-    "x": {
-      "min": 0,
-      "max": 0.3
-    },
-    "y": {
-      "min": 0,
-      "max": 0
-    }
-  },
-  "colors": {
-    "background": "#000000",
-    "particles": [
-      "#949292",
-      "#222222",
-      "#000000"
-    ]
-  },
-  "blending": "lighten",
-  "opacity": {
-    "center": 0.15,
-    "edge": 0.05
-  },
-  "skew": 0,
-  "shapes": [
-    "s"
-  ]
-});
+<script>
+VANTA.NET({
+  el: ".finisher-header",
+  mouseControls: true,
+  touchControls: true,
+  gyroControls: false,
+  minHeight: 200.00,
+  minWidth: 200.00,
+  scale: 1.00,
+  scaleMobile: 1.00,
+  color: 0x064e3b,
+  backgroundColor: 0xf1f5f9
+})
 </script>
 
 </body>

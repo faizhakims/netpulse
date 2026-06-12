@@ -24,10 +24,10 @@
                 <h1 class="page-title">Traffic Monitoring</h1>
                 <p class="page-subtitle">Real-time analysis of network</p>
             </div>
-            <div class="updated-badge">
+            <!-- <div class="updated-badge">
                 <span class="live-dot"></span>
                 <span>Live</span>
-            </div>
+            </div> -->
         </div>
 
         {{-- Hero Row: Bandwidth Card + Stats Column --}}
@@ -142,7 +142,6 @@
                 <h3 class="table-card-title">Top Busiest Devices</h3>
                 <button class="view-all-btn" id="viewAllBtn" onclick="openAllDevicesPanel()">
                     <span>View All</span>
-                    <span class="btn-arrow">&rarr;</span>
                 </button>
             </div>
             <div class="table-scroll">
@@ -196,7 +195,6 @@
                 <h3 class="table-card-title">Bandwidth Log</h3>
                 <button class="view-all-btn" onclick="openBandwidthLogPanel()">
                     <span>View All</span>
-                    <span class="btn-arrow">&rarr;</span>
                 </button>
             </div>
             <div class="table-scroll">
