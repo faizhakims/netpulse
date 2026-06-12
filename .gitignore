@@ -1,27 +1,40 @@
+```
+# Dependencies
+vendor/
+node_modules/
+
+# Build artifacts
+dist/
+build/
+target/
+
+# Cache and temporary files
+.cache/
+*.tmp
 *.log
-.DS_Store
+
+# Environment specific
 .env
-.env.backup
-.env.production
-.env.example
-.phpactor.json
-.phpunit.result.cache
-/.fleet
-/.idea
-/.nova
-/.phpunit.cache
-/.vscode
-/.zed
-/auth.json
-/node_modules
-/public/build
-/public/hot
-/public/storage
-/storage/*.key
-/storage/pail
-/vendor
-_ide_helper.php
-Homestead.json
-Homestead.yaml
+.env.local
+.env.*
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# PHP specific
+*.php~
+**/vendor/composer/generated/*
+!vendor/composer/autoload_classmap.php
+!vendor/composer/autoload_namespaces.php
+!vendor/composer/autoload_psr4.php
+!vendor/composer/autoload_real.php
+!vendor/composer/autoload_static.php
+!vendor/composer/ClassLoader.php
+
+# OS generated files
+.DS_Store
 Thumbs.db
-shell.nix
+```

@@ -39,10 +39,12 @@
 
         <span class="sidebar-section-label">System</span>
 
+        @if(auth()->user()->hasRole(['operator', 'admin']))
         <a href="/logs" class="nav-item {{ request()->is('logs') || request()->is('logs/*') ? 'active' : '' }}">
             <span class="material-symbols-outlined">list_alt</span>
             <span class="nav-item-label">Logs</span>
         </a>
+        @endif
 
         <a href="/settings" class="nav-item {{ request()->is('settings') || request()->is('settings/*') ? 'active' : '' }}">
             <span class="material-symbols-outlined">settings</span>

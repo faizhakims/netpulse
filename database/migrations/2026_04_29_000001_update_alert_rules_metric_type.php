@@ -2,6 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -15,6 +17,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip for SQLite - it doesn't support ENUM or MODIFY COLUMN
+        if (config('database.default') === 'sqlite') {
+            return;
+        }
+
         // Hapus rule lama dengan metric cpu/memory (tidak ada data sumbernya)
         DB::table('alert_rules')
             ->whereIn('metric_type', ['cpu', 'memory'])
@@ -31,6 +38,11 @@ return new class extends Migration
 
     public function down(): void
     {
+        // Skip for SQLite
+        if (config('database.default') === 'sqlite') {
+            return;
+        }
+
         DB::statement("
             ALTER TABLE alert_rules
             MODIFY COLUMN metric_type
