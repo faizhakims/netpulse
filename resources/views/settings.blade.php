@@ -123,9 +123,11 @@
                     <span class="material-symbols-outlined">search</span>
                     <input class="users-search" id="usersSearch" type="text" placeholder="Search users…">
                 </div>
+                @can('manage users')
                 <button class="btn-primary" id="addUserBtn">
                     <span class="material-symbols-outlined">person_add</span> Add User
                 </button>
+                @endcan
             </div>
 
             <div style="border: 1px solid #E2E8F0; border-radius: 12px; overflow: hidden;">
@@ -145,7 +147,7 @@
                             data-search="{{ strtolower($u->name . ' ' . $u->email) }}">
                             <td>
                                 <div style="display:flex;align-items:center;gap:10px;">
-                                    <div class="user-avatar {{ $u->role }}">{{ strtoupper(substr($u->name,0,1)) }}</div>
+                                    <div class="user-avatar {{ $u->currentRoleName() }}">{{ strtoupper(substr($u->name,0,1)) }}</div>
                                     <div>
                                         <p style="margin:0;font-weight:600;font-size:13px;color:#0F172A;">{{ $u->name }}
                                             @if($u->id === auth()->id())
@@ -156,7 +158,7 @@
                                     </div>
                                 </div>
                             </td>
-                            <td><span class="role-badge role-{{ $u->role }}">{{ $u->role }}</span></td>
+                            <td><span class="role-badge role-{{ $u->currentRoleName() }}">{{ $u->currentRoleName() }}</span></td>
                             <td>
                                 <span class="status-pill {{ $u->is_active ? 'active' : 'inactive' }}">
                                     <span class="status-pill-dot"></span>
@@ -165,7 +167,8 @@
                             </td>
                             <td style="color:#94A3B8;font-size:12px;">{{ $u->last_login_at ? $u->last_login_at->diffForHumans() : 'Never' }}</td>
                             <td style="text-align:right;">
-                                <button class="icon-btn" title="Edit" onclick="openEditUser({{ $u->id }}, '{{ addslashes($u->name) }}', '{{ $u->email }}', '{{ $u->role }}')">
+                                @can('manage users')
+                                <button class="icon-btn" title="Edit" onclick="openEditUser({{ $u->id }}, '{{ addslashes($u->name) }}', '{{ $u->email }}', '{{ $u->currentRoleName() }}')">
                                     <span class="material-symbols-outlined">edit</span>
                                 </button>
                                 <button class="icon-btn" title="{{ $u->is_active ? 'Deactivate' : 'Activate' }}" onclick="toggleUser({{ $u->id }})">
@@ -174,6 +177,7 @@
                                 <button class="icon-btn danger" title="Delete" onclick="confirmDeleteUser({{ $u->id }})" {{ $u->id === auth()->id() ? 'disabled style=opacity:.3;cursor:not-allowed' : '' }}>
                                     <span class="material-symbols-outlined">delete</span>
                                 </button>
+                                @endcan
                             </td>
                         </tr>
                         @empty
@@ -351,12 +355,12 @@
                     </div>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px;">
-                    <div class="user-avatar {{ auth()->user()->role }}" style="width:42px;height:42px;font-size:16px;">
+                    <div class="user-avatar {{ auth()->user()->currentRoleName() }}" style="width:42px;height:42px;font-size:16px;">
                         {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                     </div>
                     <div>
                         <p style="margin:0;font-weight:700;font-size:14px;color:#0F172A;">{{ auth()->user()->name }}</p>
-                        <span class="role-badge role-{{ auth()->user()->role }}">{{ auth()->user()->role }}</span>
+                        <span class="role-badge role-{{ auth()->user()->currentRoleName() }}">{{ auth()->user()->currentRoleName() }}</span>
                     </div>
                 </div>
             </div>

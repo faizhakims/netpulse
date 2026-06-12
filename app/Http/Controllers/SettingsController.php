@@ -117,6 +117,7 @@ class SettingsController extends Controller
         $user = Auth::user();
 
         // Validasi dasar
+        // Note: 'role' is intentionally excluded here to prevent privilege escalation.
         try {
             $data = $request->validate([
                 'name'  => 'required|string|max:80',
@@ -230,6 +231,11 @@ class SettingsController extends Controller
         if ($user->id === Auth::id()) {
             return response()->json(['ok' => false, 'message' => 'Cannot delete your own account.']);
         }
+
+        if ($user->hasRole('admin') && User::role('admin')->count() <= 1) {
+            return response()->json(['ok' => false, 'message' => 'Cannot delete the last admin account.']);
+        }
+
         $user->delete();
         return response()->json(['ok' => true, 'message' => 'User deleted.']);
     }
@@ -237,6 +243,7 @@ class SettingsController extends Controller
     // ── System actions ────────────────────────────────────────────────────────
     public function clearLogs()
     {
+        abort_unless(auth()->user()->can('manage settings'), 403, 'Access denied.');
         \Illuminate\Support\Facades\DB::table('snmp_metrics')
             ->where('collected_at', '<', now()->subDays(
                 (int) SystemSetting::get('retention_days', 30)
@@ -247,6 +254,7 @@ class SettingsController extends Controller
 
     public function systemInfo()
     {
+        abort_unless(auth()->user()->can('manage settings'), 403, 'Access denied.');
         $dbSize = \Illuminate\Support\Facades\DB::select("
             SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS size_mb
             FROM information_schema.tables
@@ -273,6 +281,7 @@ class SettingsController extends Controller
 
     public function triggerManualBackup()
     {
+        abort_unless(auth()->user()->can('manage settings'), 403, 'Access denied.');
         $apiUrl = config('services.monitoring.url');
 
         if (empty($apiUrl)) {

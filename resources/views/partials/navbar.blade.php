@@ -53,7 +53,7 @@
                     <span class="material-symbols-outlined">person</span>
                     <div>
                         <div style="font-weight: 600; font-size: 0.875rem;">{{ Auth::user()->name ?? 'Admin' }}</div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: capitalize;">{{ Auth::user()->role ?? 'admin' }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: capitalize;">{{ Auth::user()->currentRoleName() }}</div>
                     </div>
                 </div>
                 <div class="dropdown-divider"></div>

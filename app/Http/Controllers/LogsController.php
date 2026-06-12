@@ -11,6 +11,7 @@ class LogsController extends Controller
 {
     public function index()
     {
+        abort_unless(auth()->user()->can('view logs'), 403, 'Access denied.');
         // Gabungkan log dari device_status (status changes)
         $statusLogs = DeviceStatus::orderByDesc('checked_at')
             ->limit(100)

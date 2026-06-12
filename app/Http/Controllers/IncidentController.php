@@ -9,6 +9,7 @@ class IncidentController extends Controller
 {
     public function index()
     {
+        abort_unless(auth()->user()->can('view incidents'), 403, 'Access denied.');
         // ── Auto-resolve: incidents whose device is now back to normal ────────
         // Run inline so the page always reflects the latest device state
         $this->autoResolveRecovered();

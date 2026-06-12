@@ -11,7 +11,7 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable, HasRoles;
 
-    protected $fillable = ['name', 'email', 'password', 'role', 'is_active', 'last_login_at'];
+    protected $fillable = ['name', 'email', 'password', 'is_active', 'last_login_at'];
     protected $hidden   = ['password', 'remember_token'];
 
     protected function casts(): array
@@ -31,10 +31,16 @@ class User extends Authenticatable
 
     public function roleBadgeClass(): string
     {
-        return match($this->role) {
+        $r = $this->getRoleNames()->first() ?? $this->role;
+        return match($r) {
             'admin'    => 'role-admin',
             'operator' => 'role-operator',
             default    => 'role-viewer',
         };
+    }
+
+    public function currentRoleName(): string
+    {
+        return $this->getRoleNames()->first() ?? $this->role ?? 'viewer';
     }
 }

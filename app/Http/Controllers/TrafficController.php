@@ -10,6 +10,7 @@ class TrafficController extends Controller
 {
     public function index()
     {
+        abort_unless(auth()->user()->can('view traffic'), 403, 'Access denied.');
         // ── 1. BANDWIDTH: ambil snapshot terbaru per device+interface ──────────
         $latestIds = DB::table('interface_traffic')
             ->selectRaw('MAX(id) as id')

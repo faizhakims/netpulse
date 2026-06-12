@@ -14,7 +14,7 @@ use App\Http\Controllers\SettingsController;
 Route::middleware('guest')->group(function () {
     Route::get('/',      [AuthController::class, 'showLogin'])->name('home');
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login',[AuthController::class, 'login']);
+    Route::post('/login',[AuthController::class, 'login'])->middleware('throttle:10,1');
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
@@ -23,11 +23,13 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middl
 Route::middleware('auth')->group(function () {
 
     // ── Dashboard & Traffic & Logs (all roles) ────────────────────────────────
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard/export-csv', [DashboardController::class, 'exportCsv'])->name('dashboard.export.csv');
+    Route::middleware('permission:view dashboard')->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard/export-csv', [DashboardController::class, 'exportCsv'])->name('dashboard.export.csv');
+    });
 
-    Route::get('/traffic', [TrafficController::class, 'index'])->name('traffic');
-    Route::get('/logs',    [LogsController::class,    'index'])->name('logs');
+    Route::get('/traffic', [TrafficController::class, 'index'])->name('traffic')->middleware('permission:view traffic');
+    Route::get('/logs',    [LogsController::class,    'index'])->name('logs')->middleware('permission:view logs');
 
     // ── Devices — view (all roles) ────────────────────────────────────────────
     Route::get('/device',          [DeviceController::class, 'index'])->name('device.index')->middleware('permission:view devices');

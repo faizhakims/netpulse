@@ -266,6 +266,7 @@
                     {{-- REVISI 3: Alert Settings — toggle terhubung ke DB via AJAX --}}
                     <div>
                         <div class="alert-settings-title">Alert Settings</div>
+                        @can('manage alerts')
                         <div class="alert-toggles">
                             <label class="alert-toggle-item">
                                 <label class="toggle-switch">
@@ -295,6 +296,9 @@
                             </label>
                         </div>
                         <div id="alertSaveMsg" class="alert-save-msg" style="display:none;"></div>
+                        @else
+                        <div style="font-size: 13px; color: #94A3B8; margin-top: 8px;">View-only mode. Alert channels are managed by administrators.</div>
+                        @endcan
                     </div>
                 </div>
             </div>

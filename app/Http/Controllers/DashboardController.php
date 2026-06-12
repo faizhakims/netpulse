@@ -157,6 +157,7 @@ class DashboardController extends Controller
     // ── Ekspor CSV ────────────────────────────────────────────────────────
     public function exportCsv()
     {
+        abort_unless(auth()->user()->can('view dashboard'), 403, 'Access denied.');
         $devices = DeviceStatus::latestPerDevice();
 
         $filename = 'device_inventory_' . now()->format('Y-m-d') . '.csv';

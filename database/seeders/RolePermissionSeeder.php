@@ -38,7 +38,6 @@ class RolePermissionSeeder extends Seeder
             'view logs',
 
             // Settings
-            'view settings',
             'manage settings',
 
             // Users
