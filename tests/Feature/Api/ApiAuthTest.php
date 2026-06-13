@@ -106,4 +106,40 @@ class ApiAuthTest extends TestCase
         $this->assertStringNotContainsString('"password"', $response->content());
         $this->assertStringNotContainsString('"remember_token"', $response->content());
     }
+
+    // ── Token security ────────────────────────────────────────────────────
+
+    public function test_revoked_token_cannot_access_protected_endpoints(): void
+    {
+        $admin = $this->createAdmin();
+        $token = $admin->createToken('test')->plainTextToken;
+
+        // Revoke the token directly in the database
+        // (If we use the /api/auth/logout endpoint first, Laravel caches the user
+        // in the AuthManager for the remainder of the test lifecycle).
+        $admin->tokens()->delete();
+
+        // Reusing the revoked token must return 401
+        $this->withToken($token)
+            ->getJson('/api/auth/me')
+            ->assertUnauthorized();
+    }
+
+    // ── Rate limiting ────────────────────────────────────────────────────
+
+    public function test_api_login_is_rate_limited_after_many_attempts(): void
+    {
+        for ($i = 0; $i < 11; $i++) {
+            $this->postJson('/api/auth/login', [
+                'email'    => 'nobody@example.com',
+                'password' => 'wrong-password',
+            ]);
+        }
+
+        // 11th+ attempt should be rate-limited (429)
+        $this->postJson('/api/auth/login', [
+            'email'    => 'nobody@example.com',
+            'password' => 'wrong-password',
+        ])->assertStatus(429);
+    }
 }

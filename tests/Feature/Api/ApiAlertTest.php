@@ -191,4 +191,73 @@ class ApiAlertTest extends TestCase
             ->getJson("/api/alerts/{$rule->id}")
             ->assertJsonPath('data.condition_label', 'If Latency > 100ms for 5m');
     }
+
+    // ── Operator RBAC on write ────────────────────────────────────────────
+
+    public function test_operator_cannot_create_alert_via_api(): void
+    {
+        $this->apiAs($this->createOperator())
+            ->postJson('/api/alerts', [
+                'title'           => 'Unauthorized',
+                'metric_type'     => 'latency',
+                'condition'       => 'gt',
+                'threshold_value' => 50,
+                'duration'        => '5m',
+                'severity'        => 'info',
+                'channels'        => ['telegram'],
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_operator_cannot_update_alert_via_api(): void
+    {
+        $rule = AlertRule::factory()->create();
+
+        $this->apiAs($this->createOperator())
+            ->putJson("/api/alerts/{$rule->id}", [
+                'title'           => 'Hijacked',
+                'metric_type'     => 'latency',
+                'condition'       => 'gt',
+                'threshold_value' => 50,
+                'duration'        => '5m',
+                'severity'        => 'info',
+                'channels'        => ['telegram'],
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_operator_cannot_delete_alert_via_api(): void
+    {
+        $rule = AlertRule::factory()->create();
+
+        $this->apiAs($this->createOperator())
+            ->deleteJson("/api/alerts/{$rule->id}")
+            ->assertForbidden();
+    }
+
+    // ── 404 cases ────────────────────────────────────────────────────────────
+
+    public function test_api_update_nonexistent_alert_returns_404(): void
+    {
+        $this->apiAs($this->createAdmin())
+            ->putJson('/api/alerts/99999', [
+                'title'           => 'Ghost',
+                'metric_type'     => 'latency',
+                'condition'       => 'gt',
+                'threshold_value' => 50,
+                'duration'        => '5m',
+                'severity'        => 'info',
+                'channels'        => ['telegram'],
+            ])
+            ->assertNotFound()
+            ->assertJsonPath('success', false);
+    }
+
+    public function test_api_delete_nonexistent_alert_returns_404(): void
+    {
+        $this->apiAs($this->createAdmin())
+            ->deleteJson('/api/alerts/99999')
+            ->assertNotFound()
+            ->assertJsonPath('success', false);
+    }
 }

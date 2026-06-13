@@ -178,4 +178,155 @@ class AlertTest extends TestCase
 
         $this->assertDatabaseHas('alert_rules', ['title' => 'Original Rule (Copy)']);
     }
+
+    // ── Business rules ────────────────────────────────────────────────────────
+
+    public function test_creating_rule_auto_sets_description_from_title(): void
+    {
+        $this->actingAsAdmin()
+            ->postJson('/alert/rules', [
+                'title'           => 'Auto Description Rule',
+                'metric_type'     => 'latency',
+                'condition'       => 'gt',
+                'threshold_value' => 50,
+                'duration'        => '5m',
+                'severity'        => 'info',
+                'channels'        => ['telegram'],
+            ])
+            ->assertOk();
+
+        $this->assertDatabaseHas('alert_rules', [
+            'title'       => 'Auto Description Rule',
+            'description' => 'Auto Description Rule',
+        ]);
+    }
+
+    public function test_sort_order_auto_increments_on_rule_creation(): void
+    {
+        $first  = AlertRule::factory()->create(['sort_order' => 10]);
+        $second = AlertRule::factory()->create(['sort_order' => 20]);
+
+        $this->actingAsAdmin()
+            ->postJson('/alert/rules', [
+                'title'           => 'Last Rule',
+                'metric_type'     => 'latency',
+                'condition'       => 'gt',
+                'threshold_value' => 50,
+                'duration'        => '5m',
+                'severity'        => 'info',
+                'channels'        => ['telegram'],
+            ])
+            ->assertOk();
+
+        $newRule = AlertRule::where('title', 'Last Rule')->first();
+        $this->assertGreaterThan(20, $newRule->sort_order);
+    }
+
+    public function test_admin_can_create_bandwidth_alert_rule(): void
+    {
+        $this->actingAsAdmin()
+            ->postJson('/alert/rules', [
+                'title'           => 'High Bandwidth Alert',
+                'metric_type'     => 'bandwidth',
+                'condition'       => 'gt',
+                'threshold_value' => 1000,
+                'duration'        => '10m',
+                'severity'        => 'warning',
+                'channels'        => ['email'],
+            ])
+            ->assertOk()
+            ->assertJsonPath('ok', true);
+
+        $this->assertDatabaseHas('alert_rules', [
+            'title'       => 'High Bandwidth Alert',
+            'metric_type' => 'bandwidth',
+        ]);
+    }
+
+    public function test_admin_can_create_packet_loss_alert_rule(): void
+    {
+        $this->actingAsAdmin()
+            ->postJson('/alert/rules', [
+                'title'           => 'Packet Loss Alert',
+                'metric_type'     => 'packet_loss',
+                'condition'       => 'gt',
+                'threshold_value' => 5,
+                'duration'        => '5m',
+                'severity'        => 'critical',
+                'channels'        => ['telegram'],
+            ])
+            ->assertOk()
+            ->assertJsonPath('ok', true);
+
+        $this->assertDatabaseHas('alert_rules', ['metric_type' => 'packet_loss']);
+    }
+
+    // ── 404 cases ────────────────────────────────────────────────────────────
+
+    public function test_updating_nonexistent_rule_returns_404(): void
+    {
+        $this->actingAsAdmin()
+            ->putJson('/alert/rules/99999', [
+                'title'           => 'Ghost Rule',
+                'metric_type'     => 'latency',
+                'condition'       => 'gt',
+                'threshold_value' => 50,
+                'duration'        => '5m',
+                'severity'        => 'info',
+                'channels'        => ['telegram'],
+            ])
+            ->assertNotFound();
+    }
+
+    public function test_deleting_nonexistent_rule_returns_404(): void
+    {
+        $this->actingAsAdmin()
+            ->deleteJson('/alert/rules/99999')
+            ->assertNotFound();
+    }
+
+    public function test_toggling_nonexistent_rule_returns_404(): void
+    {
+        $this->actingAsAdmin()
+            ->postJson('/alert/rules/99999/toggle')
+            ->assertNotFound();
+    }
+
+    // ── Viewer read access ────────────────────────────────────────────────────
+    // AlertController::index() uses FIELD() MySQL-specific ordering
+    // incompatible with SQLite. Test RBAC guard only (not 403 / not 302).
+
+    public function test_viewer_can_reach_alert_page(): void
+    {
+        $response = $this->actingAsViewer()->get('/alert');
+        $this->assertNotEquals(403, $response->status(), 'Viewer should not be forbidden from alert page');
+        $this->assertNotEquals(302, $response->status(), 'Viewer should not be redirected from alert page');
+    }
+
+    public function test_viewer_cannot_update_alert_rule(): void
+    {
+        $rule = AlertRule::factory()->create();
+
+        $this->actingAsViewer()
+            ->putJson("/alert/rules/{$rule->id}", ['title' => 'Hijacked'])
+            ->assertForbidden();
+    }
+
+    public function test_viewer_cannot_delete_alert_rule(): void
+    {
+        $rule = AlertRule::factory()->create();
+
+        $this->actingAsViewer()
+            ->deleteJson("/alert/rules/{$rule->id}")
+            ->assertForbidden();
+    }
+
+    public function test_viewer_cannot_toggle_alert_rule(): void
+    {
+        $rule = AlertRule::factory()->create();
+
+        $this->actingAsViewer()
+            ->postJson("/alert/rules/{$rule->id}/toggle")
+            ->assertForbidden();
+    }
 }
