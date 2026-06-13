@@ -18,7 +18,6 @@ class ServiceUnitTest extends TestCase
 {
     use RefreshDatabase;
 
-    // ── AlertService ──────────────────────────────────────────────────────────
 
     public function test_alert_service_create_rule_sets_description_from_title(): void
     {
@@ -93,7 +92,6 @@ class ServiceUnitTest extends TestCase
         $this->assertDatabaseMissing('alert_rules', ['id' => $id]);
     }
 
-    // ── UserService ───────────────────────────────────────────────────────────
 
     public function test_user_service_create_user_assigns_spatie_role(): void
     {
@@ -129,29 +127,19 @@ class ServiceUnitTest extends TestCase
     {
         $service = app(UserService::class);
 
-        // Create only one admin
         $onlyAdmin = \App\Models\User::factory()->create(['is_active' => true]);
         $onlyAdmin->assignRole('admin');
 
-        // Simulate acting as someone else (we'll mock Auth::id via actingAs)
         $actor = \App\Models\User::factory()->create(['is_active' => true]);
         $actor->assignRole('admin');
 
         $this->actingAs($actor);
 
-        // Try to delete the only admin — actor is different so self-delete guard won't fire
-        // But since onlyAdmin IS the last admin, it should throw
-        // After deleting actor, onlyAdmin remains
         $actor->delete();
 
-        // Now onlyAdmin is the only admin
-        // Acting as some other non-admin for the HTTP call won't work for service test
-        // Test via exception directly
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Cannot delete the last admin account.');
 
-        // We need to pass any non-self user as actor to bypass self-delete guard
-        // Patch Auth::id to return a different ID
         \Illuminate\Support\Facades\Auth::setUser(
             \App\Models\User::factory()->create(['is_active' => true])
         );

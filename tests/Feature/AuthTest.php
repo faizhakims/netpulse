@@ -6,7 +6,6 @@ use Tests\TestCase;
 
 class AuthTest extends TestCase
 {
-    // ── Login ─────────────────────────────────────────────────────────────────
 
     public function test_login_page_is_accessible_to_guests(): void
     {
@@ -55,12 +54,10 @@ class AuthTest extends TestCase
         for ($i = 0; $i < 11; $i++) {
             $this->post('/login', ['email' => 'x@x.com', 'password' => 'wrong']);
         }
-        // 11th attempt should be rate-limited (429)
         $this->post('/login', ['email' => 'x@x.com', 'password' => 'wrong'])
              ->assertStatus(429);
     }
 
-    // ── Logout ────────────────────────────────────────────────────────────────
 
     public function test_authenticated_user_can_logout(): void
     {
@@ -71,7 +68,6 @@ class AuthTest extends TestCase
         $this->assertGuest();
     }
 
-    // ── Unauthorized access ───────────────────────────────────────────────────
 
     public function test_guest_cannot_access_dashboard(): void
     {

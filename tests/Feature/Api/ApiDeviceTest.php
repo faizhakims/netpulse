@@ -26,7 +26,6 @@ class ApiDeviceTest extends TestCase
         ]);
     }
 
-    // ── Index ─────────────────────────────────────────────────────────────────
 
     public function test_api_list_devices_returns_paginated_structure(): void
     {
@@ -75,7 +74,6 @@ class ApiDeviceTest extends TestCase
             ->assertJsonPath('data.total', 1);
     }
 
-    // ── Authorization ─────────────────────────────────────────────────────────
 
     public function test_viewer_can_list_devices_via_api(): void
     {
@@ -102,7 +100,6 @@ class ApiDeviceTest extends TestCase
             ->assertUnauthorized();
     }
 
-    // ── Show ──────────────────────────────────────────────────────────────────
 
     public function test_api_show_device_returns_correct_data(): void
     {
@@ -132,7 +129,6 @@ class ApiDeviceTest extends TestCase
             ->assertOk();
     }
 
-    // ── Permission enforcement on write actions ───────────────────────────────
 
     public function test_viewer_cannot_delete_device_via_api(): void
     {
@@ -166,11 +162,9 @@ class ApiDeviceTest extends TestCase
             ->assertUnauthorized();
     }
 
-    // ── Validation ────────────────────────────────────────────────────────────
 
     public function test_ping_action_requires_device_field(): void
     {
-        // Operator has 'manage devices' — validation fires after auth check
         $this->apiAs($this->createOperator())
             ->postJson('/api/devices', ['action' => 'ping']) // missing 'device'
             ->assertStatus(422);
@@ -186,7 +180,6 @@ class ApiDeviceTest extends TestCase
             ->assertStatus(422);
     }
 
-    // ── Resource structure ────────────────────────────────────────────────────
 
     public function test_api_device_resource_never_exposes_raw_internal_columns(): void
     {
@@ -196,8 +189,6 @@ class ApiDeviceTest extends TestCase
             ->getJson('/api/devices')
             ->assertOk();
 
-        // The DeviceResource transforms the data — verify structure
-        // DeviceResource uses 'name' (mapped from $this->device column)
         $items = $response->json('data.items');
         $this->assertNotEmpty($items);
 

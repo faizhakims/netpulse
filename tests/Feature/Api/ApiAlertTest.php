@@ -12,7 +12,6 @@ class ApiAlertTest extends TestCase
         return $this->actingAs($user, 'sanctum');
     }
 
-    // ── Index ─────────────────────────────────────────────────────────────────
 
     public function test_api_list_alerts_returns_paginated_structure(): void
     {
@@ -59,7 +58,6 @@ class ApiAlertTest extends TestCase
             ->assertJsonPath('data.total', 1);
     }
 
-    // ── Show ──────────────────────────────────────────────────────────────────
 
     public function test_api_show_alert_returns_correct_rule(): void
     {
@@ -80,7 +78,6 @@ class ApiAlertTest extends TestCase
             ->assertJsonPath('success', false);
     }
 
-    // ── Store ─────────────────────────────────────────────────────────────────
 
     public function test_api_store_alert_rule_and_persists_to_db(): void
     {
@@ -112,9 +109,7 @@ class ApiAlertTest extends TestCase
                 'channels'    => ['telegram'],
             ]);
 
-        // Cross-field validation triggers either 422 from FormRequest failedValidation
         $response->assertStatus(422);
-        // Response body should indicate failure (ok:false from web form request)
         $body = $response->json();
         $this->assertTrue(
             ($body['success'] ?? null) === false || ($body['ok'] ?? null) === false,
@@ -122,7 +117,6 @@ class ApiAlertTest extends TestCase
         );
     }
 
-    // ── Update ────────────────────────────────────────────────────────────────
 
     public function test_api_update_alert_rule(): void
     {
@@ -144,7 +138,6 @@ class ApiAlertTest extends TestCase
         $this->assertDatabaseHas('alert_rules', ['id' => $rule->id, 'title' => 'Updated via API']);
     }
 
-    // ── Delete ────────────────────────────────────────────────────────────────
 
     public function test_api_delete_alert_rule(): void
     {
@@ -158,7 +151,6 @@ class ApiAlertTest extends TestCase
         $this->assertDatabaseMissing('alert_rules', ['id' => $rule->id]);
     }
 
-    // ── Authorization ─────────────────────────────────────────────────────────
 
     public function test_viewer_cannot_create_alert_via_api(): void
     {
@@ -176,7 +168,6 @@ class ApiAlertTest extends TestCase
             ->assertOk();
     }
 
-    // ── Resource never exposes internal fields ────────────────────────────────
 
     public function test_alert_resource_includes_condition_label(): void
     {
@@ -192,7 +183,6 @@ class ApiAlertTest extends TestCase
             ->assertJsonPath('data.condition_label', 'If Latency > 100ms for 5m');
     }
 
-    // ── Operator RBAC on write ────────────────────────────────────────────
 
     public function test_operator_cannot_create_alert_via_api(): void
     {
@@ -235,7 +225,6 @@ class ApiAlertTest extends TestCase
             ->assertForbidden();
     }
 
-    // ── 404 cases ────────────────────────────────────────────────────────────
 
     public function test_api_update_nonexistent_alert_returns_404(): void
     {

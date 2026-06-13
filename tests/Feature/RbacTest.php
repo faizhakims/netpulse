@@ -6,16 +6,11 @@ use Tests\TestCase;
 
 class RbacTest extends TestCase
 {
-    // ── Dashboard ─────────────────────────────────────────────────────────────
-    // The dashboard page calls DashboardService which uses MySQL FIELD() ordering
-    // incompatible with SQLite. We keep the assertNotEquals guard only for this
-    // specific page — all other pages are SQLite-safe and use assertOk().
 
     public function test_all_roles_can_reach_dashboard(): void
     {
         foreach ([$this->createAdmin(), $this->createOperator(), $this->createViewer()] as $user) {
             $response = $this->actingAs($user)->get('/dashboard');
-            // Must not be a 403 (forbidden) or redirect-to-login (302)
             $this->assertNotEquals(403, $response->status(),
                 "Role {$user->currentRoleName()} should not be forbidden from dashboard");
             $this->assertNotEquals(302, $response->status(),
@@ -23,7 +18,6 @@ class RbacTest extends TestCase
         }
     }
 
-    // ── Settings ─────────────────────────────────────────────────────────────
 
     public function test_admin_can_access_settings(): void
     {
@@ -40,7 +34,6 @@ class RbacTest extends TestCase
         $this->actingAsViewer()->get('/settings')->assertForbidden();
     }
 
-    // ── Devices ───────────────────────────────────────────────────────────────
 
     public function test_admin_and_operator_can_ping_device(): void
     {
@@ -48,8 +41,6 @@ class RbacTest extends TestCase
             $response = $this->actingAs($user)
                 ->postJson('/device/ping', ['device' => 'test-device']);
 
-            // Ping reaches the service layer (200 or 5xx from unreachable host)
-            // but must never be 403 or 401.
             $this->assertNotEquals(403, $response->status(),
                 "Role {$user->currentRoleName()} should not be forbidden from ping");
             $this->assertNotEquals(401, $response->status(),
@@ -73,9 +64,6 @@ class RbacTest extends TestCase
 
     public function test_operator_has_manage_devices_permission(): void
     {
-        // Per web routes, operators are in the 'manage devices' group.
-        // Deleting a non-existent device returns an error response from DeviceService
-        // but must NOT be a 403. We verify authorization passes.
         $response = $this->actingAsOperator()
             ->deleteJson('/device/nonexistent-device/delete');
 
@@ -83,10 +71,6 @@ class RbacTest extends TestCase
             'Operators with manage devices permission should not be forbidden from delete');
     }
 
-    // ── Alerts ────────────────────────────────────────────────────────────────
-    // AlertController::index() uses FIELD() MySQL-specific ordering incompatible
-    // with SQLite. We assert not 403 / not 302 only — 500 from FIELD() is a
-    // SQLite test environment limitation, not a permission failure.
 
     public function test_admin_can_reach_alert_page(): void
     {
@@ -111,7 +95,6 @@ class RbacTest extends TestCase
 
     public function test_operator_can_view_but_not_manage_alerts(): void
     {
-        // Operator cannot create alert rules (manage permission)
         $this->actingAsOperator()
             ->postJson('/alert/rules', [])
             ->assertForbidden();
@@ -124,9 +107,6 @@ class RbacTest extends TestCase
             ->assertForbidden();
     }
 
-    // ── Incidents ─────────────────────────────────────────────────────────────
-    // IncidentService::getIncidentsData() uses FIELD() MySQL-specific ordering
-    // incompatible with SQLite. Assert not 403 / not 302 only.
 
     public function test_all_roles_can_reach_incidents_page(): void
     {
@@ -139,7 +119,6 @@ class RbacTest extends TestCase
         }
     }
 
-    // ── User Management ───────────────────────────────────────────────────────
 
     public function test_only_admin_can_store_users(): void
     {

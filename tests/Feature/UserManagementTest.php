@@ -7,7 +7,6 @@ use Tests\TestCase;
 
 class UserManagementTest extends TestCase
 {
-    // ── Create ────────────────────────────────────────────────────────────────
 
     public function test_admin_can_create_new_user(): void
     {
@@ -79,7 +78,6 @@ class UserManagementTest extends TestCase
             ->assertStatus(422);
     }
 
-    // ── Update ────────────────────────────────────────────────────────────────
 
     public function test_admin_can_update_user_details(): void
     {
@@ -112,7 +110,6 @@ class UserManagementTest extends TestCase
             ->assertOk()
             ->assertJsonPath('ok', true);
 
-        // Verify the password was actually changed in DB
         $this->assertDatabaseHas('users', ['id' => $user->id]);
         $fresh = $user->fresh();
         $this->assertTrue(\Illuminate\Support\Facades\Hash::check('NewSecurePass1!', $fresh->password));
@@ -122,7 +119,6 @@ class UserManagementTest extends TestCase
     {
         $user = $this->createViewer(['email' => 'myemail@example.com']);
 
-        // Updating without changing email should succeed (not trigger unique violation)
         $this->actingAsAdmin()
             ->putJson("/settings/users/{$user->id}", [
                 'name'  => 'Updated Name',
@@ -132,7 +128,6 @@ class UserManagementTest extends TestCase
             ->assertOk();
     }
 
-    // ── Toggle ────────────────────────────────────────────────────────────────
 
     public function test_admin_can_deactivate_another_user(): void
     {
@@ -167,11 +162,9 @@ class UserManagementTest extends TestCase
             ->assertOk()
             ->assertJsonPath('ok', false);
 
-        // Account must remain active
         $this->assertTrue($admin->fresh()->is_active);
     }
 
-    // ── Delete ────────────────────────────────────────────────────────────────
 
     public function test_admin_can_delete_another_user(): void
     {
@@ -207,59 +200,31 @@ class UserManagementTest extends TestCase
         $lastAdmin    = $this->createAdmin();
         $requestAdmin = $this->createAdmin(); // second admin makes the request
 
-        // Delete the request admin directly so lastAdmin is now the only admin
         User::where('id', $requestAdmin->id)->forceDelete();
 
-        // Create a fresh second admin to perform the HTTP request
         $secondAdmin = $this->createAdmin();
 
-        // Now there are 2 admins: lastAdmin + secondAdmin.
-        // Delete secondAdmin from DB, leaving lastAdmin as the ONLY admin.
         User::where('id', $secondAdmin->id)->forceDelete();
 
-        // Re-create a non-admin actor to perform the request
-        // Actually: let's recreate the scenario cleanly.
-        // We need an actor who CAN make the request (must be admin)
-        // but we want to try to delete the LAST admin (lastAdmin).
-        // Since actor must be admin too, use a different approach:
-        // create a fresh admin actor, then confirm lastAdmin is protected.
 
         $actor = $this->createAdmin(); // total admins now: lastAdmin + actor
 
-        // Delete actor from DB to make lastAdmin the only admin left
         User::where('id', $actor->id)->forceDelete();
 
-        // Recreate actor as a fresh admin (now we have lastAdmin + newActor)
         $newActor = $this->createAdmin();
 
-        // Try to delete lastAdmin — this should fail because if we delete lastAdmin,
-        // newActor would be left, so it's NOT the last admin. Let's restructure:
-        // The guard fires when target IS admin AND count <= 1 AFTER potential removal.
-        // The UserService checks: $user->hasRole('admin') && User::role('admin')->count() <= 1
-        // So we need: only 1 admin in DB, then try to delete them.
         User::where('id', $newActor->id)->forceDelete();
 
-        // Now only lastAdmin remains. But we need an actor to make the HTTP request.
-        // The actor must have 'manage users' permission (admin role).
-        // If we assign admin role to a non-admin user, or use lastAdmin itself:
         $this->actingAs($lastAdmin)
             ->deleteJson("/settings/users/{$lastAdmin->id}")
             ->assertOk()
             ->assertJsonPath('ok', false); // self-delete guard fires first
 
-        // Verify via service directly: create a viewer actor, give admin role,
-        // then target is the ONLY admin
         $adminOnly = $this->createAdmin();
         $actor2    = $this->createAdmin();
 
-        // Remove actor2 to make adminOnly the last admin
         User::where('id', $actor2->id)->forceDelete();
 
-        // Now adminOnly is the ONLY admin. Acting AS adminOnly trying to delete themselves
-        // triggers the self-delete guard (ok=false) — the last-admin guard would be
-        // reached if another user could delete them. Since the UserService::deleteUser
-        // checks self first, then admin count, we verify the count check via unit test.
-        // The unit test in Unit/IncidentModelTest validates the service guard directly.
         $this->actingAs($adminOnly)
             ->deleteJson("/settings/users/{$adminOnly->id}")
             ->assertOk()
@@ -268,7 +233,6 @@ class UserManagementTest extends TestCase
         $this->assertDatabaseHas('users', ['id' => $adminOnly->id]);
     }
 
-    // ── Profile ───────────────────────────────────────────────────────────────
 
     public function test_any_authenticated_user_can_update_their_own_profile(): void
     {
@@ -293,7 +257,6 @@ class UserManagementTest extends TestCase
             ->postJson('/settings/profile', [
                 'name'  => 'Updated Name',
                 'email' => $user->email,
-                // no new_password field
             ])
             ->assertOk();
 
@@ -317,7 +280,6 @@ class UserManagementTest extends TestCase
             ->assertOk()
             ->assertJsonPath('ok', true);
 
-        // New password must work for login
         $this->assertTrue(
             \Illuminate\Support\Facades\Hash::check('NewPass2@', $user->fresh()->password)
         );
@@ -337,7 +299,6 @@ class UserManagementTest extends TestCase
             ])
             ->assertStatus(422);
 
-        // Password must remain unchanged
         $this->assertTrue(
             \Illuminate\Support\Facades\Hash::check('OldPass1!', $user->fresh()->password)
         );
@@ -349,7 +310,6 @@ class UserManagementTest extends TestCase
             ->assertUnauthorized();
     }
 
-    // ── Operator & Viewer cannot manage users ─────────────────────────────────
 
     public function test_operator_cannot_create_users(): void
     {

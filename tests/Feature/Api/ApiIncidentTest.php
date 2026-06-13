@@ -12,7 +12,6 @@ class ApiIncidentTest extends TestCase
         return $this->actingAs($user, 'sanctum');
     }
 
-    // ── Index ─────────────────────────────────────────────────────────────────
 
     public function test_api_list_incidents_returns_paginated_structure(): void
     {
@@ -58,7 +57,6 @@ class ApiIncidentTest extends TestCase
             ->assertJsonPath('data.total', 1);
     }
 
-    // ── Show ──────────────────────────────────────────────────────────────────
 
     public function test_api_show_incident_returns_correct_fields(): void
     {
@@ -82,7 +80,6 @@ class ApiIncidentTest extends TestCase
             ->assertNotFound();
     }
 
-    // ── Manual Resolve ────────────────────────────────────────────────────────
 
     public function test_api_admin_can_manually_resolve_active_incident(): void
     {
@@ -125,7 +122,6 @@ class ApiIncidentTest extends TestCase
             ->assertForbidden();
     }
 
-    // ── Resource fields ───────────────────────────────────────────────────────
 
     public function test_api_incident_resource_has_all_required_fields(): void
     {

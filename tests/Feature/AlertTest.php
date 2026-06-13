@@ -7,7 +7,6 @@ use Tests\TestCase;
 
 class AlertTest extends TestCase
 {
-    // ── Store Rule ────────────────────────────────────────────────────────────
 
     public function test_admin_can_create_latency_alert_rule(): void
     {
@@ -96,7 +95,6 @@ class AlertTest extends TestCase
             ->assertJsonPath('ok', false);
     }
 
-    // ── Update Rule ───────────────────────────────────────────────────────────
 
     public function test_admin_can_update_alert_rule(): void
     {
@@ -119,7 +117,6 @@ class AlertTest extends TestCase
         $this->assertDatabaseHas('alert_rules', ['id' => $rule->id, 'title' => 'Updated Title']);
     }
 
-    // ── Toggle Rule ───────────────────────────────────────────────────────────
 
     public function test_admin_can_toggle_alert_rule(): void
     {
@@ -144,7 +141,6 @@ class AlertTest extends TestCase
             ->assertJsonPath('is_active', true);
     }
 
-    // ── Delete Rule ───────────────────────────────────────────────────────────
 
     public function test_admin_can_delete_alert_rule(): void
     {
@@ -165,7 +161,6 @@ class AlertTest extends TestCase
             ->assertForbidden();
     }
 
-    // ── Duplicate Rule ────────────────────────────────────────────────────────
 
     public function test_admin_can_duplicate_alert_rule(): void
     {
@@ -179,7 +174,6 @@ class AlertTest extends TestCase
         $this->assertDatabaseHas('alert_rules', ['title' => 'Original Rule (Copy)']);
     }
 
-    // ── Business rules ────────────────────────────────────────────────────────
 
     public function test_creating_rule_auto_sets_description_from_title(): void
     {
@@ -261,7 +255,6 @@ class AlertTest extends TestCase
         $this->assertDatabaseHas('alert_rules', ['metric_type' => 'packet_loss']);
     }
 
-    // ── 404 cases ────────────────────────────────────────────────────────────
 
     public function test_updating_nonexistent_rule_returns_404(): void
     {
@@ -292,9 +285,6 @@ class AlertTest extends TestCase
             ->assertNotFound();
     }
 
-    // ── Viewer read access ────────────────────────────────────────────────────
-    // AlertController::index() uses FIELD() MySQL-specific ordering
-    // incompatible with SQLite. Test RBAC guard only (not 403 / not 302).
 
     public function test_viewer_can_reach_alert_page(): void
     {

@@ -13,7 +13,6 @@ use Tests\TestCase;
  */
 class IncidentModelTest extends TestCase
 {
-    // ── isActive ──────────────────────────────────────────────────────────────
 
     public function test_is_active_returns_true_when_resolved_at_is_null(): void
     {
@@ -27,7 +26,6 @@ class IncidentModelTest extends TestCase
         $this->assertFalse($incident->isActive());
     }
 
-    // ── badgeClass ────────────────────────────────────────────────────────────
 
     public function test_badge_class_for_critical_status(): void
     {
@@ -61,12 +59,10 @@ class IncidentModelTest extends TestCase
 
     public function test_badge_class_is_case_sensitive(): void
     {
-        // lowercase 'critical' does NOT match 'Critical' — falls to default
         $incident = Incident::factory()->make(['status' => 'critical']);
         $this->assertEquals('badge-info', $incident->badgeClass());
     }
 
-    // ── displayDuration — stored value ────────────────────────────────────────
 
     public function test_display_duration_returns_stored_value_when_present(): void
     {
@@ -74,7 +70,6 @@ class IncidentModelTest extends TestCase
         $this->assertEquals('2h 15m', $incident->displayDuration());
     }
 
-    // ── displayDuration — computed from timestamps ────────────────────────────
 
     public function test_display_duration_returns_dash_when_started_at_is_null(): void
     {
@@ -138,7 +133,6 @@ class IncidentModelTest extends TestCase
 
     public function test_display_duration_returns_dash_for_negative_duration(): void
     {
-        // started_at is in the future relative to resolved_at — anomalous data
         $incident = Incident::factory()->make([
             'duration'    => null,
             'started_at'  => Carbon::now()->addHour(),
@@ -149,13 +143,11 @@ class IncidentModelTest extends TestCase
 
     public function test_display_duration_for_active_incident_uses_now_as_end(): void
     {
-        // Active incident with no resolved_at — uses now() internally
         $incident = Incident::factory()->make([
             'duration'    => null,
             'started_at'  => Carbon::now()->subMinutes(5),
             'resolved_at' => null,
         ]);
-        // Should not be '—' and should contain a digit
         $result = $incident->displayDuration();
         $this->assertNotEquals('—', $result);
         $this->assertMatchesRegularExpression('/\d/', $result);

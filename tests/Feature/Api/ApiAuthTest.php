@@ -7,7 +7,6 @@ use Tests\TestCase;
 
 class ApiAuthTest extends TestCase
 {
-    // ── Login ─────────────────────────────────────────────────────────────────
 
     public function test_api_login_returns_token_for_valid_credentials(): void
     {
@@ -53,7 +52,6 @@ class ApiAuthTest extends TestCase
             ->assertStatus(422);
     }
 
-    // ── Logout ────────────────────────────────────────────────────────────────
 
     public function test_api_logout_revokes_token(): void
     {
@@ -65,11 +63,9 @@ class ApiAuthTest extends TestCase
             ->assertOk()
             ->assertJsonPath('success', true);
 
-        // Token is now revoked — the personal_access_token row was deleted
         $this->assertDatabaseCount('personal_access_tokens', 0);
     }
 
-    // ── Protected endpoints require auth ──────────────────────────────────────
 
     public function test_protected_api_endpoint_rejects_unauthenticated_request(): void
     {
@@ -79,7 +75,6 @@ class ApiAuthTest extends TestCase
         $this->getJson('/api/incidents')->assertUnauthorized();
     }
 
-    // ── Me ────────────────────────────────────────────────────────────────────
 
     public function test_api_me_returns_user_profile_and_permissions(): void
     {
@@ -92,7 +87,6 @@ class ApiAuthTest extends TestCase
             ->assertJsonStructure(['data' => ['id', 'name', 'email', 'role', 'permissions']]);
     }
 
-    // ── Response never exposes sensitive fields ────────────────────────────────
 
     public function test_api_login_response_never_contains_password(): void
     {
@@ -107,25 +101,19 @@ class ApiAuthTest extends TestCase
         $this->assertStringNotContainsString('"remember_token"', $response->content());
     }
 
-    // ── Token security ────────────────────────────────────────────────────
 
     public function test_revoked_token_cannot_access_protected_endpoints(): void
     {
         $admin = $this->createAdmin();
         $token = $admin->createToken('test')->plainTextToken;
 
-        // Revoke the token directly in the database
-        // (If we use the /api/auth/logout endpoint first, Laravel caches the user
-        // in the AuthManager for the remainder of the test lifecycle).
         $admin->tokens()->delete();
 
-        // Reusing the revoked token must return 401
         $this->withToken($token)
             ->getJson('/api/auth/me')
             ->assertUnauthorized();
     }
 
-    // ── Rate limiting ────────────────────────────────────────────────────
 
     public function test_api_login_is_rate_limited_after_many_attempts(): void
     {
@@ -136,7 +124,6 @@ class ApiAuthTest extends TestCase
             ]);
         }
 
-        // 11th+ attempt should be rate-limited (429)
         $this->postJson('/api/auth/login', [
             'email'    => 'nobody@example.com',
             'password' => 'wrong-password',

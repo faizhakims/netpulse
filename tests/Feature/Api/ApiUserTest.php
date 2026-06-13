@@ -12,7 +12,6 @@ class ApiUserTest extends TestCase
         return $this->actingAs($user, 'sanctum');
     }
 
-    // ── Authorization guard ───────────────────────────────────────────────────
 
     public function test_viewer_cannot_list_users_via_api(): void
     {
@@ -39,7 +38,6 @@ class ApiUserTest extends TestCase
             ->assertJsonStructure(['data' => ['items', 'total', 'per_page']]);
     }
 
-    // ── Filtering ─────────────────────────────────────────────────────────────
 
     public function test_api_users_search_by_name(): void
     {
@@ -57,7 +55,6 @@ class ApiUserTest extends TestCase
         User::factory()->count(2)->create(['is_active' => true]);
         User::factory()->count(3)->create(['is_active' => false]);
 
-        // Add 1 more active (the admin itself will be created and active)
         $admin = $this->createAdmin();
 
         $this->apiAs($admin)
@@ -66,7 +63,6 @@ class ApiUserTest extends TestCase
             ->assertJsonPath('data.total', 3); // 2 factory + 1 admin
     }
 
-    // ── Show ──────────────────────────────────────────────────────────────────
 
     public function test_api_show_user_returns_correct_data(): void
     {
@@ -86,7 +82,6 @@ class ApiUserTest extends TestCase
             ->assertNotFound();
     }
 
-    // ── Resource never exposes sensitive fields ────────────────────────────────
 
     public function test_api_user_resource_excludes_password_and_token(): void
     {

@@ -8,7 +8,6 @@ use Tests\TestCase;
 
 class SettingsTest extends TestCase
 {
-    // ── General Settings ──────────────────────────────────────────────────────
 
     public function test_admin_can_save_general_settings(): void
     {
@@ -78,7 +77,6 @@ class SettingsTest extends TestCase
             ->assertUnauthorized();
     }
 
-    // ── Security Settings ─────────────────────────────────────────────────────
 
     public function test_admin_can_save_security_settings(): void
     {
@@ -131,7 +129,6 @@ class SettingsTest extends TestCase
             ->assertForbidden();
     }
 
-    // ── Settings Index (Admin only) ───────────────────────────────────────────
 
     public function test_admin_can_access_settings_page(): void
     {
@@ -154,7 +151,6 @@ class SettingsTest extends TestCase
             ->assertForbidden();
     }
 
-    // ── Profile Update (any authenticated user) ───────────────────────────────
 
     public function test_admin_can_update_own_profile_name(): void
     {
@@ -215,7 +211,6 @@ class SettingsTest extends TestCase
             ->assertOk()
             ->assertJsonPath('ok', true);
 
-        // New password must validate
         $this->assertTrue(
             Hash::check('BrandNew2@', $user->fresh()->password)
         );
@@ -235,7 +230,6 @@ class SettingsTest extends TestCase
             ])
             ->assertStatus(422);
 
-        // Password must remain unchanged
         $this->assertTrue(
             Hash::check('CurrentPass1!', $user->fresh()->password)
         );
@@ -249,7 +243,6 @@ class SettingsTest extends TestCase
             ->postJson('/settings/profile', [
                 'name'  => 'Updated Name',
                 'email' => $user->email,
-                // no new_password field
             ])
             ->assertOk();
 
@@ -258,16 +251,12 @@ class SettingsTest extends TestCase
         );
     }
 
-    // ── System Info (Admin only) ──────────────────────────────────────────────
-    // system-info uses MySQL information_schema — SQLite-incompatible.
-    // Test that authorization works (not 403/401) rather than response content.
 
     public function test_admin_can_access_system_info(): void
     {
         $response = $this->actingAsAdmin()
             ->getJson('/settings/system-info');
 
-        // Must not be forbidden or unauthenticated
         $this->assertNotEquals(403, $response->status());
         $this->assertNotEquals(401, $response->status());
     }
@@ -286,7 +275,6 @@ class SettingsTest extends TestCase
             ->assertForbidden();
     }
 
-    // ── Clear Logs (Admin only) ───────────────────────────────────────────────
 
     public function test_admin_can_clear_logs(): void
     {

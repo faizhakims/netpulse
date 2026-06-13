@@ -20,7 +20,6 @@ class AlertRuleModelTest extends TestCase
         return $rule;
     }
 
-    // ── Status metric ─────────────────────────────────────────────────────────
 
     public function test_condition_label_for_status_down_metric(): void
     {
@@ -48,7 +47,6 @@ class AlertRuleModelTest extends TestCase
         $this->assertStringContainsString('UP', $label);
     }
 
-    // ── Latency metric ────────────────────────────────────────────────────────
 
     public function test_condition_label_for_latency_gt_condition(): void
     {
@@ -89,7 +87,6 @@ class AlertRuleModelTest extends TestCase
         $this->assertEquals('If Latency = 0ms for 5m', $label);
     }
 
-    // ── Bandwidth metric ──────────────────────────────────────────────────────
 
     public function test_condition_label_for_bandwidth_metric(): void
     {
@@ -117,7 +114,6 @@ class AlertRuleModelTest extends TestCase
         $this->assertStringContainsString('Mbps', $rule->conditionLabel());
     }
 
-    // ── Packet loss metric ────────────────────────────────────────────────────
 
     public function test_condition_label_for_packet_loss_metric(): void
     {
@@ -145,7 +141,6 @@ class AlertRuleModelTest extends TestCase
         $this->assertStringContainsString('5m', $label);
     }
 
-    // ── Unknown metric type falls back to default ─────────────────────────────
 
     public function test_condition_label_unknown_metric_type_has_no_unit(): void
     {
@@ -157,7 +152,6 @@ class AlertRuleModelTest extends TestCase
         ]);
 
         $label = $rule->conditionLabel();
-        // Falls through to default '' unit — should not crash
         $this->assertStringContainsString('>', $label);
         $this->assertStringContainsString('10', $label);
     }

@@ -7,9 +7,6 @@ use Tests\TestCase;
 
 class IncidentTest extends TestCase
 {
-    // ── View ─────────────────────────────────────────────────────────────────
-    // IncidentService::getIncidentsData() uses FIELD() MySQL-specific ordering
-    // incompatible with SQLite. We assert not 403 / not 302 only.
 
     public function test_admin_can_reach_incidents_page(): void
     {
@@ -37,7 +34,6 @@ class IncidentTest extends TestCase
         $this->get('/incidents')->assertRedirect('/login');
     }
 
-    // ── Model state ───────────────────────────────────────────────────────────
 
     public function test_active_incident_has_no_resolved_at(): void
     {
@@ -55,7 +51,6 @@ class IncidentTest extends TestCase
         $this->assertFalse($incident->isActive());
     }
 
-    // ── displayDuration ───────────────────────────────────────────────────────
 
     public function test_display_duration_uses_stored_duration_if_present(): void
     {
@@ -83,7 +78,6 @@ class IncidentTest extends TestCase
             'duration'    => null,
         ]);
 
-        // Should be "10m" exactly (no trailing "0s")
         $this->assertMatchesRegularExpression('/^\d+m$/', $incident->displayDuration());
     }
 
@@ -111,7 +105,6 @@ class IncidentTest extends TestCase
 
     public function test_display_duration_returns_dash_for_negative_duration(): void
     {
-        // started_at in the future (data anomaly) — should return '—'
         $incident = Incident::factory()->make([
             'started_at'  => now()->addHour(),
             'resolved_at' => now(),
@@ -123,7 +116,6 @@ class IncidentTest extends TestCase
 
     public function test_display_duration_for_active_incident_uses_current_time(): void
     {
-        // Active incident — no resolved_at, duration should reflect elapsed time
         $incident = Incident::factory()->create([
             'started_at'  => now()->subMinutes(5),
             'resolved_at' => null,
@@ -135,7 +127,6 @@ class IncidentTest extends TestCase
         $this->assertMatchesRegularExpression('/\d+/', $result);
     }
 
-    // ── badgeClass ────────────────────────────────────────────────────────────
 
     public function test_critical_incident_has_correct_badge_class(): void
     {
@@ -172,7 +163,6 @@ class IncidentTest extends TestCase
         $this->assertEquals('badge-info', $incident->badgeClass());
     }
 
-    // ── Scopes ────────────────────────────────────────────────────────────────
 
     public function test_active_scope_returns_only_unresolved(): void
     {
