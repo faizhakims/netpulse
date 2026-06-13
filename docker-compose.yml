@@ -1,0 +1,40 @@
+services:
+  app:
+    build: .
+    image: ${DOCKER_USERNAME:-netpulse_user}/netpulse-app:latest
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+      APP_DEBUG: false
+    env_file:
+      - .env
+    volumes:
+      - app_public:/var/www/public
+
+  web:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - app_public:/var/www/public
+
+  queue:
+    image: ${DOCKER_USERNAME:-netpulse_user}/netpulse-app:latest
+    restart: unless-stopped
+    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+    env_file:
+      - .env
+
+  scheduler:
+    image: ${DOCKER_USERNAME:-netpulse_user}/netpulse-app:latest
+    restart: unless-stopped
+    command: php artisan schedule:work
+    env_file:
+      - .env
+
+volumes:
+  app_public:
