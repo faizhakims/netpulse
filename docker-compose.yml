@@ -10,6 +10,8 @@ services:
       - .env
     volumes:
       - app_public:/var/www/public
+    networks:
+      - shared-network
 
   web:
     image: nginx:alpine
@@ -21,6 +23,8 @@ services:
     volumes:
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
       - app_public:/var/www/public
+    networks:
+      - shared-network
 
   queue:
     image: ${DOCKER_USERNAME:-netpulse_user}/netpulse-app:latest
@@ -28,6 +32,8 @@ services:
     command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
     env_file:
       - .env
+    networks:
+      - shared-network
 
   scheduler:
     image: ${DOCKER_USERNAME:-netpulse_user}/netpulse-app:latest
@@ -35,6 +41,12 @@ services:
     command: php artisan schedule:work
     env_file:
       - .env
+    networks:
+      - shared-network
 
 volumes:
   app_public:
+
+networks:
+  shared-network:
+    external: true
