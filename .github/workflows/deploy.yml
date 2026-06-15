@@ -39,7 +39,7 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           source: "docker-compose.yml"
-          target: "/opt/netpulse/"
+          target: "/tmp/"
 
       - name: Execute deployment commands via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -48,6 +48,9 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
+            # Pindahkan file docker-compose dari tmp dengan sudo untuk menimpa file root
+            sudo cp /tmp/docker-compose.yml /opt/netpulse/docker-compose.yml
+            
             cd /opt/netpulse
             export DOCKER_USERNAME="${{ secrets.DOCKER_USERNAME }}"
             
