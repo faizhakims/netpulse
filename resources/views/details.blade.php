@@ -357,21 +357,7 @@
             </div>
 
             {{-- ===================== Footer ===================== --}}
-            <footer class="page-footer">
-                <span class="footer-copy">&copy; 2026 NetPulse &mdash; Network Operations Center</span>
-                <div class="footer-status-group">
-                    <span class="footer-status-item">
-                        <span class="dot"></span>
-                        API Status: Operational
-                    </span>
-                    <span class="footer-status-item">
-                        <span class="dot"></span>
-                        Database: 4ms Sync
-                    </span>
-                    <a href="#" class="footer-link">Privacy Policy</a>
-                    <a href="#" class="footer-link">System Logs</a>
-                </div>
-            </footer>
+            @include('partials.footer')
 
         </div>
     </div>

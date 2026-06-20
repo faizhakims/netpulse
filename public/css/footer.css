@@ -1,0 +1,68 @@
+/* =============================================
+   SHARED FOOTER STYLES
+   ============================================= */
+
+.page-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0 16px;
+    border-top: 1px solid #E2E8F0;
+    flex-shrink: 0;
+    margin-top: auto; /* Push to bottom if container is flex col */
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+}
+
+.footer-copy {
+    font-size: 12px;
+    font-weight: 500;
+    color: #94A3B8;
+}
+
+.footer-status {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.footer-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #94A3B8;
+}
+
+.footer-indicator::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10B981;
+}
+
+.footer-link {
+    font-size: 12px;
+    color: #CBD5E1;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.15s;
+}
+
+.footer-link:hover {
+    color: #64748B;
+}
+
+@media (max-width: 768px) {
+    .page-footer {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .footer-status {
+        gap: 14px;
+    }
+}

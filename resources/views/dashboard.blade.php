@@ -417,20 +417,7 @@
             </div>
         </section>
 
-        {{-- Footer --}}
-        <footer class="dashboard-footer">
-            <span>© 2026 NetPulse – Network Operations Center</span>
-            <div class="footer-links">
-                <span class="flex items-center gap-2">
-                    <span class="status-dot" style="background:#10b981;"></span> API Status: Operational
-                </span>
-                <span class="flex items-center gap-2">
-                    <span class="status-dot" style="background:#10b981;"></span> Database: 4ms Sync
-                </span>
-                <a href="#" class="footer-link">Privacy Policy</a>
-                <a href="#" class="footer-link">System Logs</a>
-            </div>
-        </footer>
+        @include('partials.footer')
     </main>
 
     {{-- SLIDE PANEL UNTUK ALL MANAGED NODES --}}

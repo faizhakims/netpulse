@@ -24,7 +24,6 @@
             color: #2c2f31;
         }
 
-        /* ── Add Device Button ── */
         .btn-add-device {
             background: var(--green, #006947);
             color: #d1fae5;
@@ -52,7 +51,6 @@
             font-variation-settings: 'FILL' 1, 'wght' 500;
         }
 
-        /* ── Modal Overlay ── */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -67,7 +65,6 @@
             display: flex;
         }
 
-        /* ── Modal Box ── */
         .modal-box {
             background: #ffffff;
             border-radius: 16px;
@@ -113,7 +110,6 @@
             background: #f1f5f9;
         }
 
-        /* ── Form Fields ── */
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -162,7 +158,6 @@
             color: #94a3b8;
         }
 
-        /* ── Modal Footer ── */
         .modal-footer {
             display: flex;
             justify-content: flex-end;
@@ -207,7 +202,6 @@
             cursor: not-allowed;
         }
 
-        /* ── Toast Notification ── */
         .toast {
             position: fixed;
             bottom: 28px;
@@ -241,7 +235,6 @@
             font-variation-settings: 'FILL' 1;
         }
 
-        /* ── Spinner ── */
         .spinner {
             width: 16px;
             height: 16px;

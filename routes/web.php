@@ -27,6 +27,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/traffic', [TrafficController::class, 'index'])->name('traffic')->middleware('permission:view traffic');
     Route::get('/logs',    [LogsController::class,    'index'])->name('logs')->middleware('permission:view logs');
+    Route::get('/privacy-policy', function () { return view('privacy'); })->name('privacy');
 
     Route::get('/device',          [DeviceController::class, 'index'])->name('device.index')->middleware('permission:view devices');
     Route::get('/device/{device}', [DeviceController::class, 'show'])->name('device.show')->middleware('permission:view devices');

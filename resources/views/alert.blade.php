@@ -632,16 +632,7 @@
         </div>
     </div>
 
-    {{-- Footer --}}
-    <div class="page-footer">
-        <span class="footer-copy">© 2026 NetPulse – Network Operations Center</span>
-        <div class="footer-status">
-            <div class="status-item"><span class="status-dot"></span> API Status: Operational</div>
-            <div class="status-item"><span class="status-dot"></span> Database: Live</div>
-            <a href="#" class="footer-link">Privacy Policy</a>
-            <a href="#" class="footer-link">System Logs</a>
-        </div>
-    </div>
+    @include('partials.footer')
 
 </main>
 
