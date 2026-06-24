@@ -22,14 +22,38 @@ return new class extends Migration
             });
         }
 
+        if ($driver !== 'sqlite') {
+            if (Schema::hasTable('devices')) {
+                DB::statement('ALTER TABLE devices ENGINE = InnoDB');
+                DB::statement('ALTER TABLE devices MODIFY id BIGINT UNSIGNED AUTO_INCREMENT');
+            }
+            if (Schema::hasTable('device_status')) {
+                DB::statement('ALTER TABLE device_status ENGINE = InnoDB');
+            }
+            if (Schema::hasTable('interface_traffic')) {
+                DB::statement('ALTER TABLE interface_traffic ENGINE = InnoDB');
+            }
+            if (Schema::hasTable('snmp_metrics')) {
+                DB::statement('ALTER TABLE snmp_metrics ENGINE = InnoDB');
+            }
+            if (Schema::hasTable('incidents')) {
+                DB::statement('ALTER TABLE incidents ENGINE = InnoDB');
+            }
+            if (Schema::hasTable('alert_rules')) {
+                DB::statement('ALTER TABLE alert_rules ENGINE = InnoDB');
+            }
+        }
+
         if (Schema::hasTable('device_status')) {
             if ($driver !== 'sqlite') {
                 DB::statement('INSERT IGNORE INTO devices (name, ip_address, created_at, updated_at) SELECT device, MAX(ip_address), NOW(), NOW() FROM device_status GROUP BY device');
             }
 
-            Schema::table('device_status', function (Blueprint $table) {
-                $table->foreignId('device_id')->nullable()->after('id')->constrained('devices')->cascadeOnDelete();
-            });
+            if (!Schema::hasColumn('device_status', 'device_id')) {
+                Schema::table('device_status', function (Blueprint $table) {
+                    $table->foreignId('device_id')->nullable()->after('id')->constrained('devices')->cascadeOnDelete();
+                });
+            }
 
             if ($driver !== 'sqlite') {
                 DB::statement('UPDATE device_status ds JOIN devices d ON ds.device = d.name SET ds.device_id = d.id');
@@ -56,9 +80,11 @@ return new class extends Migration
                 DB::statement('INSERT IGNORE INTO devices (name, ip_address, created_at, updated_at) SELECT device, MAX(ip_address), NOW(), NOW() FROM interface_traffic GROUP BY device');
             }
 
-            Schema::table('interface_traffic', function (Blueprint $table) {
-                $table->foreignId('device_id')->nullable()->after('id')->constrained('devices')->cascadeOnDelete();
-            });
+            if (!Schema::hasColumn('interface_traffic', 'device_id')) {
+                Schema::table('interface_traffic', function (Blueprint $table) {
+                    $table->foreignId('device_id')->nullable()->after('id')->constrained('devices')->cascadeOnDelete();
+                });
+            }
 
             if ($driver !== 'sqlite') {
                 DB::statement('UPDATE interface_traffic it JOIN devices d ON it.device = d.name SET it.device_id = d.id');
@@ -85,9 +111,11 @@ return new class extends Migration
                 DB::statement('INSERT IGNORE INTO devices (name, created_at, updated_at) SELECT device, NOW(), NOW() FROM snmp_metrics GROUP BY device');
             }
 
-            Schema::table('snmp_metrics', function (Blueprint $table) {
-                $table->foreignId('device_id')->nullable()->after('id')->constrained('devices')->cascadeOnDelete();
-            });
+            if (!Schema::hasColumn('snmp_metrics', 'device_id')) {
+                Schema::table('snmp_metrics', function (Blueprint $table) {
+                    $table->foreignId('device_id')->nullable()->after('id')->constrained('devices')->cascadeOnDelete();
+                });
+            }
 
             if ($driver !== 'sqlite') {
                 DB::statement('UPDATE snmp_metrics sm JOIN devices d ON sm.device = d.name SET sm.device_id = d.id');
@@ -110,31 +138,39 @@ return new class extends Migration
         }
 
         if (Schema::hasTable('incidents')) {
-            Schema::table('incidents', function (Blueprint $table) {
-                $table->foreignId('device_id')->nullable()->after('id')->constrained('devices')->cascadeOnDelete();
-            });
+            if (!Schema::hasColumn('incidents', 'device_id')) {
+                Schema::table('incidents', function (Blueprint $table) {
+                    $table->foreignId('device_id')->nullable()->after('id')->constrained('devices')->cascadeOnDelete();
+                });
+            }
 
             if ($driver !== 'sqlite') {
                 DB::statement('UPDATE incidents i JOIN devices d ON i.device = d.name SET i.device_id = d.id');
             }
 
-            Schema::table('incidents', function (Blueprint $table) {
-                $table->dropColumn(['device', 'ip_address']);
-            });
+            if (Schema::hasColumn('incidents', 'device')) {
+                Schema::table('incidents', function (Blueprint $table) {
+                    $table->dropColumn(['device', 'ip_address']);
+                });
+            }
         }
 
         if (Schema::hasTable('alert_rules')) {
-            Schema::table('alert_rules', function (Blueprint $table) {
-                $table->foreignId('target_device_id')->nullable()->after('target_device')->constrained('devices')->cascadeOnDelete();
-            });
+            if (!Schema::hasColumn('alert_rules', 'target_device_id')) {
+                Schema::table('alert_rules', function (Blueprint $table) {
+                    $table->foreignId('target_device_id')->nullable()->after('target_device')->constrained('devices')->cascadeOnDelete();
+                });
+            }
 
             if ($driver !== 'sqlite') {
                 DB::statement('UPDATE alert_rules a JOIN devices d ON a.target_device = d.name SET a.target_device_id = d.id WHERE a.target_device IS NOT NULL AND a.target_device != "all"');
             }
 
-            Schema::table('alert_rules', function (Blueprint $table) {
-                $table->dropColumn('target_device');
-            });
+            if (Schema::hasColumn('alert_rules', 'target_device')) {
+                Schema::table('alert_rules', function (Blueprint $table) {
+                    $table->dropColumn('target_device');
+                });
+            }
         }
     }
 
