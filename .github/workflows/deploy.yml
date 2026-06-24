@@ -99,6 +99,8 @@ jobs:
 
             docker compose pull
 
+            # Hapus container lama beserta volume app_public agar file static (CSS/JS) terbaru bisa dimuat
+            docker compose down -v
             docker compose up -d --remove-orphans
 
             sleep 5
