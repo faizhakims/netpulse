@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -17,10 +17,8 @@
 @include('partials.navbar')
 @include('partials.sidebar')
 
-{{-- ══ TOAST CONTAINER ══ --}}
 <div class="toast-container" id="toastContainer"></div>
 
-{{-- ══ DRAWER OVERLAY + DRAWER (Add/Edit Rule) ══ --}}
 <div class="drawer-overlay" id="drawerOverlay"></div>
 <div class="drawer" id="ruleDrawer">
     <div class="drawer-header">
@@ -32,20 +30,17 @@
     <div class="drawer-body">
         <input type="hidden" id="editRuleId">
 
-        {{-- Rule Name --}}
-        <div>
+<div>
             <label class="field-label">Rule Name *</label>
             <input class="field-input" id="d_title" type="text" placeholder="e.g. High Latency Alert">
         </div>
 
-        {{-- Target Device --}}
-        <div>
+<div>
             <label class="field-label">Target Device / Group</label>
             <input class="field-input" id="d_target_device" type="text" placeholder="e.g. Core-Router-01 or leave blank for all">
         </div>
 
-        {{-- Metric + Condition --}}
-        <div class="drawer-field-row">
+<div class="drawer-field-row">
             <div>
                 <label class="field-label">Metric Type *</label>
                 <select class="field-select" id="d_metric_type">
@@ -67,8 +62,7 @@
             </div>
         </div>
 
-        {{-- Threshold + Duration --}}
-        <div class="drawer-field-row">
+<div class="drawer-field-row">
             <div id="d_threshold_wrapper">
                 <label class="field-label">Threshold Value</label>
                 <input class="field-input" id="d_threshold_value" type="number" placeholder="e.g. 100">
@@ -85,8 +79,7 @@
             </div>
         </div>
 
-        {{-- Severity --}}
-        <div>
+<div>
             <label class="field-label">Severity *</label>
             <div class="severity-radio-group">
                 <label class="severity-radio-label sev-info" data-val="info">
@@ -101,8 +94,7 @@
             </div>
         </div>
 
-        {{-- Notification Channel --}}
-        <div>
+<div>
             <label class="field-label">Notification Channel *</label>
             <div class="channel-check-group">
                 <label class="channel-check-label" id="chk_telegram">
@@ -118,8 +110,7 @@
             </div>
         </div>
 
-        {{-- Enable toggle --}}
-        <div style="display:flex;align-items:center;gap:14px;">
+<div style="display:flex;align-items:center;gap:14px;">
             <label class="toggle-wrap">
                 <input type="checkbox" id="d_is_active" checked>
                 <span class="toggle-track"></span>
@@ -136,7 +127,6 @@
     </div>
 </div>
 
-{{-- ══ DELETE CONFIRM MODAL ══ --}}
 <div class="modal-overlay" id="deleteModal">
     <div class="modal-box">
         <div class="modal-icon">
@@ -151,7 +141,6 @@
     </div>
 </div>
 
-{{-- ══ PDF DATE RANGE MODAL ══ --}}
 <div class="modal-overlay" id="pdfDateModal">
     <div class="modal-box pdf-modal">
         <div class="pdf-modal-header">
@@ -184,7 +173,6 @@
     </div>
 </div>
 
-{{-- ══ HISTORY SLIDE PANEL ══ --}}
 <div class="history-panel-overlay" id="historyPanelOverlay"></div>
 <div class="history-panel" id="historyPanel">
     <div class="history-panel-header">
@@ -267,19 +255,16 @@
     </div>
 </div>
 
-{{-- ══ MAIN ══ --}}
 <main class="main">
 
-    {{-- Page Header --}}
-    <div class="page-header">
+<div class="page-header">
         <div>
             <h1 class="page-title">Alert Configuration</h1>
             <p class="page-subtitle">Manage notification channels and threshold rules</p>
         </div>
     </div>
 
-    {{-- Stats Row --}}
-    <div class="stats-row">
+<div class="stats-row">
         <div class="stat-card">
             <span class="stat-label">Active Rules</span>
             <span class="stat-value" id="statActiveRules">{{ $activeRules }}</span>
@@ -298,12 +283,10 @@
         </div>
     </div>
 
-    {{-- ══ Channel Settings — Admin only ══ --}}
-    @can('manage alerts')
+@can('manage alerts')
     <div class="settings-row">
 
-        {{-- Telegram --}}
-        <div class="settings-card">
+<div class="settings-card">
             <div class="settings-card-header">
                 <div class="settings-card-title-group">
                     <div class="settings-card-icon">
@@ -351,8 +334,7 @@
             </div>
         </div>
 
-        {{-- Email SMTP --}}
-        <div class="settings-card">
+<div class="settings-card">
             <div class="settings-card-header">
                 <div class="settings-card-title-group">
                     <div class="settings-card-icon">
@@ -428,8 +410,7 @@
     </div>
     @endcan
 
-    {{-- ══ Threshold Rules ══ --}}
-    <div class="section-header" style="margin-top:8px;">
+<div class="section-header" style="margin-top:8px;">
         <div>
             <h2 class="section-title">Threshold Rules</h2>
             <p style="font-family:'Inter',sans-serif;font-size:13px;color:#94A3B8;margin:4px 0 0;">
@@ -444,8 +425,7 @@
         @endcan
     </div>
 
-    {{-- Toolbar: search + filter chips --}}
-    <div class="rules-toolbar">
+<div class="rules-toolbar">
         <div class="rules-search-wrap">
             <span class="material-symbols-outlined">search</span>
             <input class="rules-search" id="rulesSearch" type="text" placeholder="Search rules…">
@@ -458,8 +438,7 @@
         <button class="filter-chip" data-filter="inactive">Inactive</button>
     </div>
 
-    {{-- Rules grid --}}
-    <div class="rules-grid" id="rulesGrid">
+<div class="rules-grid" id="rulesGrid">
         @forelse($thresholdRules as $rule)
         <div class="rule-card {{ $rule->is_active ? '' : 'disabled' }}"
              id="rule-card-{{ $rule->id }}"
@@ -531,8 +510,7 @@
         @endforelse
     </div>
 
-    {{-- ══ Alert History ══ --}}
-    <div class="history-section">
+<div class="history-section">
         <div class="section-header">
             <div>
                 <h2 class="section-title">Alert History</h2>
@@ -545,7 +523,7 @@
         </div>
 
         <div class="history-card">
-            {{-- Toolbar (matching Logs style) --}}
+            
             <div class="history-toolbar">
                 <div class="search-wrap">
                     <span class="material-symbols-outlined">search</span>
@@ -579,8 +557,7 @@
                 </div>
             </div>
 
-            {{-- Scrollable table: max 6 rows visible --}}
-            <div class="history-table-scroll">
+<div class="history-table-scroll">
                 <table class="history-table" id="historyTable">
                     <thead>
                         <tr>
@@ -624,8 +601,7 @@
                 </table>
             </div>
 
-            {{-- Footer: showing text + pagination --}}
-            <div class="history-table-footer">
+<div class="history-table-footer">
                 <span class="showing-text" id="historyShowingText">—</span>
                 <div class="pagination" id="historyPagination"></div>
             </div>

@@ -42,36 +42,58 @@ class AlertController extends Controller
     {
         abort_unless(auth()->user()->can('manage alerts'), 403, 'Access denied.');
 
-        $type     = $request->input('type');
-        $isActive = $request->boolean('is_active');
-        $config   = $request->input('config', []);
+        $validated = $request->validate([
+            'type'                => 'required|in:telegram,email',
+            'is_active'           => 'boolean',
+            'config.token'        => 'required_if:type,telegram|nullable|string|max:200',
+            'config.chat_id'      => 'required_if:type,telegram|nullable|string|max:100',
+            'config.host'         => 'required_if:type,email|nullable|string|max:255',
+            'config.port'         => 'required_if:type,email|nullable|integer|between:1,65535',
+            'config.username'     => 'required_if:type,email|nullable|email|max:255',
+            'config.password'     => 'nullable|string|max:500',
+            'config.from_address' => 'nullable|email|max:255',
+            'config.to_address'   => 'nullable|email|max:255',
+        ]);
 
-        $this->alertService->saveChannel($type, $config, $isActive);
+        $this->alertService->saveChannel(
+            $validated['type'],
+            $validated['config'] ?? [],
+            (bool) ($validated['is_active'] ?? false)
+        );
 
-        return response()->json(['ok' => true, 'message' => ucfirst($type) . ' settings saved.']);
+        return response()->json(['ok' => true, 'message' => ucfirst($validated['type']) . ' settings saved.']);
     }
 
     public function testChannel(Request $request)
     {
         abort_unless(auth()->user()->can('manage alerts'), 403, 'Access denied.');
 
-        $type         = $request->input('type');
-        $inlineConfig = $request->input('config', []);
+        $validated = $request->validate([
+            'type'                => 'required|in:telegram,email',
+            'config.token'        => 'required_if:type,telegram|nullable|string|max:200',
+            'config.chat_id'      => 'required_if:type,telegram|nullable|string|max:100',
+            'config.host'         => 'required_if:type,email|nullable|string|max:255',
+            'config.port'         => 'required_if:type,email|nullable|integer|between:1,65535',
+            'config.username'     => 'required_if:type,email|nullable|email|max:255',
+            'config.password'     => 'nullable|string|max:500',
+            'config.from_address' => 'nullable|email|max:255',
+            'config.to_address'   => 'nullable|email|max:255',
+        ]);
 
         try {
-            $message = $this->notificationService->testChannel($type, $inlineConfig);
+            $message = $this->notificationService->testChannel($validated['type'], $validated['config'] ?? []);
             return response()->json(['ok' => true, 'message' => $message]);
         } catch (\Exception $e) {
             return response()->json(['ok' => false, 'message' => $e->getMessage()]);
         }
     }
 
+
     public function storeRule(StoreAlertRuleRequest $request)
     {
         $data             = $request->validated();
         $data['is_active'] = $request->boolean('is_active', true);
 
-        // Nullify threshold for boolean conditions (already cross-validated in Form Request)
         if (in_array($data['condition'], ['is_down', 'is_up'])) {
             $data['threshold_value'] = null;
         }
@@ -87,7 +109,6 @@ class AlertController extends Controller
         $data             = $request->validated();
         $data['is_active'] = $request->boolean('is_active', $rule->is_active);
 
-        // Nullify threshold for boolean conditions (already cross-validated in Form Request)
         if (in_array($data['condition'], ['is_down', 'is_up'])) {
             $data['threshold_value'] = null;
         }

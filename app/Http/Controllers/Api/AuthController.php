@@ -6,14 +6,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 
-/**
- * Handles Sanctum token issuance and revocation.
- *
- * POST /api/auth/login   → issue token
- * POST /api/auth/logout  → revoke current token
- * GET  /api/auth/me      → authenticated user profile
- */
 class AuthController extends BaseApiController
 {
     public function login(Request $request)
@@ -24,9 +18,20 @@ class AuthController extends BaseApiController
             'device_name' => ['nullable', 'string', 'max:100'],
         ]);
 
+        $throttleKey = 'api-login:' . strtolower($request->email) . ':' . $request->ip();
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            return $this->error(
+                "Terlalu banyak percobaan login. Coba lagi dalam {$seconds} detik.",
+                429
+            );
+        }
+
         $user = User::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
+            RateLimiter::hit($throttleKey, 300);
             return $this->error('The provided credentials are incorrect.', 401);
         }
 
@@ -34,9 +39,9 @@ class AuthController extends BaseApiController
             return $this->error('Your account has been deactivated.', 403);
         }
 
-        // Revoke all old tokens from this device name (optional but clean)
-        $deviceName = $request->device_name ?? 'api';
+        RateLimiter::clear($throttleKey);
 
+        $deviceName = $request->device_name ?? 'api';
         $token = $user->createToken($deviceName)->plainTextToken;
 
         return $this->success([
@@ -53,9 +58,7 @@ class AuthController extends BaseApiController
 
     public function logout(Request $request)
     {
-        // Revoke only the current token
         $request->user()->currentAccessToken()->delete();
-
         return $this->success(null, 'Logged out successfully.');
     }
 

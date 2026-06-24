@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -16,10 +16,8 @@
 @include('partials.navbar')
 @include('partials.sidebar')
 
-{{-- Toast --}}
 <div class="toast-container" id="toastContainer"></div>
 
-{{-- User Drawer --}}
 <div class="drawer-overlay" id="userDrawerOverlay"></div>
 <div class="drawer" id="userDrawer">
     <div class="drawer-header">
@@ -63,7 +61,6 @@
     </div>
 </div>
 
-{{-- Delete Confirm Modal --}}
 <div class="modal-overlay" id="deleteModal">
     <div class="modal-box">
         <div class="modal-icon">
@@ -78,7 +75,6 @@
     </div>
 </div>
 
-{{-- Main --}}
 <main class="main">
 
     <div class="page-header">
@@ -86,7 +82,6 @@
         <p class="page-subtitle">Manage system configuration, users, and preferences</p>
     </div>
 
-    {{-- Tab Navigation --}}
     <div class="settings-tabs">
         <button class="settings-tab active" data-tab="users">
             <span class="material-symbols-outlined">group</span> Users
@@ -105,7 +100,6 @@
         </button>
     </div>
 
-    {{-- ══ TAB: USERS ══ --}}
     <div class="tab-panel" id="tab-users">
         <div class="section-card">
             <div class="section-card-header">
@@ -187,7 +181,6 @@
                 </table>
             </div>
 
-            {{-- Role legend --}}
             <div style="display:flex;gap:20px;margin-top:16px;flex-wrap:wrap;">
                 <div style="display:flex;align-items:center;gap:6px;">
                     <span class="role-badge role-admin">Admin</span>
@@ -205,7 +198,6 @@
         </div>
     </div>
 
-    {{-- ══ TAB: MONITORING ══ --}}
     <div class="tab-panel" id="tab-monitoring">
         <div class="section-card">
             <div class="section-card-header">
@@ -277,7 +269,6 @@
         </div>
     </div>
 
-    {{-- ══ TAB: SECURITY ══ --}}
     <div class="tab-panel" id="tab-security">
         <div class="section-card">
             <div class="section-card-header">
@@ -343,7 +334,6 @@
         </div>
     </div>
 
-    {{-- ══ TAB: MY PROFILE ══ --}}
     <div class="tab-panel" id="tab-profile">
         <div class="section-card">
             <div class="section-card-header">
@@ -417,10 +407,8 @@
         </div>
     </div>
 
-    {{-- ══ TAB: SYSTEM ══ --}}
     <div class="tab-panel" id="tab-system">
 
-        {{-- System Info --}}
         <div class="section-card">
             <div class="section-card-header">
                 <div class="section-card-title-group">
@@ -466,7 +454,6 @@
             </div>
         </div>
 
-        {{-- Scheduler Status --}}
         <div class="section-card">
             <div class="section-card-header">
                 <div class="section-card-title-group">
@@ -523,7 +510,6 @@
             </div>
         </div>
 
-        {{-- Cloud Backup --}}
         <div class="section-card">
             <div class="section-card-header">
                 <div class="section-card-title-group">
@@ -545,7 +531,6 @@
             </div>
         </div>
 
-        {{-- Danger Zone --}}
         <div class="danger-zone">
             <h3 class="danger-zone-title">⚠ Danger Zone</h3>
             <p class="danger-zone-sub">These actions are destructive and cannot be undone.</p>
@@ -558,15 +543,12 @@
         </div>
     </div>
 
-    {{-- Footer --}}
     @include('partials.footer')
-
 </main>
 
 <script>
 const CSRF = document.querySelector('meta[name="csrf-token"]').content;
 
-// ── Toast ─────────────────────────────────────────────────────────────────────
 function showToast(msg, type = 'success') {
     const c = document.getElementById('toastContainer');
     const t = document.createElement('div');
@@ -577,7 +559,6 @@ function showToast(msg, type = 'success') {
     setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 350); }, 3500);
 }
 
-// ── Tabs ──────────────────────────────────────────────────────────────────────
 document.querySelectorAll('.settings-tab').forEach(tab => {
     tab.addEventListener('click', () => {
         document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
@@ -593,7 +574,6 @@ if (defaultTab) {
     defaultTab.click();
 }
 
-// ── Eye toggles ───────────────────────────────────────────────────────────────
 document.querySelectorAll('.field-eye-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         const inp  = document.getElementById(btn.dataset.target);
@@ -603,7 +583,6 @@ document.querySelectorAll('.field-eye-btn').forEach(btn => {
     });
 });
 
-// ── Generic save helper ───────────────────────────────────────────────────────
 async function saveSettings(url, body, btn) {
     btn.disabled = true;
     const orig = btn.innerHTML;
@@ -620,7 +599,6 @@ async function saveSettings(url, body, btn) {
     btn.disabled = false; btn.innerHTML = orig;
 }
 
-// ── Monitoring ────────────────────────────────────────────────────────────────
 document.getElementById('saveMonitoringBtn').addEventListener('click', function() {
     saveSettings('/settings/monitoring', {
         polling_interval:        document.getElementById('m_polling_interval').value,
@@ -632,7 +610,6 @@ document.getElementById('saveMonitoringBtn').addEventListener('click', function(
     }, this);
 });
 
-// ── Security ──────────────────────────────────────────────────────────────────
 document.getElementById('saveSecurityBtn').addEventListener('click', function() {
     saveSettings('/settings/security', {
         session_timeout:          document.getElementById('s_session_timeout').value,
@@ -643,7 +620,6 @@ document.getElementById('saveSecurityBtn').addEventListener('click', function() 
     }, this);
 });
 
-// ── Profile ───────────────────────────────────────────────────────────────────
 document.getElementById('saveProfileBtn').addEventListener('click', async function() {
     const newPwd  = document.getElementById('p_new_password').value;
     const confPwd = document.getElementById('p_new_password_confirmation').value;
@@ -660,7 +636,6 @@ document.getElementById('saveProfileBtn').addEventListener('click', async functi
     await saveSettings('/settings/profile', body, this);
 });
 
-// ── User CRUD ─────────────────────────────────────────────────────────────────
 const userDrawer        = document.getElementById('userDrawer');
 const userDrawerOverlay = document.getElementById('userDrawerOverlay');
 
@@ -679,7 +654,6 @@ document.getElementById('addUserBtn').addEventListener('click', () => {
     openUserDrawer();
 });
 
-// ── Manual Backup ─────────────────────────────────────────────────────────────
 document.getElementById('manualBackupBtn').addEventListener('click', async function() {
     const btn      = this;
     const origHTML = btn.innerHTML;
@@ -713,20 +687,16 @@ document.getElementById('manualBackupBtn').addEventListener('click', async funct
     btn.innerHTML = origHTML;
 });
 
-// ── Cron Status Check ─────────────────────────────────────────────────────────
 async function checkCronStatus() {
     const dot  = document.getElementById('cronStatusDot');
     const text = document.getElementById('cronStatusText');
     const sub  = document.getElementById('cronStatusSub');
 
     try {
-        // Cek apakah ada incident atau alert yang baru diproses
-        // sebagai indikator scheduler jalan (via system-info endpoint)
         const r = await fetch('/settings/system-info');
         const d = await r.json();
 
         if (d.ok) {
-            // Scheduler dianggap aktif jika ada data log yang masuk
             const hasData = d.log_count > 0;
             dot.style.background  = hasData ? '#10B981' : '#F59E0B';
             dot.style.animation   = hasData ? 'pulse 2s infinite' : 'none';
@@ -744,7 +714,6 @@ async function checkCronStatus() {
 
 document.getElementById('refreshCronBtn')?.addEventListener('click', checkCronStatus);
 
-// Pulse animation untuk dot aktif
 const pulseStyle = document.createElement('style');
 pulseStyle.textContent = `
     @keyframes pulse {
@@ -818,7 +787,6 @@ document.getElementById('deleteConfirmBtn').addEventListener('click', async () =
     pendingDeleteUserId = null;
 });
 
-// ── User search ───────────────────────────────────────────────────────────────
 document.getElementById('usersSearch').addEventListener('input', function() {
     const term = this.value.toLowerCase();
     document.querySelectorAll('#usersTableBody tr[id]').forEach(row => {
@@ -826,7 +794,6 @@ document.getElementById('usersSearch').addEventListener('input', function() {
     });
 });
 
-// ── System Info ───────────────────────────────────────────────────────────────
 async function loadSysInfo() {
     try {
         const r = await fetch('/settings/system-info');
@@ -844,7 +811,6 @@ async function loadSysInfo() {
 
 document.getElementById('refreshSysInfoBtn').addEventListener('click', loadSysInfo);
 
-// ── Clear logs ────────────────────────────────────────────────────────────────
 document.getElementById('clearLogsBtn').addEventListener('click', async function() {
     if (!confirm('This will permanently delete old logs based on your retention policy. Continue?')) return;
     this.disabled = true;
@@ -856,7 +822,6 @@ document.getElementById('clearLogsBtn').addEventListener('click', async function
     this.disabled = false;
 });
 
-// ── Spin keyframe ─────────────────────────────────────────────────────────────
 const style = document.createElement('style');
 style.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
 document.head.appendChild(style);

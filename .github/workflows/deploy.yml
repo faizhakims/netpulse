@@ -3,10 +3,47 @@ name: Deploy to VPS
 on:
   push:
     branches:
-      - main # Trigger workflow on push to main branch
+      - main
+
+permissions:
+  contents: read
 
 jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo, pdo_sqlite, sqlite3, mbstring, xml, bcmath, gd, pcntl
+          coverage: none
+
+      - name: Install Composer Dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Copy .env for Testing
+        run: cp .env.example .env
+
+      - name: Generate Application Key
+        run: php artisan key:generate
+
+      - name: Run Test Suite
+        run: php artisan test --env=testing
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ":memory:"
+          CACHE_STORE: array
+          SESSION_DRIVER: array
+          QUEUE_CONNECTION: sync
+          MAIL_MAILER: array
+
   build-and-push:
+    needs: run-tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -47,24 +84,23 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
+          script_stop: true
           script: |
-            # Pindahkan file docker-compose dari tmp dengan sudo untuk menimpa file root
             sudo cp /tmp/docker-compose.yml /opt/netpulse/docker-compose.yml
-            
+
             cd /opt/netpulse
-            export DOCKER_USERNAME="${{ secrets.DOCKER_USERNAME }}"
-            
-            # Login to Docker Hub on VPS to pull private images if needed
-            echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-            
-            # Pull the latest image
+
             docker compose pull
-            
-            # Recreate containers with new image
-            docker compose up -d
-            
-            # Run migrations (app is the service name in docker-compose.yml)
+
+            docker compose up -d --remove-orphans
+
+            sleep 5
+
             docker compose exec -T app php artisan migrate --force
+
             docker compose exec -T app php artisan config:cache
             docker compose exec -T app php artisan route:cache
             docker compose exec -T app php artisan view:cache
+
+            docker image prune -f
+

@@ -18,10 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectGuestsTo('/login');
 
-        // Register active-user check on all authenticated routes
         $middleware->appendToGroup('web', \App\Http\Middleware\EnsureUserIsActive::class);
 
-        // Register Spatie middleware aliases
         $middleware->alias([
             'role'               => RoleMiddleware::class,
             'permission'         => PermissionMiddleware::class,
@@ -29,5 +27,4 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
     })->create();

@@ -9,15 +9,6 @@
     <link rel="stylesheet" href="{{ asset('css/navbar.css') }}">
     <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
     <link rel="stylesheet" href="{{ asset('css/logs.css') }}">
-    <style>
-        .panel-close-btn {
-            background: none; border: none; cursor: pointer; padding: 4px;
-            display: none; align-items: center; justify-content: center;
-            border-radius: 8px; transition: background 0.15s;
-        }
-        .panel-close-btn:hover { background: #F1F5F9; }
-        @media (max-width: 768px) { .panel-close-btn { display: flex; } }
-    </style>
 </head>
 <body>
 
@@ -26,16 +17,14 @@
 
     <div class="main" id="mainContent">
 
-        {{-- Page Header --}}
-        <div class="page-header">
+<div class="page-header">
             <div>
                 <h1 class="page-title">Logs & Activity</h1>
                 <p class="page-subtitle">Track all system, network, and user events in real time</p>
             </div>
         </div>
 
-        {{-- Stats --}}
-        <div class="stats-row">
+<div class="stats-row">
             <div class="stat-card">
                 <div class="stat-label">Total Logs Today</div>
                 <div class="stat-value">{{ $totalLogs }}</div>
@@ -54,8 +43,7 @@
             </div>
         </div>
 
-        {{-- Table Card --}}
-        <div class="table-wrapper">
+<div class="table-wrapper">
 
             <div class="toolbar">
                 <div class="search-wrap">
@@ -76,7 +64,7 @@
                     <option value="Success">Success</option>
                     <option value="Debug">Debug</option>
                 </select>
-                {{-- Date Range Filter --}}
+                
                 <div class="date-range">
                     <label for="dateFrom" class="date-label">From</label>
                     <input type="date" class="date-input" id="dateFrom" placeholder="Start date">
@@ -145,13 +133,11 @@
             </div>
         </div>
 
-        {{-- Page Footer --}}
-        @include('partials.footer')
+@include('partials.footer')
 
     </div>
 
-    {{-- Detail Panel --}}
-    <div class="detail-panel" id="detailPanel">
+<div class="detail-panel" id="detailPanel">
         <div class="panel-header">
             <span class="panel-title">Log Detail</span>
             <button class="panel-close-btn" onclick="closePanel()" aria-label="Close panel">
@@ -216,17 +202,18 @@
     </div>
 
     <script>
-    // ── Detail Panel ─────────────────────────────────────────────────────────
     let activeRow = null;
 
     function getBadgeHtml(level) {
         const map = { Critical:'badge-critical', Warning:'badge-warning',
                       Info:'badge-info', Success:'badge-success', Debug:'badge-debug' };
-        return `<span class="badge ${map[level]||'badge-debug'}">${level}</span>`;
+        const span = document.createElement('span');
+        span.className = 'badge ' + (map[level] || 'badge-debug');
+        span.textContent = level;
+        return span;
     }
 
     function openDetail(logData) {
-        // Accept both a string (from dataset) or a parsed object
         const log = typeof logData === 'string' ? JSON.parse(logData) : logData;
 
         if (activeRow) activeRow.classList.remove('active');
@@ -236,7 +223,8 @@
         document.getElementById('panelId').textContent     = log.id      || '—';
         document.getElementById('panelDate').textContent   = log.date    || '—';
         document.getElementById('panelTime').textContent   = log.time    || '—';
-        document.getElementById('panelLevel').innerHTML    = getBadgeHtml(log.level);
+        document.getElementById('panelLevel').replaceChildren(getBadgeHtml(log.level));
+
         document.getElementById('panelDevice').textContent = log.device  || '—';
         document.getElementById('panelIp').textContent     = log.ip      || '—';
         document.getElementById('panelType').textContent   = log.type    || '—';
@@ -256,7 +244,6 @@
 
     function viewDevice() { window.location.href = '/device'; }
 
-    // ── Pagination & Filtering ───────────────────────────────────────────────
     const ROWS_PER_PAGE = 15;
     let currentPage  = 1;
     let filteredRows = [];
@@ -351,7 +338,6 @@
         return b;
     }
 
-    // ── Export CSV ────────────────────────────────────────────────────────────
     function exportCSV() {
         const headers = ['ID','Date','Time','Level','Type','Device','IP','Event','Source','Description'];
         const rows = filteredRows.map(row => {
@@ -371,7 +357,6 @@
         URL.revokeObjectURL(url);
     }
 
-    // ── Export PDF ────────────────────────────────────────────────────────────
     function exportPDF() {
         const now       = new Date();
         const dateStr   = now.toLocaleDateString('en-GB', {day:'2-digit',month:'long',year:'numeric'});
@@ -476,14 +461,13 @@ tbody td{padding:8px 12px;color:#334155;vertical-align:middle}
         win.document.close();
     }
 
-    // ── Init ──────────────────────────────────────────────────────────────────
     document.getElementById('searchInput').addEventListener('input', applyFilters);
     document.getElementById('typeFilter').addEventListener('change', applyFilters);
     document.getElementById('severityFilter').addEventListener('change', applyFilters);
     document.getElementById('dateFrom').addEventListener('change', applyFilters);
     document.getElementById('dateTo').addEventListener('change', applyFilters);
 
-    applyFilters(); // initial render
+    applyFilters();
     </script>
 </body>
 </html>

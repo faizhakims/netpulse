@@ -5,29 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NetPulse - Device Details</title>
 
-    {{-- Fonts --}}
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-
-    {{-- CSS --}}
     <link rel="stylesheet" href="{{ asset('css/navbar.css') }}">
     <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
     <link rel="stylesheet" href="{{ asset('css/details.css') }}">
 
-    <style>
-        * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            background: #f5f7f9;
-            font-family: 'DM Sans', sans-serif;
-            color: #2c2f31;
-        }
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to   { transform: rotate(360deg); }
-        }
-    </style>
+
 </head>
 <body>
 
@@ -37,7 +22,7 @@
     <div class="device-detail-page">
         <div class="device-detail-canvas">
 
-            {{-- ===================== Hero Header ===================== --}}
+
             <div class="device-hero">
                 <div class="device-hero-meta">
                     <h1 class="device-hero-name">{{ $deviceName }}</h1>
@@ -47,7 +32,7 @@
                             &nbsp;|&nbsp;
                             Last checked: {{ $status && $status->checked_at ? $status->checked_at->diffForHumans() : 'N/A' }}
                         </span>
-                        {{-- REVISI 1: Status UNKNOWN ⚠ dihapus — hanya tampil UP atau DOWN --}}
+
                         @if($effectiveStatus !== 'unknown')
                         <span class="device-status-badge {{ $effectiveStatus === 'up' ? '' : 'offline' }}">
                             <span class="dot"></span>
@@ -58,7 +43,7 @@
                 </div>
 
                 <div class="device-hero-actions">
-                    {{-- REVISI 6: Ping always visible; Reboot & Delete require manage devices --}}
+
                     <button class="btn-action btn-ping" id="pingBtn">
                         <span class="material-symbols-outlined">wifi_tethering</span>
                         Ping Now
@@ -76,7 +61,7 @@
                 </div>
             </div>
 
-            {{-- ===================== Stat Cards ===================== --}}
+
             <div class="stat-cards-row">
                 <div class="stat-card">
                     <div class="stat-card-label">Status</div>
@@ -122,7 +107,7 @@
                 </div>
             </div>
 
-            {{-- ===================== Real-time Latency Chart ===================== --}}
+
             @if($effectiveStatus !== 'unknown')
             <div class="chart-card">
                 <div class="chart-card-header">
@@ -151,14 +136,12 @@
             </div>
             @endif
 
-            {{-- ===================== Incident History + Device Info ===================== --}}
             <div class="two-col-section">
 
-                {{-- REVISI 2: Incident History — terhubung ke DB, tampil 5 terakhir --}}
                 <div class="incident-card">
                     <div class="card-header-row">
                         <h2 class="card-title">Incident History</h2>
-                        {{-- View All membuka slider panel --}}
+
                         <a href="#" class="card-view-all" id="viewAllIncidentsBtn">View All</a>
                     </div>
                     <table class="incident-table">
@@ -206,7 +189,7 @@
                     </table>
                 </div>
 
-                {{-- Device Information --}}
+
                 <div class="device-info-card">
                     <div class="card-header-row">
                         <h2 class="card-title">Device Information</h2>
@@ -263,7 +246,7 @@
                         </div>
                     </div>
 
-                    {{-- REVISI 3: Alert Settings — toggle terhubung ke DB via AJAX --}}
+
                     <div>
                         <div class="alert-settings-title">Alert Settings</div>
                         @can('manage alerts')
@@ -303,8 +286,6 @@
                 </div>
             </div>
 
-            {{-- ===================== Log Activity ===================== --}}
-            {{-- REVISI 4: Tampilkan 6 log, jika lebih bisa di-scroll dalam card --}}
             <div class="log-card">
                 <div class="log-card-header">
                     <h2 class="card-title">Log Activity</h2>
@@ -325,7 +306,7 @@
                     </div>
                 </div>
 
-                {{-- REVISI 4: log-list dibatasi tingginya, bisa scroll internal --}}
+
                 <div class="log-list" id="logList">
                     @forelse($statusHistory as $log)
                     @php
@@ -356,13 +337,13 @@
                 </div>
             </div>
 
-            {{-- ===================== Footer ===================== --}}
+
             @include('partials.footer')
 
         </div>
     </div>
 
-    {{-- ===================== REVISI 2: Incident History Slider Panel ===================== --}}
+
     <div class="incident-slider-overlay" id="incidentSliderOverlay"></div>
     <div class="incident-slider-panel" id="incidentSliderPanel">
         <div class="incident-slider-header">
@@ -429,9 +410,7 @@
         </div>
     </div>
 
-    {{-- Chart.js & Scripts --}}
     <script>
-        // window.DEVICE_NAME = "{{ $deviceName }}";
         window.DEVICE_NAME = @json($deviceName);
         window.CSRF_TOKEN  = "{{ csrf_token() }}";
     </script>
@@ -440,7 +419,7 @@
         (function () {
 
             @if($effectiveStatus !== 'unknown')
-            /* ── Latency Chart ── */
+
             const ctx = document.getElementById('latencyChart').getContext('2d');
 
             const labels = {!! json_encode($latencyLabels) !!};
@@ -524,7 +503,7 @@
             });
             @endif
 
-            /* ── REVISI 4: Log Activity Filters + scroll container tetap --*/
+
             const filterBtns = document.querySelectorAll('#logFilters .log-filter-btn');
             const logList    = document.getElementById('logList');
 
@@ -543,7 +522,7 @@
                 });
             });
 
-            /* ── Export CSV ── */
+
             document.getElementById('exportCsvBtn').addEventListener('click', function (e) {
                 e.preventDefault();
                 const rows = [['Time', 'Event', 'Description']];
@@ -561,7 +540,7 @@
                 URL.revokeObjectURL(url);
             });
 
-            /* ── REVISI 2: Incident Slider Panel ── */
+
             const overlay  = document.getElementById('incidentSliderOverlay');
             const panel    = document.getElementById('incidentSliderPanel');
             const openBtn  = document.getElementById('viewAllIncidentsBtn');
@@ -587,7 +566,7 @@
                 if (e.key === 'Escape') closeSlider();
             });
 
-            /* ── REVISI 3: Alert Settings Toggle — save ke DB via AJAX ── */
+
             document.querySelectorAll('.alert-toggle-item input[data-channel]').forEach(toggle => {
                 toggle.addEventListener('change', function () {
                     const channel  = this.dataset.channel;

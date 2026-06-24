@@ -6,14 +6,12 @@
     <title>NetPulse | Network Operations Center</title>
     <link rel="icon" type="image/png" href="{{ asset('images/icon.png') }}">
 
-    {{-- Fonts --}}
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 
-    {{-- CSS Terpisah --}}
     <link rel="stylesheet" href="{{ asset('css/navbar.css') }}">
     <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}?v={{ filemtime(public_path('css/dashboard.css')) }}">
 </head>
 <body>
 
@@ -22,8 +20,7 @@
 
     <main class="main-content">
 
-        {{-- Hero Header --}}
-        <section class="hero-section flex justify-between items-end fade-in-up" style="margin-bottom:32px;">
+<section class="hero-section flex justify-between items-end fade-in-up" style="margin-bottom:32px;">
             <div>
                 <h1 class="hero-title">Dashboard</h1>
                 <!-- <div class="hero-sub">
@@ -42,14 +39,11 @@
             </div>
         </section>
 
-        {{-- 2-col layout --}}
-        <div class="main-grid flex gap-6" style="display:grid;grid-template-columns:1fr 300px;align-items:start;">
+<div class="main-grid flex gap-6" style="display:grid;grid-template-columns:1fr 300px;align-items:start;">
 
-            {{-- LEFT COLUMN --}}
-            <div class="flex flex-col gap-6">
+<div class="flex flex-col gap-6">
 
-                {{-- Active Incidents --}}
-                <div class="incidents-panel fade-in-up">
+<div class="incidents-panel fade-in-up">
                     <div class="incidents-bg-icon">
                         <span class="material-symbols-outlined" style="font-size:160px;color:white;font-variation-settings:'FILL' 1;">emergency_home</span>
                     </div>
@@ -116,8 +110,7 @@
                     </div>
                 </div>
 
-                {{-- Global Network Latency --}}
-                <div class="card fade-in-up" style="padding:28px;">
+<div class="card fade-in-up" style="padding:28px;">
                     <div class="flex justify-between items-center" style="margin-bottom:24px;">
                         <h3 style="font-size:1.0625rem;font-weight:700;margin:0;">Global Network Latency</h3>
                         <div class="flex gap-5">
@@ -190,11 +183,9 @@
                 </div>
             </div>
 
-            {{-- RIGHT COLUMN --}}
-            <div class="flex flex-col gap-4">
+<div class="flex flex-col gap-4">
 
-                {{-- Stat cards 2×2 --}}
-                <div class="stat-grid fade-in-up">
+<div class="stat-grid fade-in-up">
                     <div class="card stat-card">
                         <p class="stat-label">Live Nodes</p>
                         <p class="stat-number-lg mono">{{ $totalDevices }}</p>
@@ -219,8 +210,7 @@
                     </div>
                 </div>
 
-                {{-- SLA Card --}}
-                <div class="card sla-card fade-in-up">
+<div class="card sla-card fade-in-up">
                     <div class="sla-header">
                         <div>
                             <p class="sla-title">Rolling SLA</p>
@@ -247,8 +237,7 @@
                     </div>
                 </div>
 
-                {{-- Activity Feed --}}
-                <div class="card-muted activity-feed fade-in-up">
+<div class="card-muted activity-feed fade-in-up">
                     <h4 class="activity-title">Activity Feed</h4>
                     <div class="flex flex-col gap-4">
                         @forelse($latestDevices->take(5) as $act)
@@ -276,16 +265,18 @@
             </div>
         </div>
 
-        {{-- Device Inventory --}}
-        <section class="card device-table-section fade-in-up">
+<section class="card device-table-section fade-in-up">
             <div class="section-header">
                 <div>
                     <h2 class="section-title">Prioritized Device Inventory</h2>
                     <p class="section-sub">Sorted by criticality and operational status</p>
                 </div>
                 <div class="flex gap-3">
-                    <a href="{{ route('dashboard.export.csv') }}" class="btn-outline">Export .CSV</a>
-                    {{-- Tombol Add Device dihapus --}}
+                    <a href="{{ route('dashboard.export.csv') }}" class="export-btn" style="text-decoration:none;">
+                        <span class="material-symbols-outlined" style="font-size:14px;vertical-align:-2px;">download</span>
+                        Export .CSV
+                    </a>
+                    
                 </div>
             </div>
 
@@ -363,8 +354,7 @@
             </div>
         </section>
 
-        {{-- Performance History --}}
-        <section class="card-muted perf-section fade-in-up">
+<section class="card-muted perf-section fade-in-up">
             <div class="perf-header">
                 <div>
                     <h2 class="perf-title">Performance History</h2>
@@ -376,8 +366,7 @@
                 </div>
             </div>
 
-            {{-- Data Mingguan --}}
-            <div id="weekly-bars" class="perf-bars-container">
+<div id="weekly-bars" class="perf-bars-container">
                 @foreach ($weeklyChartData as $day)
                 <div class="perf-bar-item">
                     <div style="width:100%;flex:1;display:flex;align-items:flex-end;">
@@ -388,8 +377,7 @@
                 @endforeach
             </div>
 
-            {{-- Data Bulanan (hidden by default) — dikelompokkan per 6 hari --}}
-            <div id="monthly-bars" class="perf-bars-container" style="display:none;">
+<div id="monthly-bars" class="perf-bars-container" style="display:none;">
                 @php
                     $monthChunks = collect($monthlyData)->chunk(6);
                 @endphp
@@ -420,8 +408,7 @@
         @include('partials.footer')
     </main>
 
-    {{-- SLIDE PANEL UNTUK ALL MANAGED NODES --}}
-    <div class="overlay" id="panelOverlay"></div>
+<div class="overlay" id="panelOverlay"></div>
     <div id="allNodesSlidePanel" class="slide-panel">
         <div class="slide-panel-header">
             <h3>All Managed Nodes</h3>
@@ -444,7 +431,6 @@
     </div>
 
     <script>
-        // ── Auto-refresh countdown ────────────────────────────────────────────
         // (function() {
         //     const INTERVAL = 60; // detik
         //     let remaining = INTERVAL;
@@ -475,7 +461,6 @@
         //     setTimeout(tick, 1000);
         // })();
 
-        // ── Fade-in animation ─────────────────────────────────────────────────
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry, i) => {
                 if (entry.isIntersecting) {
@@ -506,7 +491,6 @@
         closeBtn.addEventListener('click', closePanel);
         overlay.addEventListener('click', closePanel);
 
-        // Performance tab switch
         const tabWeekly = document.getElementById('tab-weekly');
         const tabMonthly = document.getElementById('tab-monthly');
         const weeklyBars = document.getElementById('weekly-bars');

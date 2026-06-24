@@ -7,6 +7,8 @@ use App\Models\AlertRule;
 use App\Models\AlertHistory;
 use App\Models\AlertChannel;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Client\ConnectionException;
 
 class CheckAlertRules extends Command
 {
@@ -218,26 +220,34 @@ class CheckAlertRules extends Command
 
         $emoji = match(strtolower($rule->severity)) { 'critical' => '🔴', 'warning' => '🟡', default => '🔵' };
 
-        $text = urlencode(
+        $text =
             "{$emoji} *NetPulse Alert* — " . strtoupper($rule->severity) . "\n\n" .
             "📋 *Rule:* {$rule->title}\n" .
             "🖥 *Device:* `{$device->device}`\n" .
             "🌐 *IP:* `{$device->ip_address}`\n" .
             "⚡ *Kondisi:* {$rule->conditionLabel()}\n" .
-            "⏰ *Waktu:* " . now()->format('d M Y H:i:s') . " WIB"
-        );
+            "⏰ *Waktu:* " . now()->format('d M Y H:i:s') . " WIB";
 
-        $url = "https://api.telegram.org/bot{$token}/sendMessage?chat_id={$chatId}&text={$text}&parse_mode=Markdown";
-        $ch  = curl_init($url);
-        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 8, CURLOPT_SSL_VERIFYPEER => false]);
-        $response = curl_exec($ch);
-        $curlErr  = curl_error($ch);
-        curl_close($ch);
+        $ok          = false;
+        $errorDetail = null;
 
-        $result = $curlErr ? ['ok' => false] : (json_decode($response, true) ?? ['ok' => false]);
-        $ok     = $result['ok'] ?? false;
+        try {
+            $response = Http::timeout(8)
+                ->post("https://api.telegram.org/bot{$token}/sendMessage", [
+                    'chat_id'    => $chatId,
+                    'text'       => $text,
+                    'parse_mode' => 'Markdown',
+                ]);
 
-        $this->line("  📨 Telegram → " . ($ok ? '✅ terkirim' : '❌ gagal: ' . ($curlErr ?: ($result['description'] ?? 'unknown'))));
+            $result      = $response->json();
+            $ok          = $result['ok'] ?? false;
+            $errorDetail = $ok ? null : ($result['description'] ?? 'Unknown Telegram error');
+
+        } catch (ConnectionException $e) {
+            $errorDetail = 'Connection error: ' . $e->getMessage();
+        }
+
+        $this->line("  📨 Telegram → " . ($ok ? '✅ terkirim' : '❌ gagal: ' . ($errorDetail ?? 'unknown')));
 
         AlertHistory::create([
             'alert_rule_id' => $rule->id,
@@ -245,7 +255,7 @@ class CheckAlertRules extends Command
             'recipient'     => $chatId,
             'status'        => $ok ? 'sent' : 'failed',
             'message'       => $message,
-            'error_message' => $curlErr ?: ($result['description'] ?? null),
+            'error_message' => $errorDetail,
             'sent_at'       => now(),
         ]);
     }

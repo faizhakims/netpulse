@@ -11,6 +11,40 @@ use Illuminate\Support\Facades\Http;
 
 class DeviceService
 {
+    private function validateMonitoringUrl(string $url): void
+    {
+        $parsed = parse_url($url);
+
+        if (!in_array($parsed['scheme'] ?? '', ['https', 'http'])) {
+            throw new \Exception('MONITORING_API_URL harus menggunakan protokol HTTP(S).', 422);
+        }
+
+        if (app()->isProduction() && ($parsed['scheme'] ?? '') !== 'https') {
+            throw new \Exception('MONITORING_API_URL wajib menggunakan HTTPS di environment production.', 422);
+        }
+
+        $host = $parsed['host'] ?? '';
+        if (empty($host)) {
+            throw new \Exception('MONITORING_API_URL tidak valid: host tidak ditemukan.', 422);
+        }
+
+        $allowedHosts = array_filter(array_map(
+            'trim',
+            explode(',', config('services.monitoring.allowed_hosts', ''))
+        ));
+
+        if (!empty($allowedHosts) && !in_array($host, $allowedHosts)) {
+            throw new \Exception("Host '{$host}' tidak ada dalam whitelist MONITORING_API_ALLOWED_HOSTS.", 403);
+        }
+
+        $ip = gethostbyname($host);
+        if (filter_var($ip, FILTER_VALIDATE_IP) &&
+            !filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)
+        ) {
+            throw new \Exception("Host '{$host}' resolve ke IP private/reserved yang tidak diizinkan.", 403);
+        }
+    }
+
     public function getDeviceDetails(string $deviceName): array
     {
         $status = DeviceStatus::where('device', $deviceName)
@@ -96,6 +130,8 @@ class DeviceService
             throw new \Exception('MONITORING_API_URL belum dikonfigurasi di .env. Hubungi administrator.', 503);
         }
 
+        $this->validateMonitoringUrl($apiUrl);
+
         $response = Http::timeout(5)->post("{$apiUrl}/ping", ['device' => $deviceName]);
         return $response->json();
     }
@@ -106,6 +142,8 @@ class DeviceService
         if (empty($apiUrl)) {
             throw new \Exception('MONITORING_API_URL belum dikonfigurasi di .env. Hubungi administrator.', 503);
         }
+
+        $this->validateMonitoringUrl($apiUrl);
 
         $response = Http::timeout(15)->post("{$apiUrl}/reboot", ['device' => $deviceName]);
         return $response->json();
@@ -119,6 +157,8 @@ class DeviceService
             throw new \Exception('MONITORING_API_URL belum dikonfigurasi.', 503);
         }
 
+        $this->validateMonitoringUrl($apiUrl);
+
         $listResponse = Http::timeout(10)->get("{$apiUrl}/api/devices");
         $devices      = collect($listResponse->json()['data'] ?? []);
         $device       = $devices->firstWhere('name', $deviceName);
@@ -127,7 +167,12 @@ class DeviceService
             throw new \Exception("Device '{$deviceName}' tidak ditemukan.", 404);
         }
 
-        $response = Http::timeout(60)->delete("{$apiUrl}/api/devices/{$device['id']}");
+        $deviceId = (int) ($device['id'] ?? 0);
+        if ($deviceId <= 0) {
+            throw new \Exception("Device ID tidak valid dari monitoring API.", 422);
+        }
+
+        $response = Http::timeout(60)->delete("{$apiUrl}/api/devices/{$deviceId}");
         $data     = $response->json();
 
         if (!$response->successful()) {

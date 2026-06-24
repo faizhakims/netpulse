@@ -9,22 +9,13 @@
     <link rel="stylesheet" href="{{ asset('css/navbar.css') }}">
     <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
     <link rel="stylesheet" href="{{ asset('css/incidents.css') }}">
-    <style>
-        .panel-close-btn {
-            background: none; border: none; cursor: pointer; padding: 4px;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 8px; transition: background 0.15s;
-        }
-        .panel-close-btn:hover { background: #F1F5F9; }
-        tr.hidden { display: none; }
-    </style>
 </head>
 <body>
     @include('partials.navbar')
     @include('partials.sidebar')
 
     <div class="main" id="mainContent">
-        {{-- ===================== Header ===================== --}}
+
         <div class="page-header">
             <div>
                 <h1 class="page-title">Incidents Management</h1>
@@ -36,7 +27,7 @@
             </div>
         </div>
 
-        {{-- ===================== Stat Cards ===================== --}}
+
         <div class="stats-row">
             <div class="stat-card">
                 <div class="stat-label">DEVICE DOWN</div>
@@ -57,7 +48,7 @@
         </div>
 
         <div class="main-content-row">
-            {{-- ===================== Active Incidents ===================== --}}
+
             <div class="active-incidents">
                 <div class="active-incidents-header">
                     <div>
@@ -79,7 +70,7 @@
                     </div>
                 </div>
 
-                {{-- Table with max 6 visible rows, then scroll --}}
+
                 <div class="table-responsive" id="incidentTableWrap">
                     <table class="incident-table" id="incidentTable">
                         <thead>
@@ -126,7 +117,7 @@
                     </table>
                 </div>
 
-                {{-- Row count info --}}
+
                 @if($activeIncidents->count() > 0)
                 <div class="table-info">
                     <span id="visibleCount">{{ $activeIncidents->count() }}</span> incident{{ $activeIncidents->count() !== 1 ? 's' : '' }} active
@@ -137,7 +128,7 @@
                 @endif
             </div>
 
-            {{-- ===================== Resolved Log Sidebar ===================== --}}
+
             <div class="resolved-log">
                 <div class="resolved-log-header">
                     <h2 class="section-title">Resolved Log</h2>
@@ -169,7 +160,7 @@
             </div>
         </div>
 
-        {{-- ===================== Full History Slide Panel ===================== --}}
+
         <div class="history-panel" id="historyPanel">
             <div class="panel-header">
                 <div>
@@ -232,7 +223,6 @@
             if (searchInput)    searchInput.addEventListener('input', filterRows);
             if (severityFilter) severityFilter.addEventListener('change', filterRows);
 
-            // History panel
             const openBtn  = document.getElementById('openHistoryBtn');
             const panel    = document.getElementById('historyPanel');
             const overlay  = document.getElementById('historyOverlay');
@@ -253,9 +243,6 @@
                 if (e.key === 'Escape') closeHistory();
             });
 
-            // Auto-refresh: reload page every 30 seconds to pick up newly
-            // resolved incidents and new active incidents. Only reloads when
-            // the history panel is not open (avoids disrupting the user).
             let autoRefreshTimer = setInterval(() => {
                 const panelOpen = panel && panel.classList.contains('open');
                 if (!panelOpen) {
@@ -263,7 +250,6 @@
                 }
             }, 30000);
 
-            // Pause auto-refresh while user is actively filtering/searching
             let lastInteraction = Date.now();
             [searchInput, severityFilter].forEach(el => {
                 if (el) el.addEventListener('input', () => { lastInteraction = Date.now(); });

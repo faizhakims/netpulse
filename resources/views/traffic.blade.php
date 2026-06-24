@@ -15,24 +15,16 @@
     @include('partials.navbar')
     @include('partials.sidebar')
 
-    {{-- ==================== MAIN CONTENT ==================== --}}
     <div class="main" id="mainContent">
 
-        {{-- Page Header (tanpa "Updated xx ago" — sudah dihapus) --}}
         <div class="page-header">
             <div>
                 <h1 class="page-title">Traffic Monitoring</h1>
                 <p class="page-subtitle">Real-time analysis of network</p>
             </div>
-            <!-- <div class="updated-badge">
-                <span class="live-dot"></span>
-                <span>Live</span>
-            </div> -->
         </div>
 
-        {{-- Hero Row: Bandwidth Card + Stats Column --}}
         <div class="hero-row">
-            {{-- Main Hero Card: Bandwidth Chart (real data 24h) --}}
             <div class="hero-card">
                 <div class="hero-card-top">
                     <div class="hero-card-header">
@@ -60,16 +52,13 @@
                     </div>
                 </div>
 
-                {{-- Chart SVG dirender via JS dari data real --}}
                 <div class="chart-container" style="position:relative;">
                     <canvas id="bandwidthChart" style="width:100%;height:192px;display:block;"></canvas>
                 </div>
 
             </div>
 
-            {{-- Stats Column --}}
             <div class="stats-column">
-                {{-- Latency Card: dari device_status real --}}
                 <div class="stat-card latency-card">
                     <div class="stat-card-header-row">
                         <span class="stat-card-label">NETWORK LATENCY</span>
@@ -101,7 +90,6 @@
                     </div>
                 </div>
 
-                {{-- Packet Loss Card: dari data nyata, atau "-" jika tidak ada --}}
                 <div class="stat-card packet-loss-card">
                     <div class="stat-card-header-row">
                         <span class="stat-card-label">PACKET LOSS</span>
@@ -128,7 +116,6 @@
                         </div>
                         @else
                         <span style="font-size:12px;color:#94a3b8;">
-                            <!-- Requires <code>packet_loss</code> metric in snmp_metrics -->
                         </span>
                         @endif
                     </div>
@@ -136,7 +123,6 @@
             </div>
         </div>
 
-        {{-- Devices Table --}}
         <div class="table-card">
             <div class="table-card-header">
                 <h3 class="table-card-title">Top Busiest Devices</h3>
@@ -189,7 +175,6 @@
             </div>
         </div>
 
-        {{-- Bandwidth Log Card --}}
         <div class="table-card">
             <div class="table-card-header">
                 <h3 class="table-card-title">Bandwidth Log</h3>
@@ -227,12 +212,10 @@
             </div>
         </div>
 
-        {{-- Page Footer --}}
         @include('partials.footer')
 
-    </div>{{-- /.main --}}
+    </div>
 
-    {{-- ==================== ALL DEVICES SLIDE PANEL ==================== --}}
     <div class="all-devices-panel" id="allDevicesPanel">
         <div class="panel-header">
             <span class="panel-title">All Devices ({{ $allDevices->count() }})</span>
@@ -285,7 +268,6 @@
         </div>
     </div>
 
-    {{-- ==================== BANDWIDTH LOG SLIDE PANEL ==================== --}}
     <div class="all-devices-panel" id="bandwidthLogPanel">
         <div class="panel-header">
             <span class="panel-title">Bandwidth Log ({{ $bandwidthLog->count() }} days)</span>
@@ -342,18 +324,14 @@
         </div>
     </div>
 
-    {{-- Panel Overlay (shared for all panels) --}}
     <div class="panel-overlay" id="panelOverlay" onclick="closeAllPanels()"></div>
 
-    {{-- Pass PHP data to JS --}}
     <script>
         const chartHours  = @json($chartHours);
         const chartValues = @json($chartValues);
     </script>
 
-    {{-- JavaScript --}}
     <script>
-        // ── Shared helper ─────────────────────────────────────────────────────
         function closeAllPanels() {
             ['allDevicesPanel', 'bandwidthLogPanel'].forEach(id => {
                 document.getElementById(id).classList.remove('open');
@@ -363,7 +341,6 @@
             document.body.style.overflow = '';
         }
 
-        // ── Devices panel ─────────────────────────────────────────────────────
         function openAllDevicesPanel() {
             closeAllPanels();
             document.getElementById('allDevicesPanel').classList.add('open');
@@ -393,7 +370,6 @@
             if (e.key === 'Escape') closeAllPanels();
         });
 
-        // ── Bandwidth Log panel ───────────────────────────────────────────────
         function openBandwidthLogPanel() {
             closeAllPanels();
             document.getElementById('bandwidthLogPanel').classList.add('open');
@@ -419,7 +395,6 @@
             document.getElementById('bwLogNoResults').style.display = found ? 'none' : 'flex';
         }
 
-        // ── Bandwidth Chart (Canvas, data real dari server) ───────────────────
         (function () {
             const canvas = document.getElementById('bandwidthChart');
             if (!canvas) return;
@@ -434,8 +409,8 @@
             const ctx = canvas.getContext('2d');
             ctx.scale(dpr, dpr);
 
-            const values = chartValues;  // array 24 nilai dari PHP
-            const labels = chartHours;   // array 24 label jam
+            const values = chartValues;
+            const labels = chartHours;
 
             if (!values || values.length === 0) {
                 ctx.fillStyle = '#94a3b8';
@@ -450,13 +425,11 @@
             const chartW = W - padL - padR;
             const chartH = H - padTop - padBot;
 
-            // Titik koordinat
             const pts = values.map((v, i) => ({
                 x: padL + (i / (values.length - 1)) * chartW,
                 y: padTop + chartH - (v / maxVal) * chartH,
             }));
 
-            // Area gradient
             const grad = ctx.createLinearGradient(0, padTop, 0, padTop + chartH);
             grad.addColorStop(0,   'rgba(16,185,129,0.35)');
             grad.addColorStop(1,   'rgba(16,185,129,0)');
@@ -472,7 +445,6 @@
             ctx.fillStyle = grad;
             ctx.fill();
 
-            // Line
             ctx.beginPath();
             ctx.moveTo(pts[0].x, pts[0].y);
             for (let i = 1; i < pts.length; i++) {
@@ -482,7 +454,6 @@
             ctx.lineWidth   = 2;
             ctx.stroke();
 
-            // Label jam (setiap 4 jam)
             ctx.fillStyle   = '#94a3b8';
             ctx.font        = '10px Inter, sans-serif';
             ctx.textAlign   = 'center';
@@ -493,7 +464,6 @@
             });
         })();
 
-        // ── Fallback X jika Material Icons gagal load ─────────────────────────
         window.addEventListener('load', function () {
             const closeBtn = document.querySelector('.panel-close-btn');
             if (closeBtn) {

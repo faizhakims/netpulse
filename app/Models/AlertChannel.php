@@ -10,6 +10,7 @@ class AlertChannel extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
-        'config'    => 'array',
+        'config'    => 'encrypted:array',
     ];
 }
+

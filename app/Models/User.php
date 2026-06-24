@@ -12,7 +12,10 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
-    protected $fillable = ['name', 'email', 'password', 'is_active', 'last_login_at'];
+    protected $fillable = ['name', 'email', 'password'];
+
+    protected $guarded  = ['id', 'is_active', 'last_login_at', 'remember_token'];
+
     protected $hidden   = ['password', 'remember_token'];
 
     protected function casts(): array
@@ -25,9 +28,6 @@ class User extends Authenticatable
         ];
     }
 
-    /**
-     * Backward-compat helper — still works, now also delegates to Spatie.
-     */
     public function isAdmin(): bool { return $this->hasRole('admin'); }
 
     public function roleBadgeClass(): string

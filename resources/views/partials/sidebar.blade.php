@@ -1,12 +1,9 @@
-{{-- Tombol Hamburger --}}
 <button class="sidebar-toggle" id="sidebarToggle" aria-label="Open menu">
     <span class="material-symbols-outlined" id="sidebarToggleIcon">menu</span>
 </button>
 
-{{-- Overlay Backdrop --}}
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-{{-- Sidebar Utama --}}
 <aside class="sidebar" id="sidebar">
 
     <div class="sidebar-body">
@@ -98,7 +95,6 @@
         overlay.addEventListener('click', closeSidebar);
     }
 
-    // Tutup sidebar saat klik item navigasi
     sidebar.querySelectorAll('.nav-item').forEach(link => {
         link.addEventListener('click', function() {
             if (window.innerWidth <= 768) {

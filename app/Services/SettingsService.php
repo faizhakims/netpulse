@@ -88,17 +88,20 @@ class SettingsService
         $snmpCount    = DB::table('snmp_metrics')->count();
         $trafficCount = DB::table('interface_traffic')->count();
 
+        $isAdmin = Auth::user()?->hasRole('admin') ?? false;
+
         return [
             'db_size_mb'      => $dbSize,
             'device_count'    => $deviceCount,
             'log_count'       => $logCount,
             'snmp_count'      => $snmpCount,
             'traffic_count'   => $trafficCount,
-            'php_version'     => PHP_VERSION,
-            'laravel_version' => app()->version(),
+            'php_version'     => $isAdmin ? PHP_VERSION : 'N/A',
+            'laravel_version' => $isAdmin ? app()->version() : 'N/A',
             'server_time'     => now()->format('d M Y H:i:s') . ' WIB',
         ];
     }
+
 
     public function triggerManualBackup()
     {

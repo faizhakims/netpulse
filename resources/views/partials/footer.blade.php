@@ -1,4 +1,3 @@
-{{-- ===================== Footer ===================== --}}
 <link rel="stylesheet" href="{{ asset('css/footer.css') }}?v={{ filemtime(public_path('css/footer.css')) }}">
 <div class="page-footer">
     <span class="footer-copy">&copy; 2026 NetPulse – Network Operations Center</span>

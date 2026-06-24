@@ -10,13 +10,22 @@ class UserService
 {
     public function createUser(array $data)
     {
-        $data['password']  = Hash::make($data['password']);
-        $data['is_active'] = true;
-        $user = User::create($data);
+        $data['password'] = Hash::make($data['password']);
+
+        $user = User::create([
+            'name'     => $data['name'],
+            'email'    => $data['email'],
+            'password' => $data['password'],
+        ]);
+
+        $user->is_active = true;
+        $user->save();
+
         $user->syncRoles([$data['role']]);
-        
+
         return $user;
     }
+
 
     public function updateUser(User $user, array $data)
     {

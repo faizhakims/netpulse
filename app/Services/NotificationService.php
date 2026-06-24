@@ -33,25 +33,26 @@ class NotificationService
             throw new \Exception('Bot Token dan Chat ID harus diisi terlebih dahulu.');
         }
 
-        $text = urlencode("✅ *NetPulse Test Alert*\n\nKoneksi Telegram berhasil dikonfigurasi.\nWaktu: " . now()->format('d M Y H:i:s') . ' WIB');
-        $url  = "https://api.telegram.org/bot{$token}/sendMessage?chat_id={$chatId}&text={$text}&parse_mode=Markdown";
-
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT        => 10,
-            CURLOPT_SSL_VERIFYPEER => false,
-        ]);
-        $response = curl_exec($ch);
-        $curlErr  = curl_error($ch);
-        curl_close($ch);
-
-        if ($curlErr) {
-            $this->logAlertHistory('telegram', $chatId, 'failed', "cURL error: {$curlErr}");
-            throw new \Exception("cURL error: {$curlErr}");
+        if (!preg_match('/^\d+:[A-Za-z0-9_-]{35,}$/', $token)) {
+            throw new \Exception('Format Bot Token Telegram tidak valid.');
         }
 
-        $result = json_decode($response, true);
+        $text = "✅ *NetPulse Test Alert*\n\nKoneksi Telegram berhasil dikonfigurasi.\nWaktu: " . now()->format('d M Y H:i:s') . ' WIB';
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(10)
+                ->post("https://api.telegram.org/bot{$token}/sendMessage", [
+                    'chat_id'    => $chatId,
+                    'text'       => $text,
+                    'parse_mode' => 'Markdown',
+                ]);
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            $this->logAlertHistory('telegram', $chatId, 'failed', "Connection error: {$e->getMessage()}");
+            throw new \Exception("Koneksi ke Telegram API gagal: {$e->getMessage()}");
+        }
+
+        $result = $response->json();
+
         if ($result['ok'] ?? false) {
             $this->logAlertHistory('telegram', $chatId, 'sent');
             return 'Pesan test berhasil dikirim ke Telegram! Cek chat Anda.';

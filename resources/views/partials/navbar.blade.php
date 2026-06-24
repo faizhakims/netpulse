@@ -10,12 +10,10 @@
             <span class="material-symbols-outlined">refresh</span>
         </button>
 
-        {{-- 2. Cloud Status (Read-Only) --}}
         <div class="nav-icon-btn cloud-status-indicator" title="Cloud Synced">
             <span class="material-symbols-outlined">cloud_done</span>
         </div>
 
-        {{-- 3. Alert Menu --}}
         <div class="dropdown-wrapper" id="alert-wrapper">
             <button class="nav-icon-btn" id="alert-btn" title="Alerts">
                 <span class="material-symbols-outlined">notifications</span>
@@ -42,7 +40,6 @@
             </div>
         </div>
 
-        {{-- 4. User Profile (Nickname) --}}
         <div class="dropdown-wrapper" id="user-wrapper">
             <button class="user-btn" id="user-btn">
                 <span class="username">{{ Auth::user()->name ?? 'Admin' }}</span>
@@ -75,7 +72,6 @@
     </div>
 </nav>
 
-{{-- JavaScript untuk interaksi dropdown --}}
 <script>
 (function() {
     function initNavbarDropdowns() {
