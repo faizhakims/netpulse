@@ -34,14 +34,14 @@ class DashboardService
         $mainRouterName = config('netpulse.main_router', 'main-router');
 
         // ── Statistik latency (Core, Edge, Peak) ──────────────────────────
-        $mainRouterStatus = $latestDevices->firstWhere('device', $mainRouterName);
+        $mainRouterStatus = $latestDevices->firstWhere(fn($d) => ($d->device->name ?? '') === $mainRouterName);
 
         // Core latency: hanya valid kalau device UP dan tidak stale
         $coreAvgLatency = ($mainRouterStatus && $mainRouterStatus->effectiveStatus() === 'up')
             ? round($mainRouterStatus->latency_ms, 2)
             : null;
 
-        $edgeDevices    = $latestDevices->where('device', '!=', $mainRouterName)
+        $edgeDevices    = $latestDevices->filter(fn($d) => ($d->device->name ?? '') !== $mainRouterName)
             ->filter(fn($d) => $d->effectiveStatus() === 'up');
         $edgeAvgLatency = $edgeDevices->count() > 0
             ? round($edgeDevices->avg('latency_ms'), 2)
@@ -64,29 +64,35 @@ class DashboardService
         $latencyCore = [];
         $latencyEdge = [];
 
-        foreach ($checkTimes as $time) {
-            $coreVal = DB::table('device_status')
-                ->where('device', $mainRouterName)
-                ->where('checked_at', $time)
-                ->value('latency_ms');
-            $latencyCore[] = min(200, round($coreVal ?? 0));
+        $latencies = DB::table('device_status')
+            ->join('devices', 'device_status.device_id', '=', 'devices.id')
+            ->whereIn('checked_at', $checkTimes)
+            ->select('checked_at', 'devices.name as device_name', 'latency_ms')
+            ->get()
+            ->groupBy('checked_at');
 
-            $edgeAvgVal = DB::table('device_status')
-                ->where('device', '!=', $mainRouterName)
-                ->where('checked_at', $time)
-                ->avg('latency_ms');
-            $latencyEdge[] = min(200, round($edgeAvgVal ?? 0));
+        foreach ($checkTimes as $time) {
+            $records = $latencies->get($time, collect());
+            
+            $coreRecord = $records->firstWhere('device_name', $mainRouterName);
+            $coreVal = $coreRecord ? $coreRecord->latency_ms : 0;
+            $latencyCore[] = min(200, round($coreVal));
+
+            $edgeRecords = $records->where('device_name', '!=', $mainRouterName);
+            $edgeAvgVal = $edgeRecords->isEmpty() ? 0 : $edgeRecords->avg('latency_ms');
+            $latencyEdge[] = min(200, round($edgeAvgVal));
         }
 
         while (count($latencyCore) < 21) $latencyCore[] = 0;
         while (count($latencyEdge) < 21) $latencyEdge[] = 0;
 
         // ── Active Incidents ───────────────────────────────────────────────
-        $monitoredDevices = DB::table('device_status')
-            ->select('device')->distinct()->pluck('device');
+        $monitoredDeviceIds = DB::table('device_status')
+            ->select('device_id')->distinct()->pluck('device_id');
 
         $activeIncidents = \App\Models\Incident::whereNull('resolved_at')
-            ->when($monitoredDevices->isNotEmpty(), fn($q) => $q->whereIn('device', $monitoredDevices))
+            ->with('device')
+            ->when($monitoredDeviceIds->isNotEmpty(), fn($q) => $q->whereIn('device_id', $monitoredDeviceIds))
             ->orderByRaw("FIELD(status,'Critical','Warning','Monitoring','Info')")
             ->orderByDesc('started_at')
             ->get();
@@ -101,17 +107,27 @@ class DashboardService
 
         // ── Performance History (Weekly) ───────────────────────────────────
         $weeklyChartData = [];
+        
+        $startWeekly = Carbon::today()->subDays(6)->toDateString();
+        $endWeekly = Carbon::today()->toDateString();
+        
+        $weeklyStats = DB::table('device_status')
+            ->whereDate('checked_at', '>=', $startWeekly)
+            ->whereDate('checked_at', '<=', $endWeekly)
+            ->select(DB::raw('DATE(checked_at) as date'), 'status', DB::raw('count(*) as count'))
+            ->groupBy('date', 'status')
+            ->get();
+
         for ($i = 6; $i >= 0; $i--) {
-            $date = Carbon::today()->subDays($i);
-            $rows = DB::table('device_status')
-                ->whereDate('checked_at', $date->toDateString())
-                ->get();
-            $total = $rows->count();
-            $up    = $rows->where('status', 'up')->count();
+            $dateStr = Carbon::today()->subDays($i)->toDateString();
+            $dayStats = $weeklyStats->where('date', $dateStr);
+            $total = $dayStats->sum('count');
+            $up = $dayStats->where('status', 'up')->sum('count');
+            
             $pct   = $total > 0 ? round(($up / $total) * 100) : 0;
             $type  = $pct >= 80 ? 'green' : ($pct >= 50 ? 'orange' : 'red');
             $weeklyChartData[] = [
-                'label' => $date->format('D'),
+                'label' => Carbon::parse($dateStr)->format('D'),
                 'h'     => $pct . '%',
                 'type'  => $type,
                 'pct'   => $pct,
@@ -120,17 +136,27 @@ class DashboardService
 
         // ── Performance History (Monthly) ──────────────────────────────────
         $monthlyData = [];
+
+        $startMonthly = Carbon::today()->subDays(29)->toDateString();
+        $endMonthly = Carbon::today()->toDateString();
+        
+        $monthlyStats = DB::table('device_status')
+            ->whereDate('checked_at', '>=', $startMonthly)
+            ->whereDate('checked_at', '<=', $endMonthly)
+            ->select(DB::raw('DATE(checked_at) as date'), 'status', DB::raw('count(*) as count'))
+            ->groupBy('date', 'status')
+            ->get();
+
         for ($i = 29; $i >= 0; $i--) {
-            $date = Carbon::today()->subDays($i);
-            $rows = DB::table('device_status')
-                ->whereDate('checked_at', $date->toDateString())
-                ->get();
-            $total = $rows->count();
-            $up    = $rows->where('status', 'up')->count();
+            $dateStr = Carbon::today()->subDays($i)->toDateString();
+            $dayStats = $monthlyStats->where('date', $dateStr);
+            $total = $dayStats->sum('count');
+            $up = $dayStats->where('status', 'up')->sum('count');
+            
             $pct   = $total > 0 ? round(($up / $total) * 100) : 0;
             $type  = $pct >= 80 ? 'green' : ($pct >= 50 ? 'orange' : 'red');
             $monthlyData[] = [
-                'label' => $date->format('M d'),
+                'label' => Carbon::parse($dateStr)->format('M d'),
                 'h'     => $pct . '%',
                 'type'  => $type,
                 'pct'   => $pct,

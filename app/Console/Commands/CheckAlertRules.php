@@ -30,11 +30,13 @@ class CheckAlertRules extends Command
 
         // Ambil status terbaru per device (MariaDB compatible: MAX(id) per device)
         $latestDevices = DB::table('device_status')
-            ->whereIn('id', function ($q) {
-                $q->selectRaw('MAX(id)')->from('device_status')->groupBy('device');
+            ->join('devices', 'device_status.device_id', '=', 'devices.id')
+            ->whereIn('device_status.id', function ($q) {
+                $q->selectRaw('MAX(id)')->from('device_status')->groupBy('device_id');
             })
+            ->select('device_status.*', 'devices.name as device_name', 'devices.ip_address as device_ip')
             ->get()
-            ->keyBy('device');
+            ->keyBy('device_id');
 
         if ($debug) {
             $this->line("  📡 Device ditemukan: " . $latestDevices->count());
@@ -45,10 +47,10 @@ class CheckAlertRules extends Command
 
         // Ambil rata-rata latency per device
         $avgLatency = DB::table('device_status')
-            ->select('device', DB::raw('AVG(latency_ms) as avg_latency'))
-            ->groupBy('device')
+            ->select('device_id', DB::raw('AVG(latency_ms) as avg_latency'))
+            ->groupBy('device_id')
             ->get()
-            ->keyBy('device');
+            ->keyBy('device_id');
 
         foreach ($rules as $rule) {
             $targets = $this->resolveTargets($rule, $latestDevices);
@@ -89,10 +91,10 @@ class CheckAlertRules extends Command
     // ── Tentukan device yang dicek ──────────────────────────────────────────
     private function resolveTargets(AlertRule $rule, $allDevices): array
     {
-        if (empty($rule->target_device) || strtolower($rule->target_device) === 'all') {
+        if (empty($rule->target_device_id)) {
             return $allDevices->values()->all();
         }
-        $match = $allDevices->get($rule->target_device);
+        $match = $allDevices->get($rule->target_device_id);
         return $match ? [$match] : [];
     }
 
@@ -110,7 +112,7 @@ class CheckAlertRules extends Command
                 if ($condition === 'is_down') {
                     // Ambil semua record dalam window [duration] menit terakhir
                     $window = DB::table('device_status')
-                        ->where('device', $device->device)
+                        ->where('device_id', $device->device_id)
                         ->where('checked_at', '>=', now()->subMinutes($minutes))
                         ->orderByDesc('checked_at')
                         ->get();
@@ -118,7 +120,7 @@ class CheckAlertRules extends Command
                     // Jika tidak ada data dalam window, cek apakah record terakhir = down
                     if ($window->isEmpty()) {
                         $last = DB::table('device_status')
-                            ->where('device', $device->device)
+                            ->where('device_id', $device->device_id)
                             ->orderByDesc('checked_at')
                             ->first();
                         $result = $last && strtolower($last->status) === 'down';
@@ -143,7 +145,7 @@ class CheckAlertRules extends Command
                     if ($debug) $this->line("  → latency: device DOWN, skip");
                     return false;
                 }
-                $latencyRow = $avgLatency->get($device->device);
+                $latencyRow = $avgLatency->get($device->device_id);
                 $val = ($latencyRow && $latencyRow->avg_latency !== null)
                     ? (float) $latencyRow->avg_latency
                     : (($device->latency_ms !== null) ? (float) $device->latency_ms : null);
@@ -157,7 +159,7 @@ class CheckAlertRules extends Command
 
             case 'packet_loss':
                 $recent = DB::table('device_status')
-                    ->where('device', $device->device)
+                    ->where('device_id', $device->device_id)
                     ->orderByDesc('id')->limit(10)->get();
                 if ($recent->isEmpty()) return false;
                 $lossRate = ($recent->where('status', 'down')->count() / $recent->count()) * 100;
@@ -167,7 +169,7 @@ class CheckAlertRules extends Command
 
             case 'bandwidth':
                 $rounds = DB::table('interface_traffic')
-                    ->where('device', $device->device)
+                    ->where('device_id', $device->device_id)
                     ->select('collected_at', DB::raw('SUM(bytes_in + bytes_out) as total_bytes'))
                     ->groupBy('collected_at')
                     ->orderByDesc('collected_at')
@@ -322,20 +324,19 @@ class CheckAlertRules extends Command
     // ── Buat incident otomatis ──────────────────────────────────────────────
     private function createIncidentIfNeeded(AlertRule $rule, $device): void
     {
-        $existing = \App\Models\Incident::where('device', $device->device)
+        $existing = \App\Models\Incident::where('device_id', $device->device_id)
             ->whereNull('resolved_at')
             ->where('issue', $rule->title)
             ->first();
 
         if (!$existing) {
             \App\Models\Incident::create([
-                'device'     => $device->device,
-                'ip_address' => $device->ip_address,
+                'device_id'  => $device->device_id,
                 'issue'      => $rule->title,
                 'status'     => ucfirst($rule->severity),
                 'started_at' => now(),
             ]);
-            $this->line("  🚨 Incident baru dibuat untuk [{$device->device}]");
+            $this->line("  🚨 Incident baru dibuat untuk [{$device->device_name}]");
         }
     }
 }

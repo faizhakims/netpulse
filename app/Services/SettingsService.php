@@ -83,7 +83,7 @@ class SettingsService
             WHERE table_schema = DATABASE()
         ")[0]->size_mb ?? 0;
 
-        $deviceCount  = DB::table('device_status')->distinct('device')->count('device');
+        $deviceCount  = DB::table('device_status')->distinct('device_id')->count('device_id');
         $logCount     = DB::table('device_status')->count();
         $snmpCount    = DB::table('snmp_metrics')->count();
         $trafficCount = DB::table('interface_traffic')->count();

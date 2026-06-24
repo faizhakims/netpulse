@@ -10,9 +10,14 @@ class InterfaceTraffic extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'device', 'ip_address', 'interface_name',
+        'device_id', 'interface_name',
         'bytes_in', 'bytes_out', 'packets_in', 'packets_out', 'collected_at',
     ];
+
+    public function device()
+    {
+        return $this->belongsTo(Device::class);
+    }
 
     protected $casts = [
         'collected_at' => 'datetime',
@@ -40,10 +45,11 @@ class InterfaceTraffic extends Model
     public static function latestPerInterface()
     {
         return self::query()
+            ->with('device')
             ->whereIn('id', function ($q) {
                 $q->selectRaw('MAX(id)')
                   ->from('interface_traffic')
-                  ->groupBy('device', 'interface_name');
+                  ->groupBy('device_id', 'interface_name');
             })
             ->orderByDesc('bytes_in')
             ->get();

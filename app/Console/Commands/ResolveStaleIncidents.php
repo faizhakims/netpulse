@@ -37,7 +37,7 @@ class ResolveStaleIncidents extends Command
         $debug = $this->option('debug');
 
         // Ambil semua incident active
-        $activeIncidents = Incident::whereNull('resolved_at')->get();
+        $activeIncidents = Incident::with('device')->whereNull('resolved_at')->get();
 
         if ($activeIncidents->isEmpty()) {
             if ($debug) $this->info('Tidak ada incident aktif.');
@@ -49,18 +49,18 @@ class ResolveStaleIncidents extends Command
         // Ambil status terbaru per device sekaligus (1 query)
         $latestStatuses = DB::table('device_status')
             ->whereIn('id', function ($q) {
-                $q->selectRaw('MAX(id)')->from('device_status')->groupBy('device');
+                $q->selectRaw('MAX(id)')->from('device_status')->groupBy('device_id');
             })
             ->get()
-            ->keyBy('device');
+            ->keyBy('device_id');
 
         $resolvedCount = 0;
 
         foreach ($activeIncidents as $incident) {
-            $deviceStatus = $latestStatuses->get($incident->device);
+            $deviceStatus = $latestStatuses->get($incident->device_id);
 
             if (!$deviceStatus) {
-                if ($debug) $this->line("  [{$incident->device}] Tidak ada data status, skip.");
+                if ($debug) $this->line("  [{$incident->device->name}] Tidak ada data status, skip.");
                 continue;
             }
 
@@ -77,9 +77,9 @@ class ResolveStaleIncidents extends Command
                 $incident->save();
                 $resolvedCount++;
                 $this->line("  ✅ Resolved: INC-" . str_pad($incident->id, 4, '0', STR_PAD_LEFT)
-                    . " [{$incident->device}] — {$incident->issue}");
+                    . " [{$incident->device->name}] — {$incident->issue}");
             } else {
-                if ($debug) $this->line("  ⏳ Still active: [{$incident->device}] — {$incident->issue}");
+                if ($debug) $this->line("  ⏳ Still active: [{$incident->device->name}] — {$incident->issue}");
             }
         }
 
@@ -115,7 +115,7 @@ class ResolveStaleIncidents extends Command
             }
             // Ambil rata-rata latency 5 record terakhir agar tidak spike sesaat
             $recentAvg = DB::table('device_status')
-                ->where('device', $incident->device)
+                ->where('device_id', $incident->device_id)
                 ->where('status', 'up')
                 ->orderByDesc('id')
                 ->limit(5)
@@ -131,7 +131,7 @@ class ResolveStaleIncidents extends Command
         if ($this->isPacketLossIssue($issue)) {
             if ($status !== 'up') return false;
             $recent = DB::table('device_status')
-                ->where('device', $incident->device)
+                ->where('device_id', $incident->device_id)
                 ->orderByDesc('id')
                 ->limit(10)
                 ->get();
@@ -147,7 +147,7 @@ class ResolveStaleIncidents extends Command
             // Resolve jika device UP dan stabil (tidak ada fluktuasi status dalam 5 record terakhir)
             if ($status !== 'up') return false;
             $recent = DB::table('device_status')
-                ->where('device', $incident->device)
+                ->where('device_id', $incident->device_id)
                 ->orderByDesc('id')
                 ->limit(5)
                 ->pluck('status');

@@ -47,11 +47,14 @@ class DeviceService
 
     public function getDeviceDetails(string $deviceName): array
     {
-        $status = DeviceStatus::where('device', $deviceName)
+        $device = \App\Models\Device::where('name', $deviceName)->first();
+        if (!$device) abort(404, 'Device not found');
+
+        $status = DeviceStatus::where('device_id', $device->id)
             ->latest('checked_at')
             ->first();
 
-        $latencyHistory = DeviceStatus::where('device', $deviceName)
+        $latencyHistory = DeviceStatus::where('device_id', $device->id)
             ->whereNotNull('latency_ms')
             ->orderByDesc('checked_at')
             ->limit(50)
@@ -68,28 +71,29 @@ class DeviceService
         $latencyPeak = $latencyData->count() ? round($latencyData->max(), 1) : null;
         $latencyMin  = $latencyData->count() ? round($latencyData->min(), 1) : null;
 
-        $statusHistory = DeviceStatus::where('device', $deviceName)
+        $statusHistory = DeviceStatus::where('device_id', $device->id)
             ->orderByDesc('checked_at')
             ->limit(20)
             ->get();
 
-        $traffic = InterfaceTraffic::whereIn('id', function ($q) use ($deviceName) {
+        $traffic = InterfaceTraffic::whereIn('id', function ($q) use ($device) {
             $q->selectRaw('MAX(id)')
               ->from('interface_traffic')
-              ->where('device', $deviceName)
+              ->where('device_id', $device->id)
               ->groupBy('interface_name');
         })->orderByDesc('bytes_in')->get();
 
-        $metrics = SnmpMetric::where('device', $deviceName)
-            ->whereIn('id', function ($q) {
+        $metrics = SnmpMetric::where('device_id', $device->id)
+            ->whereIn('id', function ($q) use ($device) {
                 $q->selectRaw('MAX(id)')
                   ->from('snmp_metrics')
-                  ->groupBy('device', 'metric_name');
+                  ->where('device_id', $device->id)
+                  ->groupBy('metric_name');
             })
             ->get()
             ->keyBy('metric_name');
 
-        $allStatuses = DeviceStatus::where('device', $deviceName)->get();
+        $allStatuses = DeviceStatus::where('device_id', $device->id)->get();
         $upCount   = $allStatuses->where('status', 'up')->count();
         $total     = $allStatuses->count();
         $uptimePct = $total > 0 ? round(($upCount / $total) * 100, 2) : 100;
@@ -105,7 +109,7 @@ class DeviceService
             $lastReboot = $rebootTime->format('d-m-Y \a\t H.i');
         }
 
-        $incidents = Incident::where('device', $deviceName)
+        $incidents = Incident::where('device_id', $device->id)
             ->orderByDesc('started_at')
             ->get();
 

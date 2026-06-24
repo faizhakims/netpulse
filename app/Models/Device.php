@@ -9,23 +9,35 @@ class Device extends Model
 {
     use HasFactory;
 
-    // Nama tabel di database
-    protected $table = 'devices';
-
-    // Kolom yang boleh diisi secara massal
     protected $fillable = [
         'name',
         'ip_address',
-        'ssh_user',
-        'ssh_pass',
-        'snmp_community',
-        'description',
+        'layer',
         'type',
-        'is_active',
     ];
 
-    // Jika kamu ingin casting status aktif ke boolean
-    protected $casts = [
-        'is_active' => 'boolean',
-    ];
+    public function statuses()
+    {
+        return $this->hasMany(DeviceStatus::class);
+    }
+
+    public function traffic()
+    {
+        return $this->hasMany(InterfaceTraffic::class);
+    }
+
+    public function metrics()
+    {
+        return $this->hasMany(SnmpMetric::class);
+    }
+
+    public function incidents()
+    {
+        return $this->hasMany(Incident::class);
+    }
+
+    public function alertRules()
+    {
+        return $this->hasMany(AlertRule::class, 'target_device_id');
+    }
 }

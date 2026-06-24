@@ -35,7 +35,7 @@ class AlertController extends BaseApiController
         if ($search = $request->query('search')) {
             $query->where(fn($q) =>
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('target_device', 'like', "%{$search}%")
+                  ->orWhereHas('targetDevice', fn($q2) => $q2->where('name', 'like', "%{$search}%"))
             );
         }
 
@@ -97,6 +97,14 @@ class AlertController extends BaseApiController
             $data['threshold_value'] = null;
         }
 
+        if (!empty($data['target_device'])) {
+            $device = \App\Models\Device::firstOrCreate(['name' => $data['target_device']]);
+            $data['target_device_id'] = $device->id;
+        } else {
+            $data['target_device_id'] = null;
+        }
+        unset($data['target_device']);
+
         $rule = $this->alertService->createRule($data);
 
         return $this->success(new AlertResource($rule), 'Alert rule created.', 201);
@@ -119,6 +127,16 @@ class AlertController extends BaseApiController
 
         if (in_array($data['condition'], ['is_down', 'is_up'])) {
             $data['threshold_value'] = null;
+        }
+
+        if (array_key_exists('target_device', $data)) {
+            if (!empty($data['target_device'])) {
+                $device = \App\Models\Device::firstOrCreate(['name' => $data['target_device']]);
+                $data['target_device_id'] = $device->id;
+            } else {
+                $data['target_device_id'] = null;
+            }
+            unset($data['target_device']);
         }
 
         $rule = $this->alertService->updateRule($rule, $data);

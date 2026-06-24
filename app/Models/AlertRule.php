@@ -11,9 +11,21 @@ class AlertRule extends Model
 
     protected $fillable = [
         'severity', 'title', 'description', 'channels', 'is_active',
-        'target_device', 'metric_type', 'condition', 'threshold_value',
+        'target_device_id', 'metric_type', 'condition', 'threshold_value',
         'duration', 'trigger_count', 'last_triggered_at', 'sort_order',
     ];
+
+    public function targetDevice()
+    {
+        return $this->belongsTo(Device::class, 'target_device_id');
+    }
+
+    protected $appends = ['target_device'];
+
+    public function getTargetDeviceAttribute()
+    {
+        return $this->targetDevice->name ?? null;
+    }
 
     protected $casts = [
         'channels'          => 'array',

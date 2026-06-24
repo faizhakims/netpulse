@@ -10,7 +10,7 @@ class DeviceStatus extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'device', 'ip_address', 'status', 'latency_ms', 'checked_at',
+        'device_id', 'status', 'latency_ms', 'checked_at',
     ];
 
     protected $casts = [
@@ -18,9 +18,14 @@ class DeviceStatus extends Model
         'latency_ms' => 'float',
     ];
 
+    public function device()
+    {
+        return $this->belongsTo(Device::class);
+    }
+
     public static function staleThresholdMinutes(): int
     {
-        return (int) env('STALE_THRESHOLD_MINUTES', 3);
+        return (int) config('netpulse.stale_threshold_minutes', 3);
     }
 
     public function isStale(): bool
@@ -38,29 +43,30 @@ class DeviceStatus extends Model
     public static function latestPerDevice()
     {
         return self::query()
+            ->with('device')
             ->select('device_status.*')
             ->whereIn('id', function ($q) {
                 $q->selectRaw('MAX(id)')
                   ->from('device_status')
-                  ->groupBy('device');
+                  ->groupBy('device_id');
             })
             ->leftJoinSub(
-                self::selectRaw("device, MAX(checked_at) as last_up_at")
+                self::selectRaw("device_id, MAX(checked_at) as last_up_at")
                     ->where('status', 'up')
-                    ->groupBy('device'),
+                    ->groupBy('device_id'),
                 'last_up',
-                'device_status.device', '=', 'last_up.device'
+                'device_status.device_id', '=', 'last_up.device_id'
             )
             ->leftJoinSub(
-                self::selectRaw("device, MAX(checked_at) as last_down_at")
+                self::selectRaw("device_id, MAX(checked_at) as last_down_at")
                     ->where('status', 'down')
-                    ->groupBy('device'),
+                    ->groupBy('device_id'),
                 'last_down',
-                'device_status.device', '=', 'last_down.device'
+                'device_status.device_id', '=', 'last_down.device_id'
             )
             ->addSelect('last_up_at', 'last_down_at')
-            ->orderBy('device')
-            ->get();
+            ->get()
+            ->sortBy(fn($status) => $status->device->name ?? '');
     }
 
     public static function formatDuration(int $seconds): string
@@ -117,7 +123,7 @@ class DeviceStatus extends Model
      */
     public function imageUrl(): string
     {
-        $name = strtolower($this->device);
+        $name = strtolower($this->device->name ?? '');
         if (str_contains($name, 'switch')) return asset('images/switch.png');
         return asset('images/router.png');
     }

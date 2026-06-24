@@ -86,13 +86,13 @@
                         <tbody>
                             @forelse($activeIncidents as $inc)
                             <tr data-status="{{ $inc->status }}"
-                                data-search="{{ strtolower('INC-'.str_pad($inc->id,4,'0',STR_PAD_LEFT).' '.$inc->device.' '.$inc->issue) }}">
+                                data-search="{{ strtolower('INC-'.str_pad($inc->id,4,'0',STR_PAD_LEFT).' '.($inc->device->name ?? '').' '.$inc->issue) }}">
                                 <td><span class="id-text">INC-{{ str_pad($inc->id, 4, '0', STR_PAD_LEFT) }}</span></td>
                                 <td>
                                     <div class="device-cell">
-                                        <span class="device-name">{{ $inc->device }}</span>
-                                        @if($inc->ip_address)
-                                        <span class="device-ip">{{ $inc->ip_address }}</span>
+                                        <span class="device-name">{{ $inc->device->name ?? '' }}</span>
+                                        @if($inc->device->ip_address ?? null)
+                                        <span class="device-ip">{{ $inc->device->ip_address }}</span>
                                         @endif
                                     </div>
                                 </td>
@@ -142,8 +142,8 @@
                         </div>
                         <div class="log-title">{{ $log->issue }}</div>
                         <div class="log-desc">
-                            {{ $log->device }}
-                            @if($log->ip_address) · {{ $log->ip_address }}@endif
+                            {{ $log->device->name ?? '' }}
+                            @if($log->device->ip_address ?? null) · {{ $log->device->ip_address }}@endif
                             — resolved after {{ $log->displayDuration() }}
                         </div>
                     </div>
@@ -178,7 +178,7 @@
                         <span class="history-id">INC-{{ str_pad($h->id, 4, '0', STR_PAD_LEFT) }}</span>
                         <span class="badge badge-resolved-sm">Resolved</span>
                     </div>
-                    <div class="history-device">{{ $h->device }}@if($h->ip_address) · {{ $h->ip_address }}@endif</div>
+                    <div class="history-device">{{ $h->device->name ?? '' }}@if($h->device->ip_address ?? null) · {{ $h->device->ip_address }}@endif</div>
                     <div class="history-issue">{{ $h->issue }}</div>
                     <div class="history-meta">
                         Started: {{ $h->started_at ? $h->started_at->format('d M Y H:i') : '-' }}

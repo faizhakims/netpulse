@@ -9,10 +9,9 @@ class TrafficService
 {
     public function getTrafficData(): array
     {
-        // ── 1. BANDWIDTH: ambil snapshot terbaru per device+interface ──────────
         $latestIds = DB::table('interface_traffic')
             ->selectRaw('MAX(id) as id')
-            ->groupBy('device', 'interface_name')
+            ->groupBy('device_id', 'interface_name')
             ->pluck('id');
 
         $latestSnapshots = DB::table('interface_traffic')
@@ -84,7 +83,7 @@ class TrafficService
                     $q->selectRaw('MAX(id)')
                       ->from('snmp_metrics')
                       ->where('metric_name', 'packet_loss')
-                      ->groupBy('device');
+                      ->groupBy('device_id');
                 })
                 ->avg(DB::raw('CAST(metric_value AS DECIMAL(10,4))'));
 
@@ -95,23 +94,26 @@ class TrafficService
 
         // ── 6. TOP DEVICES + status real ───────────────────────────────────────
         $topDevicesRaw = DB::table('interface_traffic')
+            ->join('devices', 'interface_traffic.device_id', '=', 'devices.id')
             ->whereIn('interface_traffic.id', $latestIds)
             ->selectRaw('
-                interface_traffic.device,
-                interface_traffic.ip_address,
+                interface_traffic.device_id as device_id,
+                devices.name as device_name,
+                devices.ip_address as ip_address,
                 SUM(interface_traffic.bytes_in)  as total_in,
                 SUM(interface_traffic.bytes_out) as total_out,
                 SUM(interface_traffic.bytes_in + interface_traffic.bytes_out) as total_bytes
             ')
-            ->groupBy('interface_traffic.device', 'interface_traffic.ip_address')
+            ->groupBy('interface_traffic.device_id', 'devices.name', 'devices.ip_address')
             ->orderByDesc('total_bytes')
             ->limit(10)
             ->get();
 
-        $statusMap  = $deviceStatuses->keyBy('device');
+        $statusMap  = $deviceStatuses->keyBy('device_id');
 
         $topDevices = $topDevicesRaw->map(function ($row) use ($statusMap) {
-            $ds           = $statusMap->get($row->device);
+            $ds           = $statusMap->get($row->device_id);
+            $row->device   = $row->device_name;
             $row->status   = $ds ? $ds->effectiveStatus() : 'unknown';
             $row->location = null; // Kolom location belum ada di skema DB
             return $row;
@@ -121,7 +123,7 @@ class TrafficService
         $allDevices = $deviceStatuses->map(function ($ds) use ($latestIds) {
             $bw = DB::table('interface_traffic')
                 ->whereIn('id', $latestIds)
-                ->where('device', $ds->device)
+                ->where('device_id', $ds->device_id)
                 ->selectRaw('SUM(bytes_in + bytes_out) as total_bytes')
                 ->value('total_bytes');
             $ds->total_bytes = (int) ($bw ?? 0);

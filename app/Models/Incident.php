@@ -10,9 +10,14 @@ class Incident extends Model
     use HasFactory;
 
     protected $fillable = [
-        'device', 'ip_address', 'issue', 'status', 'duration',
+        'device_id', 'issue', 'status', 'duration',
         'started_at', 'resolved_at',
     ];
+
+    public function device()
+    {
+        return $this->belongsTo(Device::class);
+    }
 
     protected $casts = [
         'started_at'  => 'datetime',

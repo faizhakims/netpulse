@@ -16,14 +16,15 @@ class IncidentService
         // ── Active incidents ──────────────────────────────────────────────────
         // Only incidents that are truly active (resolved_at IS NULL) AND whose
         // device actually exists in device_status (linked to real monitoring data)
-        $monitoredDevices = DB::table('device_status')
-            ->select('device')
+        $monitoredDeviceIds = DB::table('device_status')
+            ->select('device_id')
             ->distinct()
-            ->pluck('device');
+            ->pluck('device_id');
 
         $activeIncidents = Incident::active()
-            ->when($monitoredDevices->isNotEmpty(), function ($q) use ($monitoredDevices) {
-                $q->whereIn('device', $monitoredDevices);
+            ->with('device')
+            ->when($monitoredDeviceIds->isNotEmpty(), function ($q) use ($monitoredDeviceIds) {
+                $q->whereIn('device_id', $monitoredDeviceIds);
             })
             ->orderByRaw("FIELD(status,'Critical','Warning','Monitoring','Info')")
             ->orderBy('started_at', 'desc')
@@ -33,7 +34,7 @@ class IncidentService
         // Device Down: devices currently reported as 'down' in device_status
         $deviceDown = DB::table('device_status')
             ->whereIn('id', function ($q) {
-                $q->selectRaw('MAX(id)')->from('device_status')->groupBy('device');
+                $q->selectRaw('MAX(id)')->from('device_status')->groupBy('device_id');
             })
             ->where('status', 'down')
             ->count();
@@ -89,13 +90,13 @@ class IncidentService
         // Latest status per device (one query)
         $latestStatuses = DB::table('device_status')
             ->whereIn('id', function ($q) {
-                $q->selectRaw('MAX(id)')->from('device_status')->groupBy('device');
+                $q->selectRaw('MAX(id)')->from('device_status')->groupBy('device_id');
             })
             ->get()
-            ->keyBy('device');
+            ->keyBy('device_id');
 
         foreach ($activeIncidents as $incident) {
-            $deviceStatus = $latestStatuses->get($incident->device);
+            $deviceStatus = $latestStatuses->get($incident->device_id);
             if (!$deviceStatus) continue; // no monitoring data → leave as-is
 
             $issue  = strtolower($incident->issue);
@@ -108,7 +109,7 @@ class IncidentService
             } elseif ($this->isLatencyIssue($issue)) {
                 if ($status === 'up') {
                     $recentAvg = DB::table('device_status')
-                        ->where('device', $incident->device)
+                        ->where('device_id', $incident->device_id)
                         ->where('status', 'up')
                         ->orderByDesc('id')
                         ->limit(5)
@@ -119,7 +120,7 @@ class IncidentService
             } elseif ($this->isPacketLossIssue($issue)) {
                 if ($status === 'up') {
                     $recent = DB::table('device_status')
-                        ->where('device', $incident->device)
+                        ->where('device_id', $incident->device_id)
                         ->orderByDesc('id')
                         ->limit(10)
                         ->get();

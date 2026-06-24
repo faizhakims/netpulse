@@ -13,7 +13,7 @@ class LogsController extends Controller
     {
         abort_unless(auth()->user()->can('view logs'), 403, 'Access denied.');
         // Gabungkan log dari device_status (status changes)
-        $statusLogs = DeviceStatus::orderByDesc('checked_at')
+        $statusLogs = DeviceStatus::with('device')->orderByDesc('checked_at')
             ->limit(100)
             ->get()
             ->map(function ($row) {
@@ -23,8 +23,8 @@ class LogsController extends Controller
                     'date_filter' => $row->checked_at ? $row->checked_at->format('Y-m-d') : '',
                     'time'        => $row->checked_at ? $row->checked_at->format('H:i:s') : '-',
                     'level'  => strtolower($row->status) === 'up' ? 'Info' : 'Critical',
-                    'device' => $row->device,
-                    'ip'     => $row->ip_address,
+                    'device' => $row->device->name ?? '',
+                    'ip'     => $row->device->ip_address ?? '',
                     'event'  => strtolower($row->status) === 'up'
                                     ? 'Device reachable'
                                     : 'Device unreachable / down',
@@ -36,7 +36,7 @@ class LogsController extends Controller
             });
 
         // Log dari snmp_metrics
-        $snmpLogs = SnmpMetric::orderByDesc('collected_at')
+        $snmpLogs = SnmpMetric::with('device')->orderByDesc('collected_at')
             ->limit(50)
             ->get()
             ->map(function ($row) {
@@ -46,8 +46,8 @@ class LogsController extends Controller
                     'date_filter' => $row->collected_at ? $row->collected_at->format('Y-m-d') : '',
                     'time'        => $row->collected_at ? $row->collected_at->format('H:i:s') : '-',
                     'level'       => 'Info',
-                    'device'      => $row->device,
-                    'ip'          => $row->ip_address,
+                    'device'      => $row->device->name ?? '',
+                    'ip'          => $row->device->ip_address ?? '',
                     'event'       => 'SNMP Metric collected: ' . $row->metric_name,
                     'source'      => 'SNMP Poller',
                     'desc'        => $row->metric_name . ' = ' . $row->metric_value,

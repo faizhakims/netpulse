@@ -10,8 +10,8 @@ class DeviceResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'name'            => $this->device,
-            'ip_address'      => $this->ip_address,
+            'name'            => $this->device->name ?? $this->device,
+            'ip_address'      => $this->device->ip_address ?? $this->ip_address,
             'status'          => $this->effectiveStatus(),
             'raw_status'      => strtolower($this->status),
             'is_stale'        => $this->isStale(),

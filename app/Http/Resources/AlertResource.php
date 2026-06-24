@@ -18,7 +18,7 @@ class AlertResource extends JsonResource
             'condition'        => $this->condition,
             'threshold_value'  => $this->threshold_value,
             'duration'         => $this->duration,
-            'target_device'    => $this->target_device,
+            'target_device'    => $this->targetDevice->name ?? null,
             'channels'         => $this->channels,
             'is_active'        => $this->is_active,
             'trigger_count'    => $this->trigger_count,

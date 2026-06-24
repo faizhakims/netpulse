@@ -10,8 +10,13 @@ class SnmpMetric extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'device', 'ip_address', 'metric_name', 'metric_value', 'collected_at',
+        'device_id', 'metric_name', 'metric_value', 'collected_at',
     ];
+
+    public function device()
+    {
+        return $this->belongsTo(Device::class);
+    }
 
     protected $casts = [
         'collected_at' => 'datetime',
@@ -23,13 +28,14 @@ class SnmpMetric extends Model
     public static function latestPerDeviceMetric()
     {
         return self::query()
+            ->with('device')
             ->whereIn('id', function ($q) {
                 $q->selectRaw('MAX(id)')
                   ->from('snmp_metrics')
-                  ->groupBy('device', 'metric_name');
+                  ->groupBy('device_id', 'metric_name');
             })
-            ->orderBy('device')
-            ->get();
+            ->get()
+            ->sortBy(fn($m) => $m->device->name ?? '');
     }
 
     /**
@@ -38,11 +44,12 @@ class SnmpMetric extends Model
     public static function latestByMetricName(string $metricName)
     {
         return self::query()
+            ->with('device')
             ->where('metric_name', $metricName)
             ->whereIn('id', function ($q) {
                 $q->selectRaw('MAX(id)')
                   ->from('snmp_metrics')
-                  ->groupBy('device', 'metric_name');
+                  ->groupBy('device_id', 'metric_name');
             })
             ->get();
     }
