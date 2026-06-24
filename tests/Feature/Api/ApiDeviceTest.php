@@ -15,15 +15,23 @@ class ApiDeviceTest extends TestCase
     /**
      * Seed a device_status row for tests that need to find a device.
      */
-    private function seedDevice(string $name = 'test-router', string $ip = '192.168.1.1', string $status = 'up'): void
+    private function seedDevice(string $name = 'test-router', string $ip = '192.168.1.1', string $status = 'up'): int
     {
+        $device = \App\Models\Device::firstOrCreate(
+            ['name' => $name],
+            ['ip_address' => $ip]
+        );
+
         DB::table('device_status')->insert([
+            'device_id'  => $device->id,
             'device'     => $name,
             'ip_address' => $ip,
             'status'     => $status,
             'latency_ms' => 12.5,
             'checked_at' => now()->toDateTimeString(),
         ]);
+
+        return $device->id;
     }
 
 
@@ -103,13 +111,13 @@ class ApiDeviceTest extends TestCase
 
     public function test_api_show_device_returns_correct_data(): void
     {
-        $this->seedDevice('core-router', '192.168.100.1');
+        $id = $this->seedDevice('core-router', '192.168.100.1');
 
         $this->apiAs($this->createAdmin())
-            ->getJson('/api/devices/core-router')
+            ->getJson("/api/devices/core-router")
             ->assertOk()
             ->assertJsonPath('success', true)
-            ->assertJsonPath('data.device.name', 'core-router');  // DeviceResource uses 'name' not 'device'
+            ->assertJsonPath('data.device.name', 'core-router');
     }
 
     public function test_api_show_nonexistent_device_returns_404(): void
@@ -122,20 +130,20 @@ class ApiDeviceTest extends TestCase
 
     public function test_viewer_can_show_device_via_api(): void
     {
-        $this->seedDevice('edge-switch');
+        $id = $this->seedDevice('edge-switch');
 
         $this->apiAs($this->createViewer())
-            ->getJson('/api/devices/edge-switch')
+            ->getJson("/api/devices/edge-switch")
             ->assertOk();
     }
 
 
     public function test_viewer_cannot_delete_device_via_api(): void
     {
-        $this->seedDevice('deletable-device');
+        $id = $this->seedDevice('deletable-device');
 
         $this->apiAs($this->createViewer())
-            ->deleteJson('/api/devices/deletable-device')
+            ->deleteJson("/api/devices/deletable-device")
             ->assertForbidden()
             ->assertJsonPath('success', false);
     }

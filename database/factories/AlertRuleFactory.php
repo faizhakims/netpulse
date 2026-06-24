@@ -19,7 +19,7 @@ class AlertRuleFactory extends Factory
             'condition'       => 'gt',
             'threshold_value' => fake()->numberBetween(50, 200),
             'duration'        => fake()->randomElement(['1m', '5m', '10m', '15m', '30m']),
-            'target_device'   => null,
+            'target_device_id'=> null,
             'channels'        => ['telegram'],
             'is_active'       => true,
             'sort_order'      => fake()->numberBetween(1, 100),

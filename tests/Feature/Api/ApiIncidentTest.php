@@ -48,7 +48,7 @@ class ApiIncidentTest extends TestCase
 
     public function test_api_incidents_search_by_device_name(): void
     {
-        Incident::factory()->create(['device' => 'unique-target-device']);
+        Incident::factory()->create(['device_id' => \App\Models\Device::factory()->create(['name' => 'unique-target-device'])->id]);
         Incident::factory()->count(3)->create();
 
         $this->apiAs($this->createAdmin())
@@ -61,7 +61,7 @@ class ApiIncidentTest extends TestCase
     public function test_api_show_incident_returns_correct_fields(): void
     {
         $incident = Incident::factory()->active()->create([
-            'device' => 'edge-switch-1',
+            'device_id' => \App\Models\Device::factory()->create(['name' => 'edge-switch-1'])->id,
             'status' => 'Critical',
         ]);
 

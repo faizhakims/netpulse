@@ -64,6 +64,7 @@ abstract class TestCase extends \Illuminate\Foundation\Testing\TestCase
     {
         DB::statement("CREATE TABLE IF NOT EXISTS device_status (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            device_id INTEGER,
             device TEXT NOT NULL,
             ip_address TEXT,
             status TEXT NOT NULL DEFAULT 'down',
@@ -73,6 +74,7 @@ abstract class TestCase extends \Illuminate\Foundation\Testing\TestCase
 
         DB::statement("CREATE TABLE IF NOT EXISTS interface_traffic (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            device_id INTEGER,
             device TEXT NOT NULL,
             ip_address TEXT,
             interface_name TEXT,
@@ -83,6 +85,7 @@ abstract class TestCase extends \Illuminate\Foundation\Testing\TestCase
 
         DB::statement("CREATE TABLE IF NOT EXISTS snmp_metrics (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            device_id INTEGER,
             device TEXT NOT NULL,
             metric_name TEXT NOT NULL,
             metric_value TEXT,

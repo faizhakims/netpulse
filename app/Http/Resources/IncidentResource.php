@@ -11,8 +11,8 @@ class IncidentResource extends JsonResource
     {
         return [
             'id'          => $this->id,
-            'device'      => $this->device,
-            'ip_address'  => $this->ip_address,
+            'device'      => $this->device->name ?? 'Unknown',
+            'ip_address'  => $this->device->ip_address ?? 'Unknown',
             'issue'       => $this->issue,
             'status'      => $this->status,
             'is_active'   => $this->isActive(),

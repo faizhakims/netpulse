@@ -12,8 +12,7 @@ class IncidentFactory extends Factory
     public function definition(): array
     {
         return [
-            'device'     => fake()->bothify('device-??##'),
-            'ip_address' => fake()->localIpv4(),
+            'device_id'  => \App\Models\Device::factory(),
             'issue'      => fake()->sentence(5),
             'status'     => fake()->randomElement(['Critical', 'Warning', 'Monitoring', 'Info']),
             'started_at' => now()->subMinutes(fake()->numberBetween(5, 120)),

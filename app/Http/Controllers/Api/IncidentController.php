@@ -39,7 +39,7 @@ class IncidentController extends BaseApiController
         // Search by device name or issue
         if ($search = $request->query('search')) {
             $query->where(fn($q) =>
-                $q->where('device', 'like', "%{$search}%")
+                $q->whereHas('device', fn($q2) => $q2->where('name', 'like', "%{$search}%"))
                   ->orWhere('issue', 'like', "%{$search}%")
             );
         }
@@ -48,7 +48,7 @@ class IncidentController extends BaseApiController
         $sort = $request->query('sort', '-started_at');
         $dir  = str_starts_with($sort, '-') ? 'desc' : 'asc';
         $col  = ltrim($sort, '-');
-        $allowed = ['started_at', 'resolved_at', 'device', 'status'];
+        $allowed = ['started_at', 'resolved_at', 'status'];
         if (!in_array($col, $allowed)) $col = 'started_at';
 
         $query->orderBy($col, $dir);
