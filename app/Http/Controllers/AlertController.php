@@ -42,18 +42,24 @@ class AlertController extends Controller
     {
         abort_unless(auth()->user()->can('manage alerts'), 403, 'Access denied.');
 
-        $validated = $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'type'                => 'required|in:telegram,email',
             'is_active'           => 'boolean',
             'config.token'        => 'required_if:type,telegram|nullable|string|max:200',
             'config.chat_id'      => 'required_if:type,telegram|nullable|string|max:100',
             'config.host'         => 'required_if:type,email|nullable|string|max:255',
             'config.port'         => 'required_if:type,email|nullable|integer|between:1,65535',
-            'config.username'     => 'required_if:type,email|nullable|email|max:255',
+            'config.username'     => 'required_if:type,email|nullable|string|max:255',
             'config.password'     => 'nullable|string|max:500',
             'config.from_address' => 'nullable|email|max:255',
             'config.to_address'   => 'nullable|email|max:255',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json(['ok' => false, 'message' => $validator->errors()->first()], 422);
+        }
+
+        $validated = $validator->validated();
 
         $this->alertService->saveChannel(
             $validated['type'],
@@ -68,17 +74,23 @@ class AlertController extends Controller
     {
         abort_unless(auth()->user()->can('manage alerts'), 403, 'Access denied.');
 
-        $validated = $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'type'                => 'required|in:telegram,email',
             'config.token'        => 'required_if:type,telegram|nullable|string|max:200',
             'config.chat_id'      => 'required_if:type,telegram|nullable|string|max:100',
             'config.host'         => 'required_if:type,email|nullable|string|max:255',
             'config.port'         => 'required_if:type,email|nullable|integer|between:1,65535',
-            'config.username'     => 'required_if:type,email|nullable|email|max:255',
+            'config.username'     => 'required_if:type,email|nullable|string|max:255',
             'config.password'     => 'nullable|string|max:500',
             'config.from_address' => 'nullable|email|max:255',
             'config.to_address'   => 'nullable|email|max:255',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json(['ok' => false, 'message' => $validator->errors()->first()], 422);
+        }
+
+        $validated = $validator->validated();
 
         try {
             $message = $this->notificationService->testChannel($validated['type'], $validated['config'] ?? []);
