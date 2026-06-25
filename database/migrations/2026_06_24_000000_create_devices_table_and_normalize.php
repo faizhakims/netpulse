@@ -23,24 +23,15 @@ return new class extends Migration
         }
 
         if ($driver !== 'sqlite') {
+            $tables = ['devices', 'device_status', 'interface_traffic', 'snmp_metrics', 'incidents', 'alert_rules'];
+            foreach ($tables as $t) {
+                if (Schema::hasTable($t)) {
+                    DB::statement("ALTER TABLE {$t} ENGINE = InnoDB");
+                    DB::statement("ALTER TABLE {$t} CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+                }
+            }
             if (Schema::hasTable('devices')) {
-                DB::statement('ALTER TABLE devices ENGINE = InnoDB');
                 DB::statement('ALTER TABLE devices MODIFY id BIGINT UNSIGNED AUTO_INCREMENT');
-            }
-            if (Schema::hasTable('device_status')) {
-                DB::statement('ALTER TABLE device_status ENGINE = InnoDB');
-            }
-            if (Schema::hasTable('interface_traffic')) {
-                DB::statement('ALTER TABLE interface_traffic ENGINE = InnoDB');
-            }
-            if (Schema::hasTable('snmp_metrics')) {
-                DB::statement('ALTER TABLE snmp_metrics ENGINE = InnoDB');
-            }
-            if (Schema::hasTable('incidents')) {
-                DB::statement('ALTER TABLE incidents ENGINE = InnoDB');
-            }
-            if (Schema::hasTable('alert_rules')) {
-                DB::statement('ALTER TABLE alert_rules ENGINE = InnoDB');
             }
         }
 
