@@ -50,6 +50,7 @@ return new class extends Migration
                 DB::statement('UPDATE device_status ds JOIN devices d ON ds.device = d.name SET ds.device_id = d.id');
 
                 DB::unprepared('
+                    DROP TRIGGER IF EXISTS before_insert_device_status;
                     CREATE TRIGGER before_insert_device_status
                     BEFORE INSERT ON device_status
                     FOR EACH ROW
@@ -81,6 +82,7 @@ return new class extends Migration
                 DB::statement('UPDATE interface_traffic it JOIN devices d ON it.device = d.name SET it.device_id = d.id');
 
                 DB::unprepared('
+                    DROP TRIGGER IF EXISTS before_insert_interface_traffic;
                     CREATE TRIGGER before_insert_interface_traffic
                     BEFORE INSERT ON interface_traffic
                     FOR EACH ROW
@@ -112,6 +114,7 @@ return new class extends Migration
                 DB::statement('UPDATE snmp_metrics sm JOIN devices d ON sm.device = d.name SET sm.device_id = d.id');
 
                 DB::unprepared('
+                    DROP TRIGGER IF EXISTS before_insert_snmp_metrics;
                     CREATE TRIGGER before_insert_snmp_metrics
                     BEFORE INSERT ON snmp_metrics
                     FOR EACH ROW
