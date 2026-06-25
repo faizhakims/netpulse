@@ -12,7 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('alert_channels', function (Blueprint $table) {
-            $table->text('config')->change();
+            $table->dropColumn('config');
+        });
+        Schema::table('alert_channels', function (Blueprint $table) {
+            $table->text('config')->after('is_active')->nullable();
         });
     }
 
