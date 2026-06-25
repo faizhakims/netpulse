@@ -9,7 +9,18 @@ class AlertService
 {
     public function saveChannel(string $type, array $config, bool $isActive)
     {
-        $channel = AlertChannel::firstOrNew(['type' => $type]);
+        try {
+            $channel = AlertChannel::where('type', $type)->first();
+        } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+            // Auto-heal: if the existing config is undecryptable (due to APP_KEY change or old JSON format)
+            \Illuminate\Support\Facades\DB::table('alert_channels')->where('type', $type)->delete();
+            $channel = null;
+        }
+
+        if (!$channel) {
+            $channel = new AlertChannel(['type' => $type]);
+        }
+
         $channel->is_active = $isActive;
         $channel->config    = $config;
         $channel->save();
