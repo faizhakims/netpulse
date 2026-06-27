@@ -12,7 +12,74 @@
     <link rel="stylesheet" href="{{ asset('css/navbar.css') }}">
     <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}?v={{ filemtime(public_path('css/dashboard.css')) }}">
+    <script type="application/ld+json">
+    {
+        "@context": {
+            "schema":    "https://schema.org/",
+            "netpulse":  "http://netpulse.local/ontology#",
+            "xsd":       "http://www.w3.org/2001/XMLSchema#"
+        },
+        "@type": "schema:WebPage",
+        "@id": "{{ url('/dashboard') }}",
+        "schema:name": "NetPulse — Network Operations Center Dashboard",
+        "schema:description": "Real-time overview of network health, active incidents, device availability, and latency metrics.",
+        "schema:url": "{{ url('/dashboard') }}",
+        "schema:about": {
+            "@type": "schema:SoftwareApplication",
+            "schema:name": "NetPulse",
+            "schema:applicationCategory": "Network Monitoring",
+            "schema:operatingSystem": "Linux, Windows Server",
+            "schema:description": "Network Operations Center application that monitors routers, switches, and servers via SNMP and ICMP."
+        },
+        "schema:mainEntity": {
+            "@type": "schema:Dataset",
+            "schema:name": "Network Status Summary",
+            "schema:description": "Live aggregated status of {{ $totalDevices }} monitored network devices.",
+            "schema:variableMeasured": [
+                {
+                    "@type": "schema:PropertyValue",
+                    "schema:name": "System Health Score",
+                    "schema:value": {{ $healthScore }},
+                    "schema:unitCode": "P1"
+                },
+                {
+                    "@type": "schema:PropertyValue",
+                    "schema:name": "Total Monitored Devices",
+                    "schema:value": {{ $totalDevices }}
+                },
+                {
+                    "@type": "schema:PropertyValue",
+                    "schema:name": "Online Devices",
+                    "schema:value": {{ $upDevices }}
+                },
+                {
+                    "@type": "schema:PropertyValue",
+                    "schema:name": "Offline Devices",
+                    "schema:value": {{ $downDevices }}
+                },
+                {
+                    "@type": "schema:PropertyValue",
+                    "schema:name": "Average Latency",
+                    "schema:value": {{ $avgLatency ?? 0 }},
+                    "schema:unitCode": "MSC"
+                },
+                {
+                    "@type": "schema:PropertyValue",
+                    "schema:name": "Active Incidents",
+                    "schema:value": {{ $activeIncidents->count() }}
+                }
+            ],
+            "netpulse:healthStatus": "{{ $healthScore >= 80 ? 'good' : ($healthScore >= 50 ? 'warning' : 'critical') }}",
+            "schema:dateModified": {
+                "@type": "xsd:dateTime",
+                "@value": "{{ now()->toIso8601String() }}"
+            },
+            "schema:sameAs": "{{ url('/api/rdf/devices') }}"
+        }
+    }
+    </script>
 </head>
+
 <body>
 
     @include('partials.navbar')

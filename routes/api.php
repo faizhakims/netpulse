@@ -8,10 +8,18 @@ use App\Http\Controllers\Api\TrafficController;
 use App\Http\Controllers\Api\AlertController;
 use App\Http\Controllers\Api\IncidentController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\RdfController;
 
 
 Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:10,1');
+});
+
+Route::prefix('rdf')->group(function () {
+    Route::get('ontology',          [RdfController::class, 'ontology']);
+    Route::get('devices',           [RdfController::class, 'devices']);
+    Route::get('devices/{name}',    [RdfController::class, 'device']);
+    Route::get('incidents',         [RdfController::class, 'incidents']);
 });
 
 Route::middleware('auth:sanctum')->group(function () {

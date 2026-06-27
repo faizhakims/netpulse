@@ -11,9 +11,67 @@
     <link rel="stylesheet" href="{{ asset('css/navbar.css') }}">
     <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
     <link rel="stylesheet" href="{{ asset('css/details.css') }}">
-
-
+    <script type="application/ld+json">
+    {
+        "@context": {
+            "schema":   "https://schema.org/",
+            "netpulse": "http://netpulse.local/ontology#",
+            "xsd":      "http://www.w3.org/2001/XMLSchema#"
+        },
+        "@type": "schema:WebPage",
+        "@id": "{{ url('/device/' . $deviceName) }}",
+        "schema:name": "NetPulse — {{ $deviceName }} Device Details",
+        "schema:description": "Real-time monitoring details for network device {{ $deviceName }}, including status, latency, uptime, and incident history.",
+        "schema:url": "{{ url('/device/' . $deviceName) }}",
+        "schema:mainEntity": {
+            "@type": ["schema:ComputerServer", "netpulse:NetworkDevice"],
+            "@id": "{{ url('/api/rdf/devices/' . $deviceName) }}",
+            "schema:name": "{{ addslashes($deviceName) }}",
+            "schema:description": "{{ addslashes($status->device->type ?? 'Network Device') }} — Layer {{ addslashes($status->device->layer ?? 'N/A') }}",
+            "schema:operatingStatus": "{{ $effectiveStatus === 'up' ? 'https://schema.org/InStock' : ($effectiveStatus === 'down' ? 'https://schema.org/Discontinued' : 'https://schema.org/LimitedAvailability') }}",
+            "netpulse:ipAddress":  "{{ $status->ip_address ?? '' }}",
+            "netpulse:status":     "{{ $effectiveStatus }}",
+            "netpulse:layer":      "{{ $status->device->layer ?? '' }}",
+            "netpulse:deviceType": "{{ $status->device->type ?? '' }}",
+            "netpulse:checkedAt": {
+                "@type":  "xsd:dateTime",
+                "@value": "{{ $status && $status->checked_at ? $status->checked_at->toIso8601String() : '' }}"
+            },
+            @if($status && $status->latency_ms !== null)
+            "netpulse:latencyMs": {
+                "@type":  "xsd:decimal",
+                "@value": "{{ $status->latency_ms }}"
+            },
+            @endif
+            @if($latencyAvg !== null)
+            "schema:measurementTechnique": "ICMP ping round-trip time",
+            "schema:variableMeasured": [
+                {
+                    "@type": "schema:PropertyValue",
+                    "schema:name": "Average Latency",
+                    "schema:value": {{ $latencyAvg }},
+                    "schema:unitCode": "MSC"
+                },
+                {
+                    "@type": "schema:PropertyValue",
+                    "schema:name": "Peak Latency",
+                    "schema:value": {{ $latencyPeak ?? 0 }},
+                    "schema:unitCode": "MSC"
+                },
+                {
+                    "@type": "schema:PropertyValue",
+                    "schema:name": "30-Day Uptime",
+                    "schema:value": {{ $uptimePct }},
+                    "schema:unitCode": "P1"
+                }
+            ],
+            @endif
+            "schema:sameAs": "{{ url('/api/rdf/devices/' . $deviceName) }}"
+        }
+    }
+    </script>
 </head>
+
 <body>
 
     @include('partials.navbar')

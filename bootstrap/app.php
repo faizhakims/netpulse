@@ -19,6 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectGuestsTo('/login');
 
         $middleware->appendToGroup('web', \App\Http\Middleware\EnsureUserIsActive::class);
+        $middleware->appendToGroup('web', \App\Http\Middleware\SemanticLinkHeader::class);
+
 
         $middleware->alias([
             'role'               => RoleMiddleware::class,
