@@ -13,27 +13,27 @@
     <link rel="stylesheet" href="{{ asset('css/device.css') }}">
     <script type="application/ld+json">
     {
-        "@context": {
+        "@@context": {
             "schema":   "https://schema.org/",
             "netpulse": "http://netpulse.local/ontology#"
         },
-        "@type": "schema:WebPage",
-        "@id": "{{ url('/device') }}",
+        "@@type": "schema:WebPage",
+        "@@id": "{{ url('/device') }}",
         "schema:name": "NetPulse — Network Devices",
         "schema:description": "List of all monitored network devices including routers and switches, with real-time availability status.",
         "schema:url": "{{ url('/device') }}",
         "schema:mainEntity": {
-            "@type": "schema:ItemList",
+            "@@type": "schema:ItemList",
             "schema:name": "Monitored Network Devices",
             "schema:numberOfItems": {{ $devices->count() }},
             "schema:itemListElement": [
                 @foreach($devices as $i => $device)
                 {
-                    "@type": "schema:ListItem",
+                    "@@type": "schema:ListItem",
                     "schema:position": {{ $i + 1 }},
                     "schema:item": {
-                        "@type": ["schema:ComputerServer", "netpulse:NetworkDevice"],
-                        "@id": "{{ url('/api/rdf/devices/' . ($device->device->name ?? '')) }}",
+                        "@@type": ["schema:ComputerServer", "netpulse:NetworkDevice"],
+                        "@@id": "{{ url('/api/rdf/devices/' . ($device->device->name ?? '')) }}",
                         "schema:name": "{{ addslashes($device->device->name ?? 'Unknown') }}",
                         "schema:description": "{{ addslashes($device->device->type ?? 'Network Device') }} — Layer {{ addslashes($device->device->layer ?? 'N/A') }}",
                         "schema:operatingStatus": "{{ $device->effectiveStatus() === 'up' ? 'https://schema.org/InStock' : ($device->effectiveStatus() === 'down' ? 'https://schema.org/Discontinued' : 'https://schema.org/LimitedAvailability') }}",
