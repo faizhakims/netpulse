@@ -37,3 +37,11 @@ docker/standalone-db/mysql_data/
 *.key
 docker/nginx/ssl/
 
+# File debug/scratch sementara
+test_*.php
+extract_schema.py
+kebutuhansistem.txt
+
+# Bootstrap cache (generated, tidak perlu di-commit)
+/bootstrap/cache/*.php
+
