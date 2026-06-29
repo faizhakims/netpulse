@@ -11,10 +11,18 @@ use Illuminate\Http\Response;
 
 class RdfController extends BaseApiController
 {
-    private const BASE_URI   = 'http://netpulse.local/resource/';
-    private const ONTOLOGY   = 'http://netpulse.local/ontology#';
-    private const SCHEMA     = 'https://schema.org/';
-    private const XSD        = 'http://www.w3.org/2001/XMLSchema#';
+    private const SCHEMA = 'https://schema.org/';
+    private const XSD    = 'http://www.w3.org/2001/XMLSchema#';
+
+    private function baseUri(): string
+    {
+        return rtrim(config('app.url'), '/') . '/resource/';
+    }
+
+    private function ontologyNs(): string
+    {
+        return rtrim(config('app.url'), '/') . '/ontology#';
+    }
 
     private function negotiate(Request $request): string
     {
@@ -90,7 +98,7 @@ class RdfController extends BaseApiController
 
     private function deviceUri(DeviceStatus $status): string
     {
-        return self::BASE_URI . 'device/' . $this->deviceSlug($status);
+        return $this->baseUri() . 'device/' . $this->deviceSlug($status);
     }
 
     private function schemaOperatingStatus(string $effective): string
@@ -110,24 +118,25 @@ class RdfController extends BaseApiController
             $effective = $status->effectiveStatus();
             $device    = $status->device;
 
+            $ontology = $this->ontologyNs();
             $node = [
                 '@id'             => $this->deviceUri($status),
-                '@type'           => [self::SCHEMA . 'ComputerServer', self::ONTOLOGY . 'NetworkDevice'],
+                '@type'           => [self::SCHEMA . 'ComputerServer', $ontology . 'NetworkDevice'],
                 self::SCHEMA . 'name'            => $device->name ?? 'Unknown',
                 self::SCHEMA . 'description'     => ($device->type ?? 'Network Device') . ' at layer ' . ($device->layer ?? 'N/A'),
                 self::SCHEMA . 'operatingStatus' => ['@id' => $this->schemaOperatingStatus($effective)],
-                self::ONTOLOGY . 'ipAddress'     => $status->ip_address ?? '',
-                self::ONTOLOGY . 'status'        => $effective,
-                self::ONTOLOGY . 'layer'         => $device->layer ?? '',
-                self::ONTOLOGY . 'deviceType'    => $device->type ?? '',
-                self::ONTOLOGY . 'checkedAt'     => [
+                $ontology . 'ipAddress'     => $status->ip_address ?? '',
+                $ontology . 'status'        => $effective,
+                $ontology . 'layer'         => $device->layer ?? '',
+                $ontology . 'deviceType'    => $device->type ?? '',
+                $ontology . 'checkedAt'     => [
                     '@type'  => self::XSD . 'dateTime',
                     '@value' => $status->checked_at ? $status->checked_at->toIso8601String() : '',
                 ],
             ];
 
             if ($status->latency_ms !== null) {
-                $node[self::ONTOLOGY . 'latencyMs'] = [
+                $node[$ontology . 'latencyMs'] = [
                     '@type'  => self::XSD . 'decimal',
                     '@value' => (string) $status->latency_ms,
                 ];
@@ -139,7 +148,7 @@ class RdfController extends BaseApiController
         $payload = [
             '@context' => [
                 'schema'    => self::SCHEMA,
-                'netpulse'  => self::ONTOLOGY,
+                'netpulse'  => $this->ontologyNs(),
                 'xsd'       => self::XSD,
             ],
             '@graph' => $graph,
@@ -156,26 +165,27 @@ class RdfController extends BaseApiController
         $effective = $status->effectiveStatus();
         $device    = $status->device;
 
+        $ontology = $this->ontologyNs();
         $payload = [
             '@context' => [
                 'schema'   => self::SCHEMA,
-                'netpulse' => self::ONTOLOGY,
+                'netpulse' => $ontology,
                 'xsd'      => self::XSD,
             ],
             '@id'   => $this->deviceUri($status),
-            '@type' => [self::SCHEMA . 'ComputerServer', self::ONTOLOGY . 'NetworkDevice'],
+            '@type' => [self::SCHEMA . 'ComputerServer', $ontology . 'NetworkDevice'],
             self::SCHEMA . 'name'            => $device->name ?? 'Unknown',
             self::SCHEMA . 'description'     => ($device->type ?? 'Network Device') . ' at layer ' . ($device->layer ?? 'N/A'),
             self::SCHEMA . 'operatingStatus' => ['@id' => $this->schemaOperatingStatus($effective)],
-            self::ONTOLOGY . 'ipAddress'     => $status->ip_address ?? '',
-            self::ONTOLOGY . 'status'        => $effective,
-            self::ONTOLOGY . 'layer'         => $device->layer ?? '',
-            self::ONTOLOGY . 'deviceType'    => $device->type ?? '',
-            self::ONTOLOGY . 'checkedAt'     => [
+            $ontology . 'ipAddress'     => $status->ip_address ?? '',
+            $ontology . 'status'        => $effective,
+            $ontology . 'layer'         => $device->layer ?? '',
+            $ontology . 'deviceType'    => $device->type ?? '',
+            $ontology . 'checkedAt'     => [
                 '@type'  => self::XSD . 'dateTime',
                 '@value' => $status->checked_at ? $status->checked_at->toIso8601String() : '',
             ],
-            self::ONTOLOGY . 'latencyMs' => $status->latency_ms !== null ? [
+            $ontology . 'latencyMs' => $status->latency_ms !== null ? [
                 '@type'  => self::XSD . 'decimal',
                 '@value' => (string) $status->latency_ms,
             ] : null,
@@ -246,6 +256,18 @@ class RdfController extends BaseApiController
         return $triples;
     }
 
+    private function turtlePrefixesWithNs(): array
+    {
+        $lines   = $this->turtlePrefixes();
+        // Replace the netpulse prefix line with the dynamic one
+        foreach ($lines as &$line) {
+            if (str_starts_with($line, '@prefix netpulse:')) {
+                $line = '@prefix netpulse: <' . $this->ontologyNs() . '> .';
+            }
+        }
+        return $lines;
+    }
+
     private function devicesAsRdfXml($statuses): Response
     {
         $items = '';
@@ -269,15 +291,16 @@ class RdfController extends BaseApiController
 
     private function deviceToRdfXmlDescription(DeviceStatus $status): string
     {
-        $effective = $status->effectiveStatus();
-        $device    = $status->device;
-        $uri       = htmlspecialchars($this->deviceUri($status));
-        $name      = htmlspecialchars($device->name ?? 'Unknown');
-        $ip        = htmlspecialchars($status->ip_address ?? '');
-        $layer     = htmlspecialchars($device->layer ?? '');
-        $type      = htmlspecialchars($device->type ?? 'Network Device');
-        $checkedAt = $status->checked_at ? $status->checked_at->toIso8601String() : '';
-        $opStatus  = htmlspecialchars($this->schemaOperatingStatus($effective));
+        $effective  = $status->effectiveStatus();
+        $device     = $status->device;
+        $uri        = htmlspecialchars($this->deviceUri($status));
+        $name       = htmlspecialchars($device->name ?? 'Unknown');
+        $ip         = htmlspecialchars($status->ip_address ?? '');
+        $layer      = htmlspecialchars($device->layer ?? '');
+        $type       = htmlspecialchars($device->type ?? 'Network Device');
+        $checkedAt  = $status->checked_at ? $status->checked_at->toIso8601String() : '';
+        $opStatus   = htmlspecialchars($this->schemaOperatingStatus($effective));
+        $ontologyNs = htmlspecialchars($this->ontologyNs());
 
         $latencyTriple = $status->latency_ms !== null
             ? "    <netpulse:latencyMs rdf:datatype=\"http://www.w3.org/2001/XMLSchema#decimal\">{$status->latency_ms}</netpulse:latencyMs>\n"
@@ -286,7 +309,7 @@ class RdfController extends BaseApiController
         return <<<XML
   <rdf:Description rdf:about="{$uri}">
     <rdf:type rdf:resource="https://schema.org/ComputerServer"/>
-    <rdf:type rdf:resource="http://netpulse.local/ontology#NetworkDevice"/>
+    <rdf:type rdf:resource="{$ontologyNs}NetworkDevice"/>
     <schema:name>{$name}</schema:name>
     <schema:description>{$type} at layer {$layer}</schema:description>
     <schema:operatingStatus rdf:resource="{$opStatus}"/>
@@ -301,22 +324,23 @@ XML;
 
     private function incidentsAsJsonLd($incidents): Response
     {
-        $graph = [];
+        $graph    = [];
+        $ontology = $this->ontologyNs();
 
         foreach ($incidents as $incident) {
-            $uri = self::BASE_URI . 'incident/' . $incident->id;
+            $uri = $this->baseUri() . 'incident/' . $incident->id;
 
             $node = [
                 '@id'   => $uri,
-                '@type' => [self::SCHEMA . 'Event', self::ONTOLOGY . 'NetworkIncident'],
+                '@type' => [self::SCHEMA . 'Event', $ontology . 'NetworkIncident'],
                 self::SCHEMA . 'name'        => $incident->issue ?? 'Network Incident',
                 self::SCHEMA . 'description' => 'Status: ' . ($incident->status ?? 'unknown'),
                 self::SCHEMA . 'startDate'   => [
                     '@type'  => self::XSD . 'dateTime',
                     '@value' => $incident->started_at ? $incident->started_at->toIso8601String() : '',
                 ],
-                self::ONTOLOGY . 'incidentStatus'   => $incident->status ?? 'unknown',
-                self::ONTOLOGY . 'incidentDuration' => $incident->displayDuration(),
+                $ontology . 'incidentStatus'   => $incident->status ?? 'unknown',
+                $ontology . 'incidentDuration' => $incident->displayDuration(),
             ];
 
             if ($incident->resolved_at) {
@@ -333,7 +357,7 @@ XML;
                     ->first();
 
                 if ($deviceStatus) {
-                    $node[self::ONTOLOGY . 'affectsDevice'] = ['@id' => $this->deviceUri($deviceStatus)];
+                    $node[$ontology . 'affectsDevice'] = ['@id' => $this->deviceUri($deviceStatus)];
                 }
             }
 
@@ -343,7 +367,7 @@ XML;
         $payload = [
             '@context' => [
                 'schema'   => self::SCHEMA,
-                'netpulse' => self::ONTOLOGY,
+                'netpulse' => $ontology,
                 'xsd'      => self::XSD,
             ],
             '@graph' => $graph,
@@ -357,10 +381,10 @@ XML;
 
     private function incidentsAsTurtle($incidents): Response
     {
-        $lines = $this->turtlePrefixes();
+        $lines = $this->turtlePrefixesWithNs();
 
         foreach ($incidents as $incident) {
-            $uri        = '<' . self::BASE_URI . 'incident/' . $incident->id . '>';
+            $uri        = '<' . $this->baseUri() . 'incident/' . $incident->id . '>';
             $issue      = addslashes($incident->issue ?? 'Network Incident');
             $status     = addslashes($incident->status ?? 'unknown');
             $duration   = addslashes($incident->displayDuration());
@@ -404,10 +428,11 @@ XML;
 
     private function incidentsAsRdfXml($incidents): Response
     {
-        $items = '';
+        $items      = '';
+        $ontologyNs = htmlspecialchars($this->ontologyNs());
 
         foreach ($incidents as $incident) {
-            $uri      = htmlspecialchars(self::BASE_URI . 'incident/' . $incident->id);
+            $uri      = htmlspecialchars($this->baseUri() . 'incident/' . $incident->id);
             $issue    = htmlspecialchars($incident->issue ?? 'Network Incident');
             $status   = htmlspecialchars($incident->status ?? 'unknown');
             $duration = htmlspecialchars($incident->displayDuration());
@@ -432,7 +457,7 @@ XML;
             $items .= <<<XML
   <rdf:Description rdf:about="{$uri}">
     <rdf:type rdf:resource="https://schema.org/Event"/>
-    <rdf:type rdf:resource="http://netpulse.local/ontology#NetworkIncident"/>
+    <rdf:type rdf:resource="{$ontologyNs}NetworkIncident"/>
     <schema:name>{$issue}</schema:name>
     <netpulse:incidentStatus>{$status}</netpulse:incidentStatus>
     <netpulse:incidentDuration>{$duration}</netpulse:incidentDuration>
@@ -455,12 +480,13 @@ XML;
             '@prefix owl:      <http://www.w3.org/2002/07/owl#> .',
             '@prefix xsd:      <http://www.w3.org/2001/XMLSchema#> .',
             '@prefix schema:   <https://schema.org/> .',
-            '@prefix netpulse: <' . self::ONTOLOGY . '> .',
+            '@prefix netpulse: <' . $this->ontologyNs() . '> .',
         ];
     }
 
     private function wrapRdfXml(string $content): string
     {
+        $ontologyNs = htmlspecialchars($this->ontologyNs());
         return <<<XML
 <?xml version="1.0" encoding="UTF-8"?>
 <rdf:RDF
@@ -469,7 +495,7 @@ XML;
     xmlns:owl="http://www.w3.org/2002/07/owl#"
     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
     xmlns:schema="https://schema.org/"
-    xmlns:netpulse="http://netpulse.local/ontology#">
+    xmlns:netpulse="{$ontologyNs}">
 {$content}
 </rdf:RDF>
 XML;
@@ -477,15 +503,17 @@ XML;
 
     private function buildOntologyTurtle(): string
     {
+        $ontologyNs  = $this->ontologyNs();
+        $ontologyUri = rtrim(config('app.url'), '/') . '/ontology';
         return <<<TURTLE
 @prefix rdf:      <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:      <http://www.w3.org/2002/07/owl#> .
 @prefix xsd:      <http://www.w3.org/2001/XMLSchema#> .
 @prefix schema:   <https://schema.org/> .
-@prefix netpulse: <http://netpulse.local/ontology#> .
+@prefix netpulse: <{$ontologyNs}> .
 
-<http://netpulse.local/ontology>
+<{$ontologyUri}>
     a owl:Ontology ;
     rdfs:label "NetPulse Network Monitoring Ontology" ;
     rdfs:comment "Ontology describing network devices, incidents, and monitoring metrics for the NetPulse NOC system." .
