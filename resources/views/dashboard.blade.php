@@ -166,10 +166,10 @@
                                             <span class="badge {{ $badgeClass }}">{{ $incident->status }}</span>
                                         </div>
                                         <p class="incident-desc">{{ $incident->issue }}</p>
-                                        <p class="incident-time">{{ $incident->device }}@if($incident->ip_address) · {{ $incident->ip_address }}@endif • Active for {{ $incident->displayDuration() }}</p>
+                                        <p class="incident-time">{{ $incident->device->name ?? 'Unknown Device' }}@if($incident->device->ip_address ?? null) · {{ $incident->device->ip_address }}@endif • Active for {{ $incident->displayDuration() }}</p>
                                     </div>
                                 </div>
-                                <a href="{{ route('device.show', $incident->device) }}" class="investigate-btn">Investigate</a>
+                                <a href="{{ $incident->device_id ? route('device.show', $incident->device_id) : '#' }}" class="investigate-btn">Investigate</a>
                             </div>
                         @empty
                             <p style="color:#94a3b8; font-size:0.9375rem; text-align:center; padding:20px;">No active incidents — all systems operational.</p>
