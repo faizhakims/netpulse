@@ -80,13 +80,26 @@
                     $effStatus = $device->effectiveStatus();
                     $isUp = $effStatus === 'up';
 
-                    if ($isUp && $device->last_down_at) {
-                        $uptimeSeconds = now()->diffInSeconds(\Carbon\Carbon::parse($device->last_down_at));
-                    } elseif (!$isUp && $device->last_up_at) {
+                    // Reset setiap iterasi agar tidak carry-over antar device
+                    $uptimeSeconds     = null;
+                    $lastOnlineSeconds = null;
+
+                    if ($isUp) {
+                        if ($device->last_down_at) {
+                            // Uptime sejak terakhir kali down
+                            $uptimeSeconds = now()->diffInSeconds(\Carbon\Carbon::parse($device->last_down_at));
+                        } else {
+                            // Belum pernah down — ambil checked_at record pertama sebagai proxy start
+                            $firstCheck = \Illuminate\Support\Facades\DB::table('device_status')
+                                ->where('device_id', $device->device_id)
+                                ->orderBy('checked_at')
+                                ->value('checked_at');
+                            $uptimeSeconds = $firstCheck
+                                ? now()->diffInSeconds(\Carbon\Carbon::parse($firstCheck))
+                                : null;
+                        }
+                    } elseif ($device->last_up_at) {
                         $lastOnlineSeconds = now()->diffInSeconds(\Carbon\Carbon::parse($device->last_up_at));
-                    } else {
-                        $uptimeSeconds = null;
-                        $lastOnlineSeconds = null;
                     }
                 @endphp
 

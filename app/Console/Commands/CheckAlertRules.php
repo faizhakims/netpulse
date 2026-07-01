@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use App\Models\AlertRule;
 use App\Models\AlertHistory;
 use App\Models\AlertChannel;
+use App\Models\DeviceStatus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Client\ConnectionException;
@@ -28,24 +29,32 @@ class CheckAlertRules extends Command
 
         $this->info("Mengecek {$rules->count()} rule aktif...");
 
-        // Ambil status terbaru per device (MariaDB compatible: MAX(id) per device)
+        $staleMinutes  = DeviceStatus::staleThresholdMinutes();
         $latestDevices = DB::table('device_status')
             ->join('devices', 'device_status.device_id', '=', 'devices.id')
             ->whereIn('device_status.id', function ($q) {
                 $q->selectRaw('MAX(id)')->from('device_status')->groupBy('device_id');
             })
-            ->select('device_status.*', 'devices.name as device_name', 'devices.ip_address as device_ip')
+            ->select(
+                'device_status.id',
+                'device_status.device_id',
+                'device_status.status',
+                'device_status.latency_ms',
+                'device_status.checked_at',
+                'devices.name as device_name',
+                'devices.ip_address as ip_address'
+            )
             ->get()
             ->keyBy('device_id');
 
         if ($debug) {
             $this->line("  📡 Device ditemukan: " . $latestDevices->count());
             foreach ($latestDevices as $d) {
-                $this->line("     - {$d->device} [{$d->ip_address}] status={$d->status} latency={$d->latency_ms}ms");
+                $ageMin = now()->diffInMinutes(\Carbon\Carbon::parse($d->checked_at));
+                $this->line("     - {$d->device_name} [{$d->ip_address}] status={$d->status} latency={$d->latency_ms}ms age={$ageMin}min");
             }
         }
 
-        // Ambil rata-rata latency per device
         $avgLatency = DB::table('device_status')
             ->select('device_id', DB::raw('AVG(latency_ms) as avg_latency'))
             ->groupBy('device_id')
@@ -57,21 +66,28 @@ class CheckAlertRules extends Command
 
             if ($debug) {
                 $this->line("\n🔍 Rule: [{$rule->title}] metric={$rule->metric_type} condition={$rule->condition} threshold={$rule->threshold_value} duration={$rule->duration}");
-                $this->line("   Targets: " . collect($targets)->pluck('device')->join(', '));
+                $this->line("   Targets: " . collect($targets)->pluck('device_name')->join(', '));
             }
 
             foreach ($targets as $device) {
-                // Cooldown per rule+device — cegah spam tapi tetap cek device lain
-                $cooldownKey = "rule_{$rule->id}_device_{$device->device}";
-                if ($this->isInCooldown($rule, $device->device)) {
-                    if ($debug) $this->line("  ⏳ [{$device->device}] masih cooldown, skip.");
+                $deviceName = $device->device_name;
+
+                if ($this->isInCooldown($rule, $deviceName)) {
+                    if ($debug) $this->line("   [{$deviceName}] masih cooldown, skip.");
                     continue;
+                }
+
+                $ageMinutes = now()->diffInMinutes(\Carbon\Carbon::parse($device->checked_at));
+                $isStale    = $ageMinutes > $staleMinutes;
+                if ($isStale && $rule->metric_type === 'status' && $rule->condition === 'is_down') {
+                    $device->status = 'down';
+                    if ($debug) $this->line("   [{$deviceName}] data stale ({$ageMinutes}min), diperlakukan sebagai DOWN");
                 }
 
                 $triggered = $this->evaluate($rule, $device, $avgLatency, $debug);
 
                 if ($triggered) {
-                    $this->line("  ⚡ TRIGGER: [{$rule->title}] → [{$device->device}]");
+                    $this->line("   TRIGGER: [{$rule->title}] → [{$deviceName}]");
                     $this->sendAlert($rule, $device);
 
                     $rule->increment('trigger_count');
@@ -80,7 +96,7 @@ class CheckAlertRules extends Command
 
                     $this->createIncidentIfNeeded($rule, $device);
                 } else {
-                    if ($debug) $this->line("  ✅ [{$device->device}] kondisi tidak terpenuhi, tidak trigger.");
+                    if ($debug) $this->line("  ✅ [{$deviceName}] kondisi tidak terpenuhi, tidak trigger.");
                 }
             }
         }
@@ -88,7 +104,6 @@ class CheckAlertRules extends Command
         $this->info('Alert check selesai — ' . now()->format('H:i:s') . ' WIB');
     }
 
-    // ── Tentukan device yang dicek ──────────────────────────────────────────
     private function resolveTargets(AlertRule $rule, $allDevices): array
     {
         if (empty($rule->target_device_id)) {
@@ -98,7 +113,6 @@ class CheckAlertRules extends Command
         return $match ? [$match] : [];
     }
 
-    // ── Evaluasi kondisi ────────────────────────────────────────────────────
     private function evaluate(AlertRule $rule, $device, $avgLatency, bool $debug = false): bool
     {
         $metric    = $rule->metric_type ?? 'latency';
@@ -110,14 +124,12 @@ class CheckAlertRules extends Command
 
             case 'status':
                 if ($condition === 'is_down') {
-                    // Ambil semua record dalam window [duration] menit terakhir
                     $window = DB::table('device_status')
                         ->where('device_id', $device->device_id)
                         ->where('checked_at', '>=', now()->subMinutes($minutes))
                         ->orderByDesc('checked_at')
                         ->get();
 
-                    // Jika tidak ada data dalam window, cek apakah record terakhir = down
                     if ($window->isEmpty()) {
                         $last = DB::table('device_status')
                             ->where('device_id', $device->device_id)
@@ -128,7 +140,6 @@ class CheckAlertRules extends Command
                         return $result;
                     }
 
-                    // Trigger jika SEMUA record dalam window = down (tidak ada 'up' sama sekali)
                     $hasUp = $window->contains(fn($r) => strtolower($r->status) === 'up');
                     $result = !$hasUp;
                     if ($debug) $this->line("  → status(window {$minutes}m): {$window->count()} records, hasUp=" . ($hasUp?'yes':'no') . " → " . ($result?'TRIGGER':'skip'));
@@ -201,11 +212,11 @@ class CheckAlertRules extends Command
         };
     }
 
-    // ── Kirim notifikasi ────────────────────────────────────────────────────
     private function sendAlert(AlertRule $rule, $device): void
     {
-        $channels = $rule->channels ?? [];
-        $message  = "[{$rule->severity}] {$rule->title} — Device: {$device->device} ({$device->ip_address}) | {$rule->conditionLabel()} | " . now()->format('d M Y H:i:s') . ' WIB';
+        $channels   = $rule->channels ?? [];
+        $deviceName = $device->device_name;
+        $message    = "[{$rule->severity}] {$rule->title} — Device: {$deviceName} ({$device->ip_address}) | {$rule->conditionLabel()} | " . now()->format('d M Y H:i:s') . ' WIB';
 
         if (in_array('telegram', $channels)) $this->sendTelegram($rule, $device, $message);
         if (in_array('email',    $channels)) $this->sendEmail($rule, $device, $message);
@@ -220,15 +231,16 @@ class CheckAlertRules extends Command
         $chatId = $cfg->config['chat_id'] ?? '';
         if (empty($token) || empty($chatId)) { $this->warn('  Telegram token/chat_id kosong.'); return; }
 
-        $emoji = match(strtolower($rule->severity)) { 'critical' => '🔴', 'warning' => '🟡', default => '🔵' };
+        $emoji      = match(strtolower($rule->severity)) { 'critical' => '🔴', 'warning' => '🟡', default => '🔵' };
+        $deviceName = $device->device_name;
 
         $text =
             "{$emoji} *NetPulse Alert* — " . strtoupper($rule->severity) . "\n\n" .
-            "📋 *Rule:* {$rule->title}\n" .
-            "🖥 *Device:* `{$device->device}`\n" .
-            "🌐 *IP:* `{$device->ip_address}`\n" .
-            "⚡ *Kondisi:* {$rule->conditionLabel()}\n" .
-            "⏰ *Waktu:* " . now()->format('d M Y H:i:s') . " WIB";
+            " *Rule:* {$rule->title}\n" .
+            " *Device:* `{$deviceName}`\n" .
+            " *IP:* `{$device->ip_address}`\n" .
+            " *Kondisi:* {$rule->conditionLabel()}\n" .
+            " *Waktu:* " . now()->format('d M Y H:i:s') . " WIB";
 
         $ok          = false;
         $errorDetail = null;
@@ -249,7 +261,7 @@ class CheckAlertRules extends Command
             $errorDetail = 'Connection error: ' . $e->getMessage();
         }
 
-        $this->line("  📨 Telegram → " . ($ok ? '✅ terkirim' : '❌ gagal: ' . ($errorDetail ?? 'unknown')));
+        $this->line("   Telegram → " . ($ok ? '✅ terkirim' : '❌ gagal: ' . ($errorDetail ?? 'unknown')));
 
         AlertHistory::create([
             'alert_rule_id' => $rule->id,
@@ -290,24 +302,23 @@ class CheckAlertRules extends Command
             \Illuminate\Support\Facades\Mail::raw($message, function ($msg) use ($toAddress, $rule) {
                 $msg->to($toAddress)->subject("[NetPulse] " . strtoupper($rule->severity) . ": {$rule->title}");
             });
-            $this->line("  📧 Email → ✅ terkirim ke {$toAddress}");
+            $this->line(" Email → ✅ terkirim ke {$toAddress}");
             AlertHistory::create([
                 'alert_rule_id' => $rule->id, 'channel' => 'email', 'recipient' => $toAddress,
                 'status' => 'sent', 'message' => $message, 'sent_at' => now(),
             ]);
         } catch (\Exception $e) {
-            $this->warn("  📧 Email → ❌ gagal: " . $e->getMessage());
+            $this->warn("   Email → ❌ gagal: " . $e->getMessage());
             AlertHistory::create([
                 'alert_rule_id' => $rule->id, 'channel' => 'email', 'recipient' => $toAddress,
                 'status' => 'failed', 'message' => $message, 'error_message' => $e->getMessage(), 'sent_at' => now(),
             ]);
         }
     }
-
-    // ── Cooldown per rule+device (bukan per rule saja) ─────────────────────
+    
     private function isInCooldown(AlertRule $rule, string $deviceName): bool
     {
-        $minutes = max($this->durationToMinutes($rule->duration ?? '1m'), 5); // minimum 5 menit cooldown
+        $minutes = max($this->durationToMinutes($rule->duration ?? '1m'), 5);
 
         return AlertHistory::where('alert_rule_id', $rule->id)
             ->where('message', 'like', "%Device: {$deviceName}%")
@@ -320,8 +331,6 @@ class CheckAlertRules extends Command
     {
         return (int) str_replace('m', '', $duration);
     }
-
-    // ── Buat incident otomatis ──────────────────────────────────────────────
     private function createIncidentIfNeeded(AlertRule $rule, $device): void
     {
         $existing = \App\Models\Incident::where('device_id', $device->device_id)
@@ -336,7 +345,7 @@ class CheckAlertRules extends Command
                 'status'     => ucfirst($rule->severity),
                 'started_at' => now(),
             ]);
-            $this->line("  🚨 Incident baru dibuat untuk [{$device->device_name}]");
+            $this->line("  Incident baru dibuat untuk [{$device->device_name}]");
         }
     }
 }

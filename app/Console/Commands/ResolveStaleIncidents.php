@@ -26,17 +26,14 @@ class ResolveStaleIncidents extends Command
     protected $signature   = 'incidents:resolve {--debug : Tampilkan detail evaluasi}';
     protected $description = 'Auto-resolve active incidents ketika device kembali ke kondisi normal.';
 
-    /** Latency dianggap normal jika di bawah nilai ini (ms) */
     const LATENCY_NORMAL_MS = 150;
 
-    /** Packet loss dianggap normal jika di bawah nilai ini (%) */
     const PACKET_LOSS_NORMAL_PCT = 5;
 
     public function handle(): void
     {
         $debug = $this->option('debug');
 
-        // Ambil semua incident active
         $activeIncidents = Incident::with('device')->whereNull('resolved_at')->get();
 
         if ($activeIncidents->isEmpty()) {
@@ -46,7 +43,6 @@ class ResolveStaleIncidents extends Command
 
         if ($debug) $this->info("Mengecek {$activeIncidents->count()} incident aktif...");
 
-        // Ambil status terbaru per device sekaligus (1 query)
         $latestStatuses = DB::table('device_status')
             ->whereIn('id', function ($q) {
                 $q->selectRaw('MAX(id)')->from('device_status')->groupBy('device_id');
@@ -68,7 +64,6 @@ class ResolveStaleIncidents extends Command
 
             if ($isNormal) {
                 $incident->resolved_at = now();
-                // Hitung durasi aktual dan simpan
                 $incident->duration = $this->formatDuration(
                     $incident->started_at
                         ? now()->diffInSeconds($incident->started_at)
@@ -90,30 +85,23 @@ class ResolveStaleIncidents extends Command
         }
     }
 
-    /**
-     * Tentukan apakah incident sudah bisa di-resolve berdasarkan kondisi device saat ini.
-     */
     private function checkIfNormal(Incident $incident, object $deviceStatus, bool $debug): bool
     {
         $issue  = strtolower($incident->issue);
         $status = strtolower($deviceStatus->status ?? 'down');
         $latency = (float) ($deviceStatus->latency_ms ?? 0);
 
-        // ── Device Down / Connection Lost / Unreachable ───────────────────────
         if ($this->isStatusIssue($issue)) {
             $normal = $status === 'up';
             if ($debug) $this->line("    [status check] device_status={$status} → " . ($normal ? 'NORMAL' : 'still down'));
             return $normal;
         }
 
-        // ── Latency Spike / High Latency ─────────────────────────────────────
         if ($this->isLatencyIssue($issue)) {
-            // Device harus UP dulu
             if ($status !== 'up') {
                 if ($debug) $this->line("    [latency check] device DOWN, belum bisa resolve.");
                 return false;
             }
-            // Ambil rata-rata latency 5 record terakhir agar tidak spike sesaat
             $recentAvg = DB::table('device_status')
                 ->where('device_id', $incident->device_id)
                 ->where('status', 'up')
@@ -127,7 +115,6 @@ class ResolveStaleIncidents extends Command
             return $normal;
         }
 
-        // ── Packet Loss ───────────────────────────────────────────────────────
         if ($this->isPacketLossIssue($issue)) {
             if ($status !== 'up') return false;
             $recent = DB::table('device_status')
@@ -142,9 +129,7 @@ class ResolveStaleIncidents extends Command
             return $normal;
         }
 
-        // ── Interface Flapping ────────────────────────────────────────────────
         if (str_contains($issue, 'flapping') || str_contains($issue, 'interface')) {
-            // Resolve jika device UP dan stabil (tidak ada fluktuasi status dalam 5 record terakhir)
             if ($status !== 'up') return false;
             $recent = DB::table('device_status')
                 ->where('device_id', $incident->device_id)
@@ -156,7 +141,6 @@ class ResolveStaleIncidents extends Command
             return $allUp;
         }
 
-        // ── Fallback: resolusi jika device UP ────────────────────────────────
         $normal = $status === 'up';
         if ($debug) $this->line("    [fallback check] device_status={$status} → " . ($normal ? 'NORMAL' : 'still issue'));
         return $normal;
