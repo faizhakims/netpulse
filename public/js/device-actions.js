@@ -64,7 +64,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 const data = await res.json();
 
-                showToast(`Ping OK (${data.latency_ms} ms)`);
+                let latency = data.latency_ms ?? data.latency ?? data.time;
+                let msg = latency !== undefined ? `Ping OK (${latency} ms)` : (data.message || 'Ping OK');
+                showToast(msg);
 
             } catch (err) {
                 console.error(err);
