@@ -80,7 +80,6 @@
     <div class="device-detail-page">
         <div class="device-detail-canvas">
 
-
             <div class="device-hero">
                 <div class="device-hero-meta">
                     <h1 class="device-hero-name">{{ $deviceName }}</h1>
@@ -118,7 +117,6 @@
                     @endcan
                 </div>
             </div>
-
 
             <div class="stat-cards-row">
                 <div class="stat-card">
@@ -164,7 +162,6 @@
                     <div class="stat-card-sub">Stable connection</div>
                 </div>
             </div>
-
 
             @if($effectiveStatus !== 'unknown')
             <div class="chart-card">
@@ -247,7 +244,6 @@
                     </table>
                 </div>
 
-
                 <div class="device-info-card">
                     <div class="card-header-row">
                         <h2 class="card-title">Device Information</h2>
@@ -303,7 +299,6 @@
                             </div>
                         </div>
                     </div>
-
 
                     <div>
                         <div class="alert-settings-title">Alert Settings</div>
@@ -364,7 +359,6 @@
                     </div>
                 </div>
 
-
                 <div class="log-list" id="logList">
                     @forelse($statusHistory as $log)
                     @php
@@ -395,12 +389,10 @@
                 </div>
             </div>
 
-
             @include('partials.footer')
 
         </div>
     </div>
-
 
     <div class="incident-slider-overlay" id="incidentSliderOverlay"></div>
     <div class="incident-slider-panel" id="incidentSliderPanel">
@@ -561,7 +553,6 @@
             });
             @endif
 
-
             const filterBtns = document.querySelectorAll('#logFilters .log-filter-btn');
             const logList    = document.getElementById('logList');
 
@@ -580,7 +571,6 @@
                 });
             });
 
-
             document.getElementById('exportCsvBtn').addEventListener('click', function (e) {
                 e.preventDefault();
                 const rows = [['Time', 'Event', 'Description']];
@@ -597,7 +587,6 @@
                 a.href = url; a.download = 'log_activity.csv'; a.click();
                 URL.revokeObjectURL(url);
             });
-
 
             const overlay  = document.getElementById('incidentSliderOverlay');
             const panel    = document.getElementById('incidentSliderPanel');
@@ -623,7 +612,6 @@
             document.addEventListener('keydown', e => {
                 if (e.key === 'Escape') closeSlider();
             });
-
 
             document.querySelectorAll('.alert-toggle-item input[data-channel]').forEach(toggle => {
                 toggle.addEventListener('change', function () {

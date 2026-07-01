@@ -24,8 +24,6 @@ class Incident extends Model
         'resolved_at' => 'datetime',
     ];
 
-    // ── Scopes ────────────────────────────────────────────────────────────────
-
     public function scopeActive($query)
     {
         return $query->whereNull('resolved_at');
@@ -35,8 +33,6 @@ class Incident extends Model
     {
         return $query->whereNotNull('resolved_at');
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     public function isActive(): bool
     {
@@ -53,11 +49,6 @@ class Incident extends Model
         };
     }
 
-    /**
-     * Hitung durasi otomatis dari started_at.
-     * Jika duration sudah tersimpan, gunakan itu.
-     * Guard terhadap durasi negatif (data seeder tidak konsisten).
-     */
     public function displayDuration(): string
     {
         if ($this->duration) {
@@ -67,9 +58,8 @@ class Incident extends Model
         if (!$this->started_at) return '—';
 
         $end  = $this->resolved_at ?? now();
-        $secs = (int) $this->started_at->diffInSeconds($end, false); // false = signed
+        $secs = (int) $this->started_at->diffInSeconds($end, false); 
 
-        // Negatif berarti started_at > end — data tidak valid, tampilkan —
         if ($secs < 0) return '—';
 
         if ($secs < 60)   return "{$secs}s";

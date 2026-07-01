@@ -106,9 +106,6 @@ class DeviceStatus extends Model
         };
     }
 
-    /**
-     * CSS class untuk status dot di views.
-     */
     public function dotClass(): string
     {
         return match($this->effectiveStatus()) {
@@ -118,9 +115,6 @@ class DeviceStatus extends Model
         };
     }
 
-    /**
-     * Gambar generik berdasarkan nama device.
-     */
     public function imageUrl(): string
     {
         $name = strtolower($this->device->name ?? '');

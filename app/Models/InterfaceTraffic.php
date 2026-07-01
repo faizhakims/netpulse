@@ -27,9 +27,6 @@ class InterfaceTraffic extends Model
         'packets_out'  => 'integer',
     ];
 
-    /**
-     * Convert bytes ke format human-readable (KB/MB/GB/TB).
-     */
     public static function formatBytes(int $bytes): string
     {
         if ($bytes >= 1_000_000_000_000) return round($bytes / 1_000_000_000_000, 2) . ' TB';
@@ -39,9 +36,6 @@ class InterfaceTraffic extends Model
         return $bytes . ' B';
     }
 
-    /**
-     * Ambil record terbaru per device+interface.
-     */
     public static function latestPerInterface()
     {
         return self::query()

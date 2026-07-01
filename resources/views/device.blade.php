@@ -80,16 +80,15 @@
                     $effStatus = $device->effectiveStatus();
                     $isUp = $effStatus === 'up';
 
-                    // Reset setiap iterasi agar tidak carry-over antar device
                     $uptimeSeconds     = null;
                     $lastOnlineSeconds = null;
 
                     if ($isUp) {
                         if ($device->last_down_at) {
-                            // Uptime sejak terakhir kali down
+                            
                             $uptimeSeconds = now()->diffInSeconds(\Carbon\Carbon::parse($device->last_down_at));
                         } else {
-                            // Belum pernah down — ambil checked_at record pertama sebagai proxy start
+                            
                             $firstCheck = \Illuminate\Support\Facades\DB::table('device_status')
                                 ->where('device_id', $device->device_id)
                                 ->orderBy('checked_at')
@@ -168,7 +167,6 @@
 
             <div class="form-grid">
 
-
                 <div class="form-group">
                     <label class="form-label">Device Name *</label>
                     <input type="text" id="f-name" class="form-input"
@@ -177,14 +175,12 @@
                     <span class="form-hint">Lowercase, no spaces (use - or _)</span>
                 </div>
 
-
                 <div class="form-group">
                     <label class="form-label">IP Address *</label>
                     <input type="text" id="f-ip" class="form-input"
                            placeholder="e.g. 192.168.99.1"
                            autocomplete="off">
                 </div>
-
 
                 <div class="form-group">
                     <label class="form-label">Device Type *</label>
@@ -196,14 +192,12 @@
                     </select>
                 </div>
 
-
                 <div class="form-group">
                     <label class="form-label">SNMP Community</label>
                     <input type="text" id="f-snmp" class="form-input"
                            placeholder="public" value="public"
                            autocomplete="off">
                 </div>
-
 
                 <div class="form-group">
                     <label class="form-label">SSH User</label>
@@ -212,14 +206,12 @@
                            autocomplete="off">
                 </div>
 
-
                 <div class="form-group">
                     <label class="form-label">SSH Password</label>
                     <input type="password" id="f-ssh-pass" class="form-input"
                            placeholder="Leave blank if none"
                            autocomplete="new-password">
                 </div>
-
 
                 <div class="form-group full-width">
                     <label class="form-label">Description</label>
@@ -252,7 +244,6 @@
     <script>
         const MONITORING_API = '{{ config('services.monitoring.url', '') }}';
 
-
         function openAddModal() {
             document.getElementById('add-device-modal').classList.add('active');
             document.getElementById('f-name').focus();
@@ -280,14 +271,12 @@
             setLoading(false);
         }
 
-
         function validateForm() {
             const name = document.getElementById('f-name').value.trim();
             const ip   = document.getElementById('f-ip').value.trim();
             const type = document.getElementById('f-type').value;
 
             let valid = true;
-
 
             if (!name || !/^[a-z0-9_-]+$/.test(name)) {
                 document.getElementById('f-name').classList.add('input-error');
@@ -296,7 +285,6 @@
                 document.getElementById('f-name').classList.remove('input-error');
             }
 
-
             const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
             if (!ip || !ipRegex.test(ip)) {
                 document.getElementById('f-ip').classList.add('input-error');
@@ -304,7 +292,6 @@
             } else {
                 document.getElementById('f-ip').classList.remove('input-error');
             }
-
 
             if (!type) {
                 document.getElementById('f-type').classList.add('input-error');
@@ -315,7 +302,6 @@
 
             return valid;
         }
-
 
         async function submitAddDevice() {
             if (!validateForm()) {
@@ -365,7 +351,6 @@
             }
         }
 
-
         function setLoading(state) {
             const btn     = document.getElementById('btn-submit');
             const spinner = document.getElementById('submit-spinner');
@@ -378,7 +363,6 @@
             label.textContent     = state ? 'Adding...' : 'Add Device';
         }
 
-
         function showToast(msg, type = 'success') {
             const toast    = document.getElementById('toast');
             const toastMsg = document.getElementById('toast-msg');
@@ -388,9 +372,7 @@
             toastIcon.textContent = type === 'success' ? 'check_circle' : 'error';
             toast.className       = `toast ${type === 'error' ? 'error' : ''}`;
 
-
             requestAnimationFrame(() => toast.classList.add('show'));
-
 
             setTimeout(() => toast.classList.remove('show'), 4000);
         }

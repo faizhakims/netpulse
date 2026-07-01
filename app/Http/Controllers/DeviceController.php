@@ -26,7 +26,7 @@ class DeviceController extends Controller
 
     public function ping(DeviceActionRequest $request)
     {
-        // authorize() in DeviceActionRequest checks 'manage devices'
+        
         try {
             $result = $this->deviceService->ping($request->validated()['device']);
             return response()->json($result);
@@ -42,7 +42,7 @@ class DeviceController extends Controller
 
     public function reboot(DeviceActionRequest $request)
     {
-        // authorize() in DeviceActionRequest checks 'manage devices'
+        
         try {
             $result = $this->deviceService->reboot($request->validated()['device']);
             return response()->json($result);

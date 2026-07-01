@@ -21,7 +21,6 @@ class SettingsController extends Controller
         private UserService $userService
     ) {}
 
-    // ── Main page ─────────────────────────────────────────────────────────────
     public function index()
     {
         abort_unless(auth()->user()->can('manage settings'), 403, 'Access denied.');
@@ -35,7 +34,6 @@ class SettingsController extends Controller
         return view('settings', compact('users', 'general', 'monitoring', 'security', 'polling'));
     }
 
-    // ── General settings ──────────────────────────────────────────────────────
     public function saveGeneral(SaveGeneralSettingsRequest $request)
     {
         $this->settingsService->saveGeneral($request->validated());
@@ -43,7 +41,6 @@ class SettingsController extends Controller
         return response()->json(['ok' => true, 'message' => 'General settings saved.']);
     }
 
-    // ── Monitoring / polling settings ─────────────────────────────────────────
     public function saveMonitoring(SaveMonitoringSettingsRequest $request)
     {
         $reloadWarning = $this->settingsService->saveMonitoring($request->validated());
@@ -55,7 +52,6 @@ class SettingsController extends Controller
         ]);
     }
 
-    // ── Security settings ─────────────────────────────────────────────────────
     public function saveSecurity(SaveSecuritySettingsRequest $request)
     {
         $this->settingsService->saveSecurity($request->validated());
@@ -63,7 +59,6 @@ class SettingsController extends Controller
         return response()->json(['ok' => true, 'message' => 'Security settings saved.']);
     }
 
-    // ── Profile (change own name/email/password) ──────────────────────────────
     public function saveProfile(UpdateProfileRequest $request)
     {
         try {
@@ -87,7 +82,6 @@ class SettingsController extends Controller
         }
     }
 
-    // ── User management ───────────────────────────────────────────────────────
     public function storeUser(StoreUserRequest $request)
     {
         $user = $this->userService->createUser($request->validated());
@@ -142,7 +136,6 @@ class SettingsController extends Controller
         }
     }
 
-    // ── System actions ────────────────────────────────────────────────────────
     public function clearLogs()
     {
         abort_unless(auth()->user()->can('manage settings'), 403, 'Access denied.');

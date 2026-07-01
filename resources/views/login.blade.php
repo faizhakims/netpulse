@@ -26,7 +26,6 @@ body{
     font-family:'Poppins',sans-serif;
 }
 
-/* ================= VANTA BG ================= */
 .finisher-header{
     position:fixed;
     inset:0;
@@ -42,14 +41,12 @@ body{
     z-index:-2;
 }
 
-/* ================= WRAPPER ================= */
 .wrapper{
     position:relative;
     width:100%;
     height:100vh;
 }
 
-/* ================= LOGO ================= */
 .logo{
     position:absolute;
     left:180px;
@@ -60,7 +57,6 @@ body{
     opacity:.92;
 }
 
-/* ================= GLASS CARD ================= */
 .login-card{
     position:absolute;
 
@@ -110,7 +106,6 @@ body{
     pointer-events:none;
 }
 
-/* ================= TITLE ================= */
 .login-title{
     text-align:center;
     font-family:'Inter',sans-serif;
@@ -120,7 +115,6 @@ body{
     margin-bottom:28px;
 }
 
-/* ================= FORM ================= */
 .form-group{
     margin-bottom:24px;
 }
@@ -154,7 +148,6 @@ body{
     border-bottom:1px solid rgba(0,0,0,.65);
 }
 
-/* ================= BUTTON ================= */
 .login-btn{
     width:100%;
     margin-top:22px;
@@ -181,7 +174,6 @@ body{
     transition:.25s ease;
 }
 
-/* ================= ERROR ================= */
 .error-box{
     background:rgba(220,38,38,.10);
     border:1px solid rgba(220,38,38,.35);
@@ -193,7 +185,6 @@ body{
     text-align:center;
 }
 
-/* ================= MOBILE ================= */
 @media(max-width:1100px){
 
     .logo{
@@ -245,16 +236,13 @@ body{
 </head>
 <body>
 
-<!-- BACKGROUND -->
 <div class="finisher-header"></div>
 <div class="overlay"></div>
 
 <div class="wrapper">
 
-    <!-- LOGO -->
     <img src="{{ asset('images/netpulseHijau.svg') }}" class="logo">
 
-    <!-- LOGIN CARD -->
     <div class="login-card">
 
         <div class="login-title">Login</div>

@@ -100,7 +100,6 @@ class AlertController extends Controller
         }
     }
 
-
     public function storeRule(StoreAlertRuleRequest $request)
     {
         $data             = $request->validated();

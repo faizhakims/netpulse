@@ -7,22 +7,10 @@ use App\Models\DeviceStatus;
 use App\Services\DeviceService;
 use Illuminate\Http\Request;
 
-/**
- * GET    /api/devices
- * GET    /api/devices/{name}
- * DELETE /api/devices/{name}
- *
- * POST   /api/devices         → triggers ping via monitoring API
- * PUT    /api/devices/{name}  → triggers reboot via monitoring API
- */
 class DeviceController extends BaseApiController
 {
     public function __construct(private DeviceService $deviceService) {}
 
-    /**
-     * GET /api/devices
-     * Supports: ?search=, ?status=, ?sort=, ?page=
-     */
     public function index(Request $request)
     {
         if (!auth()->user()->can('view devices')) {
@@ -31,7 +19,6 @@ class DeviceController extends BaseApiController
 
         $devices = DeviceStatus::latestPerDevice();
 
-        // Filter by search (device name or IP)
         if ($search = $request->query('search')) {
             $devices = $devices->filter(fn($d) =>
                 str_contains(strtolower($d->device), strtolower($search)) ||
@@ -39,12 +26,10 @@ class DeviceController extends BaseApiController
             )->values();
         }
 
-        // Filter by status
         if ($status = $request->query('status')) {
             $devices = $devices->filter(fn($d) => $d->effectiveStatus() === strtolower($status))->values();
         }
 
-        // Sort
         $sort = $request->query('sort', 'name');
         $devices = match($sort) {
             'latency'  => $devices->sortBy('latency_ms')->values(),
@@ -53,7 +38,6 @@ class DeviceController extends BaseApiController
             default    => $devices->sortBy('device')->values(),
         };
 
-        // Manual pagination
         $perPage = max(1, (int) $request->query('per_page', 20));
         $page    = max(1, (int) $request->query('page', 1));
         $total   = $devices->count();
@@ -68,9 +52,6 @@ class DeviceController extends BaseApiController
         ]);
     }
 
-    /**
-     * GET /api/devices/{name}
-     */
     public function show(string $name)
     {
         if (!auth()->user()->can('view devices')) {
@@ -96,9 +77,6 @@ class DeviceController extends BaseApiController
         ]);
     }
 
-    /**
-     * POST /api/devices  — body: {"device": "router-1", "action": "ping"}
-     */
     public function store(Request $request)
     {
         if (!auth()->user()->can('manage devices')) {
@@ -119,9 +97,6 @@ class DeviceController extends BaseApiController
         }
     }
 
-    /**
-     * PUT /api/devices/{name}  — body: {"action": "reboot"}
-     */
     public function update(Request $request, string $name)
     {
         if (!auth()->user()->can('manage devices')) {
@@ -141,9 +116,6 @@ class DeviceController extends BaseApiController
         }
     }
 
-    /**
-     * DELETE /api/devices/{name}
-     */
     public function destroy(string $name)
     {
         if (!auth()->user()->can('manage devices')) {

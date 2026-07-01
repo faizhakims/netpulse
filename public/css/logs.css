@@ -1,6 +1,4 @@
-/* =============================================
-   LOGS PAGE STYLES
-   ============================================= */
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -12,10 +10,9 @@ body {
     font-family: 'Inter', sans-serif;
     color: #2c2f31;
     height: 100vh;
-    overflow: hidden; /* desktop: scrollless layout */
+    overflow: hidden; 
 }
 
-/* Layout */
 .main {
     margin-left: 96px;
     padding: 80px 40px 0 40px;
@@ -31,7 +28,6 @@ body {
     margin-right: 480px;
 }
 
-/* Header */
 .page-header {
     display: flex;
     justify-content: space-between;
@@ -77,7 +73,6 @@ body {
     flex-shrink: 0;
 }
 
-/* Stat Cards */
 .stats-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -122,7 +117,6 @@ body {
     color: #10B981;
 }
 
-/* Table Container */
 .table-wrapper {
     background: #fff;
     border: 1px solid #E2E8F0;
@@ -133,7 +127,6 @@ body {
     min-height: 0;
 }
 
-/* Toolbar */
 .toolbar {
     display: flex;
     align-items: center;
@@ -195,7 +188,6 @@ body {
     cursor: pointer;
 }
 
-/* Date Range */ 
 .date-range {
     display: flex;
     align-items: center;
@@ -260,9 +252,8 @@ body {
     background: #FEF2F2;
 }
 
-/* Table */
 .table-scroll {
-    height: 250px;      /* ~5 rows visible; scroll to see remaining 10 */
+    height: 250px;      
     overflow-y: auto;
     overflow-x: auto;
     min-height: 0;
@@ -337,28 +328,31 @@ tbody td {
     color: #64748B;
 }
 
-/* Level Badges */
 .badge {
     display: inline-flex;
+    flex-direction: row;
     align-items: center;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.02em;
+    padding: 4px 10px;
+    gap: 4px;
+    border-radius: 9999px;
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 16px;
     color: #FFFFFF;
 }
 
 .badge-critical {
-    background: #B31B25;
+    background: #DC2626;
 }
 
 .badge-warning {
-    background: #FEB64C;
+    background: #D97706;
 }
 
 .badge-info {
-    background: #095BAC;
+    background: #1D4ED8;
 }
 
 .badge-success {
@@ -366,10 +360,9 @@ tbody td {
 }
 
 .badge-debug {
-    background: #64748B;
+    background: #6B7280;
 }
 
-/* Table Footer */
 .table-footer {
     display: flex;
     align-items: center;
@@ -423,7 +416,6 @@ tbody td {
     padding: 0 4px;
 }
 
-/* Footer Bar */
 .page-footer {
     display: flex;
     justify-content: space-between;
@@ -473,7 +465,6 @@ tbody td {
     font-weight: 500;
 }
 
-/* Detail Panel */
 .detail-panel {
     position: fixed;
     top: 64px;
@@ -599,7 +590,6 @@ tbody td {
     line-height: 1.6;
 }
 
-/* Panel Actions */
 .panel-actions {
     padding: 16px 24px 24px;
     display: flex;
@@ -630,7 +620,6 @@ tbody td {
     border-color: #111827;
 }
 
-/* Hidden row (filter) */
 tr.hidden {
     display: none;
 }
@@ -640,10 +629,6 @@ tr.hidden {
     color: #64748B;
 }
 
-
-/* =============================================
-   RESPONSIVE — TABLET (≤ 1024px)
-   ============================================= */
 @media (max-width: 1024px) {
 
     .main {
@@ -651,7 +636,6 @@ tr.hidden {
         padding: 72px 24px 0 24px;
     }
 
-    /* Disable push-layout on tablet; panel overlays instead */
     .main.panel-open {
         margin-right: 0;
     }
@@ -669,7 +653,6 @@ tr.hidden {
         font-size: 26px;
     }
 
-    /* Toolbar: allow wrapping into two rows */
     .toolbar {
         row-gap: 10px;
     }
@@ -682,25 +665,18 @@ tr.hidden {
         width: 130px;
     }
 
-    /* Detail panel: narrower on tablet */
     .detail-panel {
         width: 400px;
     }
 
-    /* Hide "Source" column on tablet */
     thead th:last-child,
     tbody td:last-child {
         display: none;
     }
 }
 
-
-/* =============================================
-   RESPONSIVE — MOBILE (≤ 768px)
-   ============================================= */
 @media (max-width: 768px) {
 
-    /* Allow page to scroll vertically on mobile */
     body {
         height: auto;
         overflow: auto;
@@ -718,7 +694,6 @@ tr.hidden {
         margin-right: 0;
     }
 
-    /* Header: stack title and badge */
     .page-header {
         flex-direction: column;
         gap: 8px;
@@ -737,7 +712,6 @@ tr.hidden {
         padding-top: 0;
     }
 
-    /* Stats: 2 columns on mobile */
     .stats-row {
         grid-template-columns: repeat(2, 1fr);
         gap: 10px;
@@ -753,7 +727,6 @@ tr.hidden {
         font-size: 24px;
     }
 
-    /* Table wrapper: fixed height removed, natural flow */
     .table-wrapper {
         flex: none;
         border-radius: 12px;
@@ -761,7 +734,6 @@ tr.hidden {
         margin-bottom: 16px;
     }
 
-    /* Toolbar: full width, wrap all items */
     .toolbar {
         flex-wrap: wrap;
         padding: 12px 14px;
@@ -783,7 +755,6 @@ tr.hidden {
         width: 100%;
     }
 
-    /* Export buttons: row at bottom of toolbar */
     .toolbar-right {
         margin-left: 0;
         width: 100%;
@@ -795,7 +766,6 @@ tr.hidden {
         padding: 6px 10px;
     }
 
-    /* Table scroll: horizontal */
     .table-scroll {
         overflow-x: auto;
         overflow-y: visible;
@@ -810,7 +780,6 @@ tr.hidden {
         padding: 10px 14px;
     }
 
-    /* Hide "Date" and "Source" columns on mobile */
     thead th:first-child,
     tbody td:first-child,
     thead th:last-child,
@@ -818,7 +787,6 @@ tr.hidden {
         display: none;
     }
 
-    /* Table footer: center on small screens */
     .table-footer {
         flex-direction: column;
         align-items: center;
@@ -826,14 +794,12 @@ tr.hidden {
         padding: 12px 14px;
     }
 
-    /* Pagination: tighter */
     .page-btn {
         width: 28px;
         height: 28px;
         font-size: 12px;
     }
 
-    /* Page footer: stack */
     .page-footer {
         flex-direction: column;
         align-items: flex-start;
@@ -845,7 +811,6 @@ tr.hidden {
         gap: 14px;
     }
 
-    /* Detail Panel: full-screen on mobile */
     .detail-panel {
         width: 100%;
         top: 0;
@@ -868,10 +833,6 @@ tr.hidden {
     }
 }
 
-
-/* =============================================
-   RESPONSIVE — SMALL MOBILE (≤ 480px)
-   ============================================= */
 @media (max-width: 480px) {
 
     .stats-row {
@@ -890,7 +851,6 @@ tr.hidden {
         font-size: 22px;
     }
 
-    /* Single column detail grid */
     .detail-grid {
         grid-template-columns: 1fr;
     }
@@ -899,7 +859,6 @@ tr.hidden {
         grid-column: 1;
     }
 
-    /* Hide pagination overflow pages, keep prev/next + active */
     .page-dots,
     .pagination .page-btn:not(.active):not(:first-child):not(:last-child) {
         display: none;

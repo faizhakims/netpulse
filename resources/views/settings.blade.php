@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="{{ asset('css/navbar.css') }}">
     <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/settings.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/settings.css') }}?v={{ time() }}">
 </head>
 <body>
 
@@ -806,7 +806,7 @@ async function loadSysInfo() {
         document.getElementById('si_php').textContent     = d.php_version;
         document.getElementById('si_laravel').textContent = d.laravel_version;
         document.getElementById('si_time').textContent    = d.server_time;
-    } catch(e) { /* silent */ }
+    } catch(e) {  }
 }
 
 document.getElementById('refreshSysInfoBtn').addEventListener('click', loadSysInfo);

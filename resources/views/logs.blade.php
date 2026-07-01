@@ -265,7 +265,7 @@
             if (type     !== 'all' && row.dataset.type  !== type)   return false;
             if (severity !== 'all' && row.dataset.level !== severity) return false;
 
-            const rowDate = row.dataset.date;   // YYYY-MM-DD from date_filter
+            const rowDate = row.dataset.date;   
             if (dateFrom && rowDate < dateFrom) return false;
             if (dateTo   && rowDate > dateTo)   return false;
 

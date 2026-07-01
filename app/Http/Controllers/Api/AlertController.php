@@ -9,21 +9,10 @@ use App\Models\AlertRule;
 use App\Services\AlertService;
 use Illuminate\Http\Request;
 
-/**
- * GET    /api/alerts
- * GET    /api/alerts/{id}
- * POST   /api/alerts
- * PUT    /api/alerts/{id}
- * DELETE /api/alerts/{id}
- */
 class AlertController extends BaseApiController
 {
     public function __construct(private AlertService $alertService) {}
 
-    /**
-     * GET /api/alerts
-     * Supports: ?search=, ?status=active|inactive, ?severity=, ?sort=, ?page=
-     */
     public function index(Request $request)
     {
         if (!auth()->user()->can('view alerts')) {
@@ -66,9 +55,6 @@ class AlertController extends BaseApiController
         ]);
     }
 
-    /**
-     * GET /api/alerts/{id}
-     */
     public function show(int $id)
     {
         if (!auth()->user()->can('view alerts')) {
@@ -84,12 +70,9 @@ class AlertController extends BaseApiController
         return $this->success(new AlertResource($rule));
     }
 
-    /**
-     * POST /api/alerts
-     */
     public function store(StoreAlertRuleRequest $request)
     {
-        // authorize() in StoreAlertRuleRequest handles 'manage alerts'
+        
         $data             = $request->validated();
         $data['is_active'] = $request->boolean('is_active', true);
 
@@ -110,12 +93,9 @@ class AlertController extends BaseApiController
         return $this->success(new AlertResource($rule), 'Alert rule created.', 201);
     }
 
-    /**
-     * PUT /api/alerts/{id}
-     */
     public function update(UpdateAlertRuleRequest $request, int $id)
     {
-        // authorize() in UpdateAlertRuleRequest handles 'manage alerts'
+        
         $rule = AlertRule::find($id);
 
         if (!$rule) {
@@ -144,9 +124,6 @@ class AlertController extends BaseApiController
         return $this->success(new AlertResource($rule->fresh()), 'Alert rule updated.');
     }
 
-    /**
-     * DELETE /api/alerts/{id}
-     */
     public function destroy(int $id)
     {
         if (!auth()->user()->can('manage alerts')) {

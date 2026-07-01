@@ -1,6 +1,4 @@
-/* =============================================
-   DEVICE PAGE STYLES (RESPONSIVE)
-   ============================================= */
+
 
 :root {
     --green:       #006947;
@@ -73,7 +71,6 @@
     gap: 20px;
 }
 
-/* ── Card as clickable link ── */
 .card {
     background: white;
     border-radius: 20px;
@@ -114,28 +111,30 @@
 }
 
 .badge {
-    font-family: 'Inter', sans-serif;
-    font-weight: 700;
-    font-style: normal;
-    font-size: 10px;
-    line-height: 15px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    background: #d1fae5;
-    color: var(--green);
-    padding: 3px 10px;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 4px 10px;
+    gap: 4px;
     border-radius: 9999px;
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 16px;
+    color: #FFFFFF;
+    background: #047857;
     vertical-align: middle;
 }
 
 .badge.offline {
-    background: #fee2e2;
-    color: #b91c1c;
+    background: #DC2626;
+    color: #FFFFFF;
 }
 
 .badge.warning {
-    background: #fef3c7;
-    color: #b45309;
+    background: #D97706;
+    color: #FFFFFF;
 }
 
 .card-title {
@@ -181,9 +180,6 @@
     gap: 16px;
 }
 
-/* =============================================
-   TABLET (max-width: 1024px)
-   ============================================= */
 @media screen and (max-width: 1024px) {
     .main {
         margin-left: 90px;
@@ -213,20 +209,11 @@
     }
 }
 
-/* =============================================
-   MOBILE (max-width: 768px) — Sidebar drawer mode
-   ============================================= */
 @media screen and (max-width: 768px) {
     .main {
         margin-left: 0 !important;
         padding: 72px 16px 24px;
     }
-
-    /*
-     * JANGAN set display: none di sini!
-     * Sidebar mobile dikendalikan oleh sidebar.css (transform slide-in).
-     * Kalau di-display:none, hamburger tidak akan bisa membuka sidebar.
-     */
 
     .grid {
         grid-template-columns: 1fr;
@@ -248,9 +235,6 @@
     }
 }
 
-/* =============================================
-   MOBILE CARD — Besar & Mudah Dibaca
-   ============================================= */
 @media screen and (max-width: 640px) {
     .main {
         padding: 72px 16px 24px;
@@ -265,7 +249,6 @@
         font-size: 0.875rem;
     }
 
-    /* Card lebih lega dan terbaca */
     .card {
         padding: 24px 20px;
         border-radius: 24px;
@@ -288,7 +271,7 @@
     }
 
     .card-title {
-        font-size: 2rem;          /* 32px — terbaca jelas tanpa terlalu besar */
+        font-size: 2rem;          
         line-height: 1.15;
         letter-spacing: -0.5px;
         margin-bottom: 12px;
@@ -315,9 +298,6 @@
     }
 }
 
-/* =============================================
-   LAYAR SANGAT KECIL (max-width: 380px)
-   ============================================= */
 @media screen and (max-width: 380px) {
     .main {
         padding: 68px 12px 20px;
@@ -335,7 +315,7 @@
         width: 75px;
     }
 }
-/* ── Unknown / Stale status ──────────────────────────────────────────────── */
+
 .badge.stale,
 .badge.unknown {
     background: #fef3c7;
@@ -356,16 +336,11 @@
     background: #9ca3af;
 }
 
-/* Stale badge in details page */
 .device-status-badge.stale {
     background: #fef3c7;
     color: #92400e;
     border-color: #fcd34d;
 }
-
-/* =============================================
-   MODAL — Add Device
-   ============================================= */
 
 * { box-sizing: border-box; }
 

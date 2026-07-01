@@ -27,7 +27,6 @@
             </div>
         </div>
 
-
         <div class="stats-row">
             <div class="stat-card">
                 <div class="stat-label">DEVICE DOWN</div>
@@ -69,7 +68,6 @@
                         </select>
                     </div>
                 </div>
-
 
                 <div class="table-responsive" id="incidentTableWrap">
                     <table class="incident-table" id="incidentTable">
@@ -117,7 +115,6 @@
                     </table>
                 </div>
 
-
                 @if($activeIncidents->count() > 0)
                 <div class="table-info">
                     <span id="visibleCount">{{ $activeIncidents->count() }}</span> incident{{ $activeIncidents->count() !== 1 ? 's' : '' }} active
@@ -127,7 +124,6 @@
                 </div>
                 @endif
             </div>
-
 
             <div class="resolved-log">
                 <div class="resolved-log-header">
@@ -159,7 +155,6 @@
                 </div>
             </div>
         </div>
-
 
         <div class="history-panel" id="historyPanel">
             <div class="panel-header">

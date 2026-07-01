@@ -7,9 +7,7 @@ use Illuminate\Http\JsonResponse;
 
 abstract class BaseApiController extends Controller
 {
-    /**
-     * Return a standardised success response.
-     */
+    
     protected function success(mixed $data = null, string $message = 'Success', int $status = 200): JsonResponse
     {
         return response()->json([
@@ -19,9 +17,6 @@ abstract class BaseApiController extends Controller
         ], $status);
     }
 
-    /**
-     * Return a standardised error response.
-     */
     protected function error(string $message, int $status = 400, mixed $errors = null): JsonResponse
     {
         $payload = [

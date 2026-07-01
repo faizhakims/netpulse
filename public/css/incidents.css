@@ -1,6 +1,4 @@
-/* =============================================
-   INCIDENTS PAGE STYLES
-   ============================================= */
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -17,9 +15,6 @@ body {
     overflow-x: hidden;
 }
 
-/* ============================
-   Page Header
-   ============================ */
 .page-header {
     display: flex;
     justify-content: space-between;
@@ -61,9 +56,6 @@ body {
     50%       { opacity: 0.4; }
 }
 
-/* ============================
-   Stat Cards
-   ============================ */
 .stats-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -86,9 +78,6 @@ body {
     color: #0f172a;
 }
 
-/* ============================
-   Main content row
-   ============================ */
 .main-content-row {
     display: flex;
     gap: 24px;
@@ -97,9 +86,6 @@ body {
     align-items: flex-start;
 }
 
-/* ============================
-   Active Incidents
-   ============================ */
 .active-incidents {
     flex: 1 1 65%;
     min-width: 0;
@@ -131,7 +117,6 @@ body {
     margin: 0;
 }
 
-/* Toolbar */
 .toolbar {
     display: flex;
     align-items: center;
@@ -176,11 +161,10 @@ body {
     cursor: pointer;
 }
 
-/* Table container: max 6 baris terlihat lalu scroll */
 .table-responsive {
     overflow-x: auto;
     overflow-y: auto;
-    max-height: calc(6 * 57px + 44px); /* 6 baris + 1 thead */
+    max-height: calc(6 * 57px + 44px); 
     min-width: 0;
     width: 100%;
     -webkit-overflow-scrolling: touch;
@@ -209,7 +193,7 @@ body {
     text-align: left;
     padding: 0 12px 12px 12px;
     border-bottom: 1px solid rgba(171,173,175,0.2);
-    /* Sticky thead agar tetap terlihat saat scroll */
+    
     position: sticky;
     top: 0;
     background: #EEF1F3;
@@ -228,15 +212,12 @@ body {
 
 .id-text { font-weight: 600; color: #0f172a; font-size: 12px; }
 
-/* Device cell */
 .device-cell { display: flex; flex-direction: column; gap: 2px; }
 .device-name { font-weight: 500; color: #0f172a; font-size: 13px; }
 .device-ip   { font-size: 11px; color: #94A3B8; }
 
-/* Started cell */
 .started-cell { font-size: 12px; color: #64748B; }
 
-/* Table info row */
 .table-info {
     margin-top: 12px;
     font-size: 12px;
@@ -244,29 +225,32 @@ body {
     font-family: 'Inter', sans-serif;
 }
 
-/* Badges */
 .badge {
-    display: inline-flex; align-items: center;
-    padding: 3px 10px; border-radius: 20px;
-    font-size: 11px; font-weight: 600; color: #fff;
-    white-space: nowrap;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 4px 10px;
+    gap: 4px;
+    border-radius: 9999px;
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 16px;
+    color: #FFFFFF;
 }
-.badge-critical { background: #B31B25; }
-.badge-high     { background: #FEB64C; color: #7f3f00; }
-.badge-normal   { background: #D9DDE0; color: #595C5E; }
-.badge-info     { background: rgba(186,211,255,0.3); color: #004F99; }
+.badge-critical { background: #DC2626; color: white; }
+.badge-high     { background: #D97706; color: white; }
+.badge-normal   { background: #6B7280; color: white; }
+.badge-info     { background: #1D4ED8; color: white; }
 
-/* Badge kecil untuk panel history */
 .badge-resolved-sm {
     display: inline-flex; align-items: center;
     padding: 2px 8px; border-radius: 9999px;
     font-size: 10px; font-weight: 600;
-    background: #D1FAE5; color: #047857;
+    background: #047857; color: white;
 }
 
-/* ============================
-   Resolved Log Sidebar
-   ============================ */
 .resolved-log {
     flex: 1 1 30%;
     min-width: 280px;
@@ -305,9 +289,6 @@ body {
 }
 .btn-view-full:hover { opacity: 0.75; }
 
-/* ============================
-   Full History Slide Panel + Overlay
-   ============================ */
 .history-overlay {
     position: fixed;
     inset: 0;
@@ -369,7 +350,6 @@ body {
 .panel-body::-webkit-scrollbar { width: 5px; }
 .panel-body::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 9999px; }
 
-/* History item cards */
 .history-item {
     padding: 16px 0;
     border-bottom: 1px solid #F1F5F9;
@@ -404,9 +384,6 @@ body {
     line-height: 1.6;
 }
 
-/* ============================
-   Footer
-   ============================ */
 .page-footer {
     display: flex; justify-content: space-between;
     align-items: center; padding: 20px 0 16px;
@@ -426,9 +403,6 @@ body {
 .footer-link { font-size: 12px; color: #CBD5E1; text-decoration: none; font-weight: 500; }
 .footer-link:hover { color: #64748B; }
 
-/* ============================
-   Responsive
-   ============================ */
 @media (max-width: 1200px) {
     .main-content-row { flex-direction: column; }
 }

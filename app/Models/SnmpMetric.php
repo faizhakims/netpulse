@@ -22,9 +22,6 @@ class SnmpMetric extends Model
         'collected_at' => 'datetime',
     ];
 
-    /**
-     * Ambil semua metric terbaru per device+metric_name.
-     */
     public static function latestPerDeviceMetric()
     {
         return self::query()
@@ -38,9 +35,6 @@ class SnmpMetric extends Model
             ->sortBy(fn($m) => $m->device->name ?? '');
     }
 
-    /**
-     * Ambil metric tertentu untuk semua device.
-     */
     public static function latestByMetricName(string $metricName)
     {
         return self::query()

@@ -5,9 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Resources\DashboardResource;
 use App\Services\DashboardService;
 
-/**
- * GET /api/dashboard
- */
 class DashboardController extends BaseApiController
 {
     public function __construct(private DashboardService $dashboardService) {}

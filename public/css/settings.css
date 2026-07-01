@@ -1,6 +1,4 @@
-/* =========================================================
-   settings.css — Settings Page  (NetPulse)
-   ========================================================= */
+
 
 * { box-sizing: border-box; }
 body {
@@ -10,7 +8,6 @@ body {
     color: #2c2f31;
 }
 
-/* ── Layout ── */
 .main {
     margin-left: 76px;
     padding: 88px 48px 48px;
@@ -21,7 +18,6 @@ body {
     gap: 0;
 }
 
-/* ── Page Header ── */
 .page-header { margin-bottom: 32px; }
 .page-title {
     font-family: 'DM Sans', sans-serif;
@@ -33,7 +29,6 @@ body {
     font-size: 14px; color: #64748B; margin: 0;
 }
 
-/* ── Tab Navigation ── */
 .settings-tabs {
     display: flex; gap: 4px;
     background: #fff; border: 1px solid #E2E8F0;
@@ -52,11 +47,9 @@ body {
 .settings-tab:hover { background: #F1F5F9; color: #334155; }
 .settings-tab.active { background: #064E3B; color: #fff; }
 
-/* ── Tab Panels ── */
 .tab-panel { display: none; }
 .tab-panel.active { display: block; }
 
-/* ── Section Card ── */
 .section-card {
     background: #fff; border: 1px solid #E2E8F0;
     border-radius: 16px; padding: 28px; margin-bottom: 20px;
@@ -81,7 +74,6 @@ body {
     font-family: 'Inter', sans-serif; font-size: 12px; color: #94A3B8; margin: 0;
 }
 
-/* ── Field System ── */
 .field-grid   { display: grid; gap: 16px; }
 .field-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .field-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
@@ -121,7 +113,6 @@ body {
 .field-eye-btn:hover { color: #475569; }
 .field-eye-btn .material-symbols-outlined { font-size: 18px; }
 
-/* ── Toggle ── */
 .toggle-row {
     display: flex; align-items: center; justify-content: space-between;
     padding: 14px 16px; background: #F8FAFC; border: 1px solid #E2E8F0;
@@ -149,7 +140,6 @@ body {
 .toggle-wrap input:checked + .toggle-track { background: #059669; }
 .toggle-wrap input:checked + .toggle-track::after { transform: translateX(20px); }
 
-/* ── Buttons ── */
 .card-actions {
     display: flex; align-items: center; justify-content: flex-end;
     gap: 10px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #F1F5F9;
@@ -183,7 +173,6 @@ body {
 .btn-danger:hover { background: #FEE2E2; }
 .btn-danger .material-symbols-outlined { font-size: 14px; }
 
-/* ── User Management Table ── */
 .users-header {
     display: flex; align-items: center; justify-content: space-between;
     margin-bottom: 16px;
@@ -229,24 +218,42 @@ body {
 .user-avatar.viewer   { background: #F0FDF4; color: #166534; }
 
 .role-badge {
-    display: inline-flex; padding: 3px 10px; border-radius: 9999px;
-    font-family: 'Inter', sans-serif; font-weight: 700;
-    font-size: 10px; letter-spacing: .04em; text-transform: uppercase;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 4px 10px;
+    gap: 4px;
+    border-radius: 9999px;
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 16px;
+    color: #FFFFFF;
 }
-.role-admin    { background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
-.role-operator { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
-.role-viewer   { background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0; }
+.role-admin    { background: #D97706; color: white; border: none; }
+.role-operator { background: #1D4ED8; color: white; border: none; }
+.role-viewer   { background: #047857; color: white; border: none; }
 
 .status-pill {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 3px 10px; border-radius: 9999px;
-    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 11px;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 4px 10px;
+    gap: 4px;
+    border-radius: 9999px;
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 16px;
+    color: #FFFFFF;
 }
-.status-pill.active   { background: #ECFDF5; color: #059669; }
-.status-pill.inactive { background: #F1F5F9; color: #94A3B8; }
+.status-pill.active   { background: #047857; color: white; }
+.status-pill.inactive { background: #6B7280; color: white; }
 .status-pill-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-.status-pill.active .status-pill-dot   { background: #10B981; }
-.status-pill.inactive .status-pill-dot { background: #94A3B8; }
+.status-pill.active .status-pill-dot   { background: white; }
+.status-pill.inactive .status-pill-dot { background: white; }
 
 .icon-btn {
     background: none; border: none; cursor: pointer; padding: 6px;
@@ -257,7 +264,6 @@ body {
 .icon-btn.danger:hover { color: #DC2626; background: #FEF2F2; }
 .icon-btn .material-symbols-outlined { font-size: 16px; }
 
-/* ── System Info Cards ── */
 .sysinfo-grid {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px;
 }
@@ -277,7 +283,6 @@ body {
     font-size: 12px; color: #64748B; font-weight: 500; margin-left: 4px;
 }
 
-/* ── Danger Zone ── */
 .danger-zone {
     border: 1.5px solid #FECACA; border-radius: 16px; padding: 24px; background: #FFFBFB;
     margin-bottom: 0;
@@ -291,7 +296,6 @@ body {
 }
 .danger-actions { display: flex; gap: 12px; flex-wrap: wrap; }
 
-/* ── Drawer ── */
 .drawer-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,.3);
     z-index: 9998; opacity: 0; pointer-events: none; transition: opacity .25s;
@@ -325,7 +329,6 @@ body {
     display: flex; gap: 10px; justify-content: flex-end; flex-shrink: 0;
 }
 
-/* ── Modal ── */
 .modal-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,.4);
     z-index: 10000; display: flex; align-items: center; justify-content: center;
@@ -359,7 +362,6 @@ body {
 }
 .btn-delete-confirm:hover { background: #B91C1C; }
 
-/* ── Toast ── */
 .toast-container {
     position: fixed; top: 80px; right: 24px; z-index: 11000;
     display: flex; flex-direction: column; gap: 10px; pointer-events: none;
@@ -377,7 +379,6 @@ body {
 .toast.error   { background: #FFF1F2; color: #BE123C; border: 1px solid #FECDD3; }
 .toast .material-symbols-outlined { font-size: 18px; flex-shrink: 0; }
 
-/* ── Footer ── */
 .page-footer {
     display: flex; align-items: center; justify-content: space-between;
     padding: 24px 0; border-top: 1px solid #E2E8F0; margin-top: 8px;

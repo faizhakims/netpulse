@@ -43,7 +43,7 @@ class AlertRule extends Model
 
     public function conditionLabel(): string
     {
-        // Untuk metric status, tidak perlu threshold value
+        
         if ($this->metric_type === 'status') {
             if ($this->condition === 'is_down') {
                 return "If no 'up' received for " . ($this->duration ?? '5m') . " (sustained down)";

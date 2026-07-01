@@ -6,7 +6,6 @@
     --text-muted:  #595c5e;
 }
 
-/* ===== Desktop Sidebar (floating, hover expand) ===== */
 .sidebar {
     position: fixed;
     left: 20px;
@@ -118,7 +117,6 @@
     gap: 2px;
 }
 
-/* ===== Mobile Hamburger & Drawer ===== */
 .sidebar-overlay {
     display: none;
     position: fixed;
@@ -165,7 +163,6 @@
     line-height: 1;
 }
 
-/* ===== Aturan Mobile ===== */
 @media (max-width: 768px) {
     .sidebar-toggle {
         display: flex !important;
@@ -191,7 +188,6 @@
         transform: translateX(0);
     }
 
-    /* Label selalu terlihat di drawer */
     .sidebar .nav-item-label {
         opacity: 1;
     }
@@ -200,7 +196,6 @@
         opacity: 1;
     }
 
-    /* Geser konten utama agar tidak tertutup sidebar */
     .main,
     .main-content,
     .device-detail-page {
@@ -209,7 +204,6 @@
         padding-right: 16px !important;
     }
 
-    /* Navbar: beri ruang untuk tombol hamburger */
     .topbar {
         padding-left: 70px !important;
     }

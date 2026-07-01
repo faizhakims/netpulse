@@ -9,18 +9,10 @@ use App\Models\User;
 use App\Services\UserService;
 use Illuminate\Http\Request;
 
-/**
- * GET /api/users
- * GET /api/users/{id}
- */
 class UserController extends BaseApiController
 {
     public function __construct(private UserService $userService) {}
 
-    /**
-     * GET /api/users
-     * Supports: ?search=, ?role=, ?status=active|inactive, ?sort=, ?page=
-     */
     public function index(Request $request)
     {
         if (!auth()->user()->can('manage users')) {
@@ -29,7 +21,6 @@ class UserController extends BaseApiController
 
         $query = User::with('roles');
 
-        // Search by name or email
         if ($search = $request->query('search')) {
             $query->where(fn($q) =>
                 $q->where('name', 'like', "%{$search}%")
@@ -37,17 +28,14 @@ class UserController extends BaseApiController
             );
         }
 
-        // Filter by role
         if ($role = $request->query('role')) {
             $query->role($role);
         }
 
-        // Filter by active status
         if ($status = $request->query('status')) {
             $query->where('is_active', $status === 'active');
         }
 
-        // Sort
         $sort = $request->query('sort', 'name');
         $dir  = str_starts_with($sort, '-') ? 'desc' : 'asc';
         $col  = ltrim($sort, '-');
@@ -67,9 +55,6 @@ class UserController extends BaseApiController
         ]);
     }
 
-    /**
-     * GET /api/users/{id}
-     */
     public function show(int $id)
     {
         if (!auth()->user()->can('manage users')) {

@@ -90,10 +90,6 @@
 }
 .avatar img { width: 100%; height: 100%; object-fit: cover; }
 
-/* =========================================
-   TAMBAHAN CSS UNTUK DROPDOWN & NICKNAME
-   ========================================= */
-
 .dropdown-wrapper { position: relative; display: flex; align-items: center; }
 
 .dropdown-menu {

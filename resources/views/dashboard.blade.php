@@ -90,12 +90,7 @@
 <section class="hero-section flex justify-between items-end fade-in-up" style="margin-bottom:32px;">
             <div>
                 <h1 class="hero-title">Dashboard</h1>
-                <!-- <div class="hero-sub">
-                    <span class="flex items-center gap-2" id="refresh-indicator">
-                        <span class="status-dot green pulse-dot"></span>
-                        Auto-refresh in 60s
-                    </span>
-                </div> -->
+                
             </div>
             <div class="health-panel">
                 <span class="health-label">System Health</span>
@@ -145,7 +140,7 @@
                     <div class="flex flex-col gap-3 relative z-1" style="max-height:276px;overflow-y:auto;padding-right:4px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.15) transparent;">
                         @forelse($activeIncidents as $incident)
                             @php
-                                // Map status (Critical/Warning/Monitoring/Info) → severity class
+                                
                                 $severity  = match($incident->status) {
                                     'Critical'   => 'critical',
                                     'Warning'    => 'major',
@@ -215,7 +210,7 @@
                                 $pathEdge = '';
                                 foreach ($corePoints as $i => $ms) {
                                     $x = $i * $xStep;
-                                    $y = 200 - min(200, max(0, $ms)); // invert: 0ms=bottom, 200ms=top
+                                    $y = 200 - min(200, max(0, $ms)); 
                                     $pathCore .= ($i === 0 ? "M" : "L") . round($x,1) . ',' . round($y,1) . ' ';
                                 }
                                 foreach ($edgePoints as $i => $ms) {
@@ -324,7 +319,7 @@
                         <p style="color:#94A3B8;font-size:13px;">No recent activity.</p>
                         @endforelse
                     </div>
-                    <!-- <button class="view-log-btn">View Logs</button> -->
+                    
                     <button class="view-log-btn" onclick="window.location.href='logs'">
                         View Logs
                     </button>
@@ -453,7 +448,7 @@
                     $chunkArr    = $chunk->values();
                     $avgPct      = round($chunkArr->avg('pct'));
                     $chunkType   = $avgPct >= 80 ? 'green' : ($avgPct >= 50 ? 'orange' : 'red');
-                    // Label: ambil tanggal awal–akhir chunk, misal "May 01" → "1"
+                    
                     $firstParts  = explode(' ', $chunkArr->first()['label']);
                     $lastParts   = explode(' ', $chunkArr->last()['label']);
                     $monthAbbr   = $firstParts[0];
@@ -498,35 +493,6 @@
     </div>
 
     <script>
-        // (function() {
-        //     const INTERVAL = 60; // detik
-        //     let remaining = INTERVAL;
-        //     const loadedAt = Date.now();
-
-        //     const indicator = document.getElementById('refresh-indicator');
-        //     const lastUpdated = document.getElementById('last-updated-text');
-
-        //     // Tampilkan kapan halaman terakhir di-load
-        //     function updateLastUpdated() {
-        //         const secs = Math.round((Date.now() - loadedAt) / 1000);
-        //         if (secs < 5)       lastUpdated.textContent = 'Just updated';
-        //         else if (secs < 60) lastUpdated.textContent = secs + 's ago';
-        //         else                lastUpdated.textContent = Math.round(secs / 60) + 'm ago';
-        //     }
-
-        //     function tick() {
-        //         remaining--;
-        //         if (remaining <= 0) {
-        //             location.reload();
-        //             return;
-        //         }
-        //         indicator.innerHTML =
-        //             '<span class="status-dot green pulse-dot"></span> Auto-refresh in ' + remaining + 's';
-        //         updateLastUpdated();
-        //         setTimeout(tick, 1000);
-        //     }
-        //     setTimeout(tick, 1000);
-        // })();
 
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry, i) => {
@@ -539,7 +505,6 @@
         }, { threshold: 0.08 });
         document.querySelectorAll('.fade-in-up').forEach(el => observer.observe(el));
 
-        // Slide panel logic
         const viewAllBtn = document.getElementById('viewAllNodesBtn');
         const panel = document.getElementById('allNodesSlidePanel');
         const overlay = document.getElementById('panelOverlay');

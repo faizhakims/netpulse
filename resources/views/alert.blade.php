@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="{{ asset('css/navbar.css') }}">
     <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/alert.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/alert.css') . '?v=' . time() }}">
 </head>
 <body>
 
@@ -616,7 +616,6 @@
 const RULES_DATA = @json($thresholdRules->keyBy('id'));
 const CSRF = document.querySelector('meta[name="csrf-token"]').content;
 
-// ── Toast ────────────────────────────────────────────────────────────────────
 function showToast(msg, type = 'success') {
     const c = document.getElementById('toastContainer');
     const t = document.createElement('div');
@@ -627,7 +626,6 @@ function showToast(msg, type = 'success') {
     setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 350); }, 3000);
 }
 
-// ── Eye toggle ───────────────────────────────────────────────────────────────
 document.querySelectorAll('.field-eye-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         const inp = document.getElementById(btn.dataset.target);
@@ -637,7 +635,6 @@ document.querySelectorAll('.field-eye-btn').forEach(btn => {
     });
 });
 
-// ── Save channel ─────────────────────────────────────────────────────────────
 document.querySelectorAll('[data-save]').forEach(btn => {
     btn.addEventListener('click', async () => {
         const type = btn.dataset.save;
@@ -665,7 +662,6 @@ document.querySelectorAll('[data-save]').forEach(btn => {
     });
 });
 
-// ── Test channel ─────────────────────────────────────────────────────────────
 document.querySelectorAll('[data-test]').forEach(btn => {
     btn.addEventListener('click', async () => {
         const type = btn.dataset.test;
@@ -695,7 +691,6 @@ document.querySelectorAll('[data-test]').forEach(btn => {
     });
 });
 
-// ── Reset channel ────────────────────────────────────────────────────────────
 document.querySelectorAll('.btn-reset').forEach(btn => {
     btn.addEventListener('click', () => {
         const type = btn.dataset.type;
@@ -712,7 +707,6 @@ document.querySelectorAll('.btn-reset').forEach(btn => {
     });
 });
 
-// ── Drawer ───────────────────────────────────────────────────────────────────
 const drawer        = document.getElementById('ruleDrawer');
 const drawerOverlay = document.getElementById('drawerOverlay');
 function openDrawer()  { drawer.classList.add('open'); drawerOverlay.classList.add('open'); document.body.style.overflow='hidden'; }
@@ -858,7 +852,6 @@ document.getElementById('drawerSaveBtn').addEventListener('click', async () => {
     btn.disabled = false;
 });
 
-// ── Toggle rule ───────────────────────────────────────────────────────────────
 async function toggleRule(id, checkbox) {
     try {
         const r = await fetch(`/alert/rules/${id}/toggle`, { method:'POST', headers:{'X-CSRF-TOKEN':CSRF} });
@@ -872,7 +865,6 @@ async function toggleRule(id, checkbox) {
     } catch(e) { showToast('Toggle failed.','error'); checkbox.checked = !checkbox.checked; }
 }
 
-// ── Delete rule ───────────────────────────────────────────────────────────────
 let pendingDeleteId = null;
 const deleteModal = document.getElementById('deleteModal');
 function confirmDelete(id) { pendingDeleteId = id; deleteModal.classList.add('open'); }
@@ -888,7 +880,6 @@ document.getElementById('deleteConfirmBtn').addEventListener('click', async () =
     pendingDeleteId = null;
 });
 
-// ── Duplicate rule ────────────────────────────────────────────────────────────
 async function duplicateRule(id) {
     try {
         const r = await fetch(`/alert/rules/${id}/duplicate`, { method:'POST', headers:{'X-CSRF-TOKEN':CSRF} });
@@ -897,7 +888,6 @@ async function duplicateRule(id) {
     } catch(e) { showToast('Duplicate failed.','error'); }
 }
 
-// ── Filter rules ──────────────────────────────────────────────────────────────
 let currentFilter = 'all';
 const rulesSearch = document.getElementById('rulesSearch');
 function applyRulesFilter() {
@@ -922,7 +912,6 @@ document.querySelectorAll('.filter-chip').forEach(chip => {
 });
 rulesSearch.addEventListener('input', applyRulesFilter);
 
-// ── History Table Pagination & Filtering ──────────────────────────────────────
 const ROWS_PER_PAGE = 15;
 let histCurrentPage  = 1;
 let histFilteredRows = [];
@@ -1000,7 +989,6 @@ function mkPageBtn(label, disabled=false, active=false) {
     document.getElementById(id)?.addEventListener('change', applyHistoryFilters);
 });
 
-// ── Panel filters ─────────────────────────────────────────────────────────────
 ['panelSearch','panelStatusFilter','panelChannelFilter','panelDateFilter'].forEach(id => {
     document.getElementById(id)?.addEventListener('input', () => {
         const term    = document.getElementById('panelSearch').value.toLowerCase();
@@ -1014,7 +1002,6 @@ function mkPageBtn(label, disabled=false, active=false) {
     });
 });
 
-// ── History slide panel ───────────────────────────────────────────────────────
 const histPanel        = document.getElementById('historyPanel');
 const histPanelOverlay = document.getElementById('historyPanelOverlay');
 document.getElementById('openHistoryPanelBtn').addEventListener('click', () => {
@@ -1027,7 +1014,6 @@ histPanelOverlay.addEventListener('click', () => {
     histPanel.classList.remove('open'); histPanelOverlay.classList.remove('open'); document.body.style.overflow='';
 });
 
-// ── Export CSV ────────────────────────────────────────────────────────────────
 function exportTableCSV(rows, filename) {
     const headers = ['Time','Channel','Recipient','Status','Message'];
     const lines = [headers.join(',')];
@@ -1046,7 +1032,6 @@ document.getElementById('panelExportCsvBtn').addEventListener('click', () => {
     exportTableCSV(rows, 'alert-history-full-'+new Date().toISOString().slice(0,10)+'.csv');
 });
 
-// ── PDF Date Range Modal ──────────────────────────────────────────────────────
 let _pdfRows = [];
 const pdfDateModal = document.getElementById('pdfDateModal');
 
@@ -1081,7 +1066,6 @@ document.getElementById('panelExportPdfBtn').addEventListener('click', () => {
     openPdfDateModal(rows);
 });
 
-// ── Export PDF (professional, matches Logs style) ─────────────────────────────
 function exportPDF(rows, dateFrom, dateTo) {
     const now      = new Date();
     const dateStr  = now.toLocaleDateString('en-GB', {day:'2-digit',month:'long',year:'numeric'});
@@ -1091,7 +1075,7 @@ function exportPDF(rows, dateFrom, dateTo) {
     const sent     = rows.filter(r=>r.dataset.status==='sent').length;
     const failed   = rows.filter(r=>r.dataset.status==='failed').length;
     const vTelegram= rows.filter(r=>r.dataset.channel==='telegram').length;
-    const rangeLabel = (dateFrom||dateTo) ? `${dateFrom||'start'} → ${dateTo||'end'}` : 'All dates';
+    const rangeLabel = (dateFrom||dateTo) ? `${dateFrom||'start'} ? ${dateTo||'end'}` : 'All dates';
 
     const tableRows = rows.map((row, i) => {
         const cells = row.querySelectorAll('td');
@@ -1150,7 +1134,7 @@ tbody td{padding:8px 12px;color:#334155;vertical-align:middle}
 <div class="wrap">
 <div class="print-bar">
   <span>Preview — <strong>NetPulse Alert History Report</strong> — ${dateStr} at ${timeStr}</span>
-  <button class="print-btn" onclick="window.print()">🖨 Print / Save PDF</button>
+  <button class="print-btn" onclick="window.print()">?? Print / Save PDF</button>
 </div>
 <div class="header">
   <div>
@@ -1161,7 +1145,7 @@ tbody td{padding:8px 12px;color:#334155;vertical-align:middle}
     <div class="report-title">Alert History Report</div>
     <div class="report-ref">${refCode}</div>
     <div class="report-date">Generated ${dateStr} at ${timeStr}</div>
-    <div class="report-range">📅 ${rangeLabel}</div>
+    <div class="report-range">?? ${rangeLabel}</div>
   </div>
 </div>
 <div class="summary">
@@ -1186,12 +1170,10 @@ tbody td{padding:8px 12px;color:#334155;vertical-align:middle}
     win.document.close();
 }
 
-// ── Spin animation ────────────────────────────────────────────────────────────
 const _style = document.createElement('style');
 _style.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
 document.head.appendChild(_style);
 
-// ── Init ──────────────────────────────────────────────────────────────────────
 applyHistoryFilters();
 </script>
 </body>

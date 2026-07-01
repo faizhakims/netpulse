@@ -7,19 +7,10 @@ use App\Models\Incident;
 use App\Services\IncidentService;
 use Illuminate\Http\Request;
 
-/**
- * GET /api/incidents
- * GET /api/incidents/{id}
- * PUT /api/incidents/{id}   → manual resolve
- */
 class IncidentController extends BaseApiController
 {
     public function __construct(private IncidentService $incidentService) {}
 
-    /**
-     * GET /api/incidents
-     * Supports: ?status=active|resolved, ?search=, ?sort=, ?page=
-     */
     public function index(Request $request)
     {
         if (!auth()->user()->can('view incidents')) {
@@ -28,7 +19,6 @@ class IncidentController extends BaseApiController
 
         $query = Incident::query();
 
-        // Status filter
         $status = $request->query('status', 'all');
         if ($status === 'active') {
             $query->active();
@@ -36,7 +26,6 @@ class IncidentController extends BaseApiController
             $query->resolved();
         }
 
-        // Search by device name or issue
         if ($search = $request->query('search')) {
             $query->where(fn($q) =>
                 $q->whereHas('device', fn($q2) => $q2->where('name', 'like', "%{$search}%"))
@@ -44,7 +33,6 @@ class IncidentController extends BaseApiController
             );
         }
 
-        // Sort
         $sort = $request->query('sort', '-started_at');
         $dir  = str_starts_with($sort, '-') ? 'desc' : 'asc';
         $col  = ltrim($sort, '-');
@@ -64,9 +52,6 @@ class IncidentController extends BaseApiController
         ]);
     }
 
-    /**
-     * GET /api/incidents/{id}
-     */
     public function show(int $id)
     {
         if (!auth()->user()->can('view incidents')) {
@@ -82,10 +67,6 @@ class IncidentController extends BaseApiController
         return $this->success(new IncidentResource($incident));
     }
 
-    /**
-     * PUT /api/incidents/{id}  — manually resolve an incident
-     * Body: {"action": "resolve"} (optional note)
-     */
     public function update(Request $request, int $id)
     {
         if (!auth()->user()->can('manage incidents')) {

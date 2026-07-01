@@ -6,21 +6,6 @@ use Illuminate\Console\Command;
 use App\Models\Incident;
 use Illuminate\Support\Facades\DB;
 
-/**
- * ResolveStaleIncidents
- *
- * Dijalankan setiap menit (lihat routes/console.php).
- * Logika:
- *   - Ambil semua incident yang masih active (resolved_at IS NULL).
- *   - Cek kondisi device saat ini dari device_status (record terbaru per device).
- *   - Jika kondisi kembali normal sesuai jenis issue, set resolved_at = now().
- *
- * Kondisi "normal" per jenis issue:
- *   - "Device Down" / status-based  → device status = 'up'
- *   - "Latency*"                    → device status = 'up' DAN latency_ms di bawah threshold
- *   - "Packet Loss*"                → rate packet loss (10 record terakhir) < 5%
- *   - Lainnya                       → device status = 'up' (fallback aman)
- */
 class ResolveStaleIncidents extends Command
 {
     protected $signature   = 'incidents:resolve {--debug : Tampilkan detail evaluasi}';

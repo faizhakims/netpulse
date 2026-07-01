@@ -1,6 +1,4 @@
-/* =========================================================
-   alert.css — Alert Configuration Page  (NetPulse)
-   ========================================================= */
+
 
 * { box-sizing: border-box; }
 body {
@@ -10,7 +8,6 @@ body {
     color: #2c2f31;
 }
 
-/* ── Layout ── */
 .main {
     margin-left: 76px;
     padding: 88px 48px 48px;
@@ -21,7 +18,6 @@ body {
     gap: 0;
 }
 
-/* ── Page Header — matches Logs style ── */
 .page-header { margin-bottom: 28px; }
 
 .page-title {
@@ -42,7 +38,6 @@ body {
     margin: 0;
 }
 
-/* ── Stats Row ── */
 .stats-row {
     display: grid;
     grid-template-columns: repeat(4,1fr);
@@ -77,7 +72,6 @@ body {
 .stat-value.green { color: #059669; }
 .stat-value.red   { color: #DC2626; }
 
-/* ── Settings Row ── */
 .settings-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -111,7 +105,6 @@ body {
     font-size: 12px; color: #94A3B8; margin: 0;
 }
 
-/* ── Toggle ── */
 .toggle-wrap { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
 .toggle-wrap input { opacity: 0; width: 0; height: 0; position: absolute; }
 .toggle-track {
@@ -126,7 +119,6 @@ body {
 .toggle-wrap input:checked + .toggle-track { background: #059669; }
 .toggle-wrap input:checked + .toggle-track::after { transform: translateX(20px); }
 
-/* ── Fields ── */
 .field-grid { display: grid; gap: 14px; }
 .field-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .field-label {
@@ -163,7 +155,6 @@ body {
 }
 .field-select:focus { border-color: #059669; background-color: #fff; }
 
-/* ── Card Actions ── */
 .card-actions {
     display: flex; align-items: center; justify-content: space-between;
     margin-top: 20px; padding-top: 20px; border-top: 1px solid #F1F5F9;
@@ -183,7 +174,6 @@ body {
 .btn-primary:active { transform: translateY(0); }
 .btn-primary:disabled { opacity: .6; cursor: not-allowed; transform: none; }
 
-/* ── Section Header ── */
 .section-header {
     display: flex; align-items: center;
     justify-content: space-between; margin-bottom: 16px;
@@ -193,7 +183,6 @@ body {
     font-weight: 700; font-size: 18px; color: #0F172A; margin: 0;
 }
 
-/* ── Rules Toolbar ── */
 .rules-toolbar {
     display: flex; align-items: center; gap: 10px;
     margin-bottom: 16px; flex-wrap: wrap;
@@ -227,7 +216,6 @@ body {
 }
 .btn-add-rule:hover { background: #047857; transform: translateY(-1px); }
 
-/* ── Rule Cards ── */
 .rules-grid {
     display: grid;
     grid-template-columns: repeat(3,1fr);
@@ -246,14 +234,22 @@ body {
     justify-content: space-between; margin-bottom: 12px;
 }
 .severity-badge {
-    display: inline-flex; align-items: center;
-    padding: 3px 10px; border-radius: 9999px;
-    font-family: 'Inter', sans-serif; font-weight: 700;
-    font-size: 10px; letter-spacing: .05em; text-transform: uppercase;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 4px 10px;
+    gap: 4px;
+    border-radius: 9999px;
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 16px;
+    color: #FFFFFF;
 }
-.severity-badge.critical { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
-.severity-badge.warning  { background: #FFFBEB; color: #D97706; border: 1px solid #FDE68A; }
-.severity-badge.info     { background: #EFF6FF; color: #2563EB; border: 1px solid #BFDBFE; }
+.severity-badge.critical { background: #DC2626; color: white; border: none; }
+.severity-badge.warning  { background: #D97706; color: white; border: none; }
+.severity-badge.info     { background: #1D4ED8; color: white; border: none; }
 .rule-title {
     font-family: 'DM Sans', sans-serif; font-weight: 700;
     font-size: 14px; color: #0F172A; margin: 0 0 4px;
@@ -285,7 +281,6 @@ body {
 .icon-btn.danger:hover { color: #DC2626; background: #FEF2F2; }
 .icon-btn .material-symbols-outlined { font-size: 16px; }
 
-/* ── Drawer ── */
 .drawer-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,.3);
     z-index: 9998; opacity: 0; pointer-events: none; transition: opacity .25s;
@@ -324,7 +319,6 @@ body {
 }
 .drawer-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
-/* Channel checkboxes */
 .channel-check-group { display: flex; gap: 12px; }
 .channel-check-label {
     display: flex; align-items: center; gap: 8px; cursor: pointer;
@@ -336,7 +330,6 @@ body {
 .channel-check-label.checked { border-color: #059669; background: #ECFDF5; color: #047857; }
 .channel-check-label .material-symbols-outlined { font-size: 16px; }
 
-/* Severity radio */
 .severity-radio-group { display: flex; gap: 10px; }
 .severity-radio-label {
     flex: 1; display: flex; align-items: center; justify-content: center;
@@ -353,7 +346,6 @@ body {
 .severity-radio-label.sev-warning.selected  { background: #FFFBEB; border-color: #D97706; }
 .severity-radio-label.sev-critical.selected { background: #FEF2F2; border-color: #DC2626; }
 
-/* ── Modals ── */
 .modal-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,.4);
     z-index: 10000; display: flex; align-items: center; justify-content: center;
@@ -389,12 +381,10 @@ body {
 }
 .btn-danger:hover { background: #B91C1C; }
 
-/* PDF Date Range Modal overrides */
 .pdf-modal { width: 430px; text-align: left; }
 .pdf-modal-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 20px; }
 .pdf-date-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
 
-/* ── Toast ── */
 .toast-container {
     position: fixed; top: 80px; right: 24px; z-index: 11000;
     display: flex; flex-direction: column; gap: 10px; pointer-events: none;
@@ -412,7 +402,6 @@ body {
 .toast.error   { background: #FFF1F2; color: #BE123C; border: 1px solid #FECDD3; }
 .toast .material-symbols-outlined { font-size: 18px; flex-shrink: 0; }
 
-/* ── Alert History Section ── */
 .history-section { margin-bottom: 0; }
 .btn-view-all {
     display: inline-flex; align-items: center; gap: 4px;
@@ -427,7 +416,6 @@ body {
     border-radius: 16px; overflow: hidden; margin-bottom: 32px;
 }
 
-/* History Toolbar — matches Logs toolbar exactly */
 .history-toolbar {
     display: flex; align-items: center; gap: 10px;
     padding: 14px 20px; border-bottom: 1px solid #F1F5F9; flex-wrap: wrap;
@@ -454,7 +442,6 @@ body {
 }
 .filter-select:focus { border-color: #047857; background-color: #fff; }
 
-/* Date Range — matches Logs */
 .date-range { display: flex; align-items: center; gap: 6px; }
 .date-label {
     font-size: 11px; font-weight: 600; color: #94A3B8;
@@ -467,7 +454,6 @@ body {
 }
 .date-input:focus { border-color: #047857; background: #fff; }
 
-/* Export buttons — matches Logs exactly */
 .toolbar-right { margin-left: auto; display: flex; gap: 8px; }
 .export-btn {
     padding: 7px 14px; border: 1px solid #E2E8F0; border-radius: 8px;
@@ -482,9 +468,8 @@ body {
 }
 .export-btn-pdf:hover { border-color: #FCA5A5; background: #FEF2F2; }
 
-/* History table scroll — max 6 rows visible */
 .history-table-scroll {
-    height: 340px;   /* ~6 rows × ~56px each + thead */
+    height: 340px;   
     overflow-y: auto;
     overflow-x: auto;
 }
@@ -511,7 +496,6 @@ body {
     font-family: 'Inter', sans-serif; font-size: 13px; color: #334155; vertical-align: middle;
 }
 
-/* Table footer */
 .history-table-footer {
     display: flex; align-items: center; justify-content: space-between;
     padding: 12px 20px; border-top: 1px solid #F1F5F9;
@@ -532,7 +516,6 @@ body {
 .page-btn.active { background: #064E3B; border-color: #064E3B; color: #fff; }
 .page-dots { font-size: 13px; color: #94A3B8; padding: 0 4px; }
 
-/* Channel + Status badges */
 .channel-cell { display: flex; align-items: center; gap: 7px; }
 .channel-icon { font-size: 15px; display: flex; }
 .channel-icon.telegram { color: #2AABEE; }
@@ -541,13 +524,13 @@ body {
     display: inline-flex; align-items: center; gap: 5px;
     padding: 4px 10px; border-radius: 9999px;
     font-family: 'Inter', sans-serif; font-weight: 600; font-size: 11px;
+    color: #FFFFFF;
 }
-.status-badge.sent   { background: #ECFDF5; color: #059669; }
-.status-badge.failed { background: #FFF1F2; color: #E11D48; }
-.status-badge .material-symbols-outlined { font-size: 13px; }
+.status-badge.sent   { background: #047857; color: #FFFFFF; }
+.status-badge.failed { background: #DC2626; color: #FFFFFF; }
+.status-badge .material-symbols-outlined { font-size: 13px; color: #FFFFFF; }
 .mono { font-family: 'Liberation Mono','Courier New',monospace; font-size: 12px; color: #475569; }
 
-/* ── History Slide Panel ── */
 .history-panel-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,.3);
     z-index: 9990; opacity: 0; pointer-events: none; transition: opacity .25s;
@@ -591,7 +574,6 @@ body {
 .history-panel-body tbody tr:hover td { background: #F8FAFC; }
 .panel-export-group { display: flex; gap: 8px; }
 
-/* ── Footer ── */
 .page-footer {
     display: flex; align-items: center; justify-content: space-between;
     padding: 24px 0; border-top: 1px solid #E2E8F0;

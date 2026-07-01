@@ -12,7 +12,7 @@ class LogsController extends Controller
     public function index()
     {
         abort_unless(auth()->user()->can('view logs'), 403, 'Access denied.');
-        // Gabungkan log dari device_status (status changes)
+        
         $statusLogs = DeviceStatus::with('device')->orderByDesc('checked_at')
             ->limit(100)
             ->get()
@@ -35,7 +35,6 @@ class LogsController extends Controller
                 ];
             });
 
-        // Log dari snmp_metrics
         $snmpLogs = SnmpMetric::with('device')->orderByDesc('collected_at')
             ->limit(50)
             ->get()
@@ -55,12 +54,10 @@ class LogsController extends Controller
                 ];
             });
 
-        // Gabung & urutkan terbaru
         $logs = $statusLogs->concat($snmpLogs)
             ->sortByDesc(fn($l) => $l['date'] . ' ' . $l['time'])
             ->values();
 
-        // Stats
         $totalLogs    = $logs->count();
         $criticalLogs = $logs->where('level', 'Critical')->count();
         $warningLogs  = $logs->where('level', 'Warning')->count();

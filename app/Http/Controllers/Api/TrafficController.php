@@ -5,9 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Resources\TrafficResource;
 use App\Services\TrafficService;
 
-/**
- * GET /api/traffic
- */
 class TrafficController extends BaseApiController
 {
     public function __construct(private TrafficService $trafficService) {}

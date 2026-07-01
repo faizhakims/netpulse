@@ -259,7 +259,7 @@ class RdfController extends BaseApiController
     private function turtlePrefixesWithNs(): array
     {
         $lines   = $this->turtlePrefixes();
-        // Replace the netpulse prefix line with the dynamic one
+        
         foreach ($lines as &$line) {
             if (str_starts_with($line, '@prefix netpulse:')) {
                 $line = '@prefix netpulse: <' . $this->ontologyNs() . '> .';
@@ -506,11 +506,11 @@ XML;
         $ontologyNs  = $this->ontologyNs();
         $ontologyUri = rtrim(config('app.url'), '/') . '/ontology';
         return <<<TURTLE
-@prefix rdf:      <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix owl:      <http://www.w3.org/2002/07/owl#> .
-@prefix xsd:      <http://www.w3.org/2001/XMLSchema#> .
-@prefix schema:   <https://schema.org/> .
+@prefix rdf:      <http:
+@prefix rdfs:     <http:
+@prefix owl:      <http:
+@prefix xsd:      <http:
+@prefix schema:   <https:
 @prefix netpulse: <{$ontologyNs}> .
 
 <{$ontologyUri}>

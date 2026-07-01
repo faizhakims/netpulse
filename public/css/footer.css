@@ -1,6 +1,4 @@
-/* =============================================
-   SHARED FOOTER STYLES
-   ============================================= */
+
 
 .page-footer {
     display: flex;
@@ -9,7 +7,7 @@
     padding: 20px 0 16px;
     border-top: 1px solid #E2E8F0;
     flex-shrink: 0;
-    margin-top: auto; /* Push to bottom if container is flex col */
+    margin-top: auto; 
     flex-wrap: wrap;
     gap: 8px;
     width: 100%;
