@@ -136,7 +136,8 @@ class DeviceService
 
         $this->validateMonitoringUrl($apiUrl);
 
-        $response = Http::timeout(5)->post("{$apiUrl}/ping", ['device' => $deviceName]);
+        $baseUrl = rtrim($apiUrl, '/');
+        $response = Http::timeout(5)->post("{$baseUrl}/ping", ['device' => $deviceName]);
         return $response->json();
     }
 
@@ -149,7 +150,8 @@ class DeviceService
 
         $this->validateMonitoringUrl($apiUrl);
 
-        $response = Http::timeout(15)->post("{$apiUrl}/reboot", ['device' => $deviceName]);
+        $baseUrl = rtrim($apiUrl, '/');
+        $response = Http::timeout(15)->post("{$baseUrl}/reboot", ['device' => $deviceName]);
         return $response->json();
     }
 
@@ -163,7 +165,9 @@ class DeviceService
 
         $this->validateMonitoringUrl($apiUrl);
 
-        $listResponse = Http::timeout(10)->get("{$apiUrl}/api/devices");
+        $baseUrl = rtrim($apiUrl, '/');
+
+        $listResponse = Http::timeout(10)->get("{$baseUrl}/api/devices");
         $devices      = collect($listResponse->json()['data'] ?? []);
         $device       = $devices->firstWhere('name', $deviceName);
 
@@ -176,7 +180,7 @@ class DeviceService
             throw new \Exception("Device ID tidak valid dari monitoring API.", 422);
         }
 
-        $response = Http::timeout(60)->delete("{$apiUrl}/api/devices/{$deviceId}");
+        $response = Http::timeout(60)->delete("{$baseUrl}/api/devices/{$deviceId}");
         $data     = $response->json();
 
         if (!$response->successful()) {
